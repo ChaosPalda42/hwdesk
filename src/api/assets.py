@@ -20,7 +20,6 @@ _FIELDS = (
     "location_id", "condition", "supplier", "warranty_until", "cost_center", "invoice_id", "invoice_number",
 )
 
-
 def _payload(data: dict, *, for_create: bool) -> dict:
     fields = {key: data[key] for key in _FIELDS if key in data}
     if "tags" in data:
@@ -31,7 +30,6 @@ def _payload(data: dict, *, for_create: bool) -> dict:
             fields.setdefault(key, "")
         fields.setdefault("price", 0)
     return fields
-
 
 def _with_tags(rows: list[dict]) -> list[dict]:
     tags = TagRepository(get_db()).for_assets([r["id"] for r in rows])
@@ -104,7 +102,8 @@ def import_csv():
 @bp.get("/assets/<int:id>")
 @api_auth_required
 def get_asset(id: int):
-    asset = build_asset_service(get_db()).get(id)
+    service = build_asset_service(get_db())
+    asset = service.get(id)
     if asset is None:
         return jsonify({"error": "not found"}), 404
     return jsonify(asset)
@@ -132,10 +131,7 @@ def retire_asset(id: int):
     return _transition(id, "retire")
 
 
-@bp.post("/assets/<int:id>/lost")
-@api_auth_required
-def lose_asset(id: int):
-    return _transition(id, "mark_lost")
+
 
 
 def _transition(id: int, method: str):
