@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Nastavení{% endblock %}
+
+{% block content %}
+{% if problems %}
+  <div class="flash error">
+    {% for problem in problems %}
+      {{ problem }}<br>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="info">
+  <p>Redirect URI pro registraci aplikace v Entra ID:</p>
+  <code>{{ redirect_uri }}</code>
+</div>
+
+<form method="post" action="/admin/settings">
+  {% for group, rows in groups %}
+    <h2>{{ group }}</h2>
+    {% for row in rows %}
+      <p>
+        <label>{{ row.label }}:</label><br>
+        {% if row.type == 'choice' %}
+          <select name="{{ row.key }}">
+            {% for choice in row.choices %}
+              <option value="{{ choice }}" {% if choice == row.value %}selected{% endif %}>{{ choice }}</option>
+            {% endfor %}
+          </select>
+        {% elif row.type == 'bool' %}
+          <input type="checkbox" name="{{ row.key }}" value="1" {% if row.value in ('1','true','True') %}checked{% endif %}>
+        {% elif row.type == 'json' or row.type == 'text' %}
+          <textarea name="{{ row.key }}" rows="4">{{ row.value }}</textarea>
+        {% elif row.type == 'secret' %}
+          <input type="password" name="{{ row.key }}" value="{{ row.value }}">
+        {% else %}
+          <input name="{{ row.key }}" value="{{ row.value }}">
+        {% endif %}
+        {% if row.help %}
+          <small class="muted">{{ row.help }}</small>
+        {% endif %}
+      </p>
+    {% endfor %}
+  {% endfor %}
+  <button type="submit">Uložit</button>
+</form>
+
+<form method="post" action="/admin/settings/test-email">
+  <button type="submit">Odeslat testovací e-mail</button>
+</form>
+
+<form method="post" action="/admin/settings/hr-sync">
+  <button type="submit">Synchronizovat zaměstnance z HR teď</button>
+</form>
+{% endblock %}
