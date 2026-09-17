@@ -1,5 +1,6 @@
 import json
-from typing import List, Dict, Any
+import sqlite3
+from typing import Optional, List, Dict, Any
 
 
 SETTINGS_SCHEMA = [
@@ -77,12 +78,12 @@ SETTINGS_SCHEMA = [
     },
     {
         "key": "EMAIL_MODE",
-        "label": "Režim e-mailové komunikace",
+        "label": "Režim e-mailu",
         "group": "E-mail (SMTP)",
         "type": "choice",
         "secret": False,
         "choices": ["outbox", "smtp"],
-        "help": "Režim e-mailové komunikace"
+        "help": "Režim odesílání e-mailů"
     },
     {
         "key": "EMAIL_FROM",
@@ -95,12 +96,12 @@ SETTINGS_SCHEMA = [
     },
     {
         "key": "SMTP_HOST",
-        "label": "SMTP server",
+        "label": "SMTP hostitel",
         "group": "E-mail (SMTP)",
         "type": "str",
         "secret": False,
         "choices": [],
-        "help": "Adresa SMTP serveru"
+        "help": "SMTP server hostitel"
     },
     {
         "key": "SMTP_PORT",
@@ -109,16 +110,16 @@ SETTINGS_SCHEMA = [
         "type": "int",
         "secret": False,
         "choices": [],
-        "help": "Port SMTP serveru"
+        "help": "SMTP server port"
     },
     {
         "key": "SMTP_USER",
-        "label": "SMTP uživatelské jméno",
+        "label": "SMTP uživatel",
         "group": "E-mail (SMTP)",
         "type": "str",
         "secret": False,
         "choices": [],
-        "help": "Uživatelské jméno pro SMTP"
+        "help": "SMTP uživatelské jméno"
     },
     {
         "key": "SMTP_PASSWORD",
@@ -127,7 +128,7 @@ SETTINGS_SCHEMA = [
         "type": "str",
         "secret": True,
         "choices": [],
-        "help": "Heslo pro SMTP"
+        "help": "SMTP heslo"
     },
     {
         "key": "SMTP_STARTTLS",
@@ -136,16 +137,16 @@ SETTINGS_SCHEMA = [
         "type": "bool",
         "secret": False,
         "choices": [],
-        "help": "Použít STARTTLS pro zabezpečení spojení"
+        "help": "Povolit STARTTLS pro zabezpečené připojení"
     },
     {
         "key": "DRUPAL_URL",
-        "label": "URL Drupal systému",
+        "label": "URL Drupal",
         "group": "HR synchronizace (Drupal)",
         "type": "str",
         "secret": False,
         "choices": [],
-        "help": "Adresa Drupal systému pro synchronizaci"
+        "help": "URL adresa Drupal systému"
     },
     {
         "key": "DRUPAL_AUTH_MODE",
@@ -154,16 +155,16 @@ SETTINGS_SCHEMA = [
         "type": "choice",
         "secret": False,
         "choices": ["none", "basic", "token"],
-        "help": "Režim autentizace pro přístup k Drupal systému"
+        "help": "Režim autentizace pro Drupal"
     },
     {
         "key": "DRUPAL_USER",
-        "label": "Uživatelské jméno Drupal",
+        "label": "Uživatel Drupal",
         "group": "HR synchronizace (Drupal)",
         "type": "str",
         "secret": False,
         "choices": [],
-        "help": "Uživatelské jméno pro přístup k Drupal systému"
+        "help": "Uživatelské jméno pro přístup k Drupal"
     },
     {
         "key": "DRUPAL_PASSWORD",
@@ -172,16 +173,16 @@ SETTINGS_SCHEMA = [
         "type": "str",
         "secret": True,
         "choices": [],
-        "help": "Heslo pro přístup k Drupal systému"
+        "help": "Heslo pro přístup k Drupal"
     },
     {
         "key": "DRUPAL_TOKEN",
-        "label": "Přístupový token Drupal",
+        "label": "Token Drupal",
         "group": "HR synchronizace (Drupal)",
         "type": "str",
         "secret": True,
         "choices": [],
-        "help": "Přístupový token pro přístup k Drupal systému"
+        "help": "Autentizační token pro Drupal"
     },
     {
         "key": "DRUPAL_FIELD_MAP",
@@ -190,16 +191,61 @@ SETTINGS_SCHEMA = [
         "type": "json",
         "secret": False,
         "choices": [],
-        "help": "Mapování polí pro synchronizaci s Drupal systémem"
+        "help": "Mapování polí mezi systémy"
     },
     {
         "key": "DRUPAL_FILTER",
-        "label": "Filtr pro Drupal",
+        "label": "Filtr Drupal",
         "group": "HR synchronizace (Drupal)",
         "type": "str",
         "secret": False,
         "choices": [],
-        "help": "Filtr pro filtrování dat při synchronizaci s Drupal systémem"
+        "help": "Filtr pro synchronizaci z Drupal"
+    },
+    {
+        "key": "TAG_PREFIXES",
+        "label": "Předpony štítků",
+        "group": "Inventární čísla a štítky",
+        "type": "json",
+        "secret": False,
+        "choices": [],
+        "help": "Mapování typů majetku na předpony štítků"
+    },
+    {
+        "key": "TAG_PAD",
+        "label": "Délka štítku",
+        "group": "Inventární čísla a štítky",
+        "type": "int",
+        "secret": False,
+        "choices": [],
+        "help": "Minimální délka štítku (přidání nul)"
+    },
+    {
+        "key": "LABEL_PRINTER_HOST",
+        "label": "Hostitel tiskárny štítků",
+        "group": "Inventární čísla a štítky",
+        "type": "str",
+        "secret": False,
+        "choices": [],
+        "help": "IP adresa nebo název tiskárny štítků"
+    },
+    {
+        "key": "LABEL_PRINTER_PORT",
+        "label": "Port tiskárny štítků",
+        "group": "Inventární čísla a štítky",
+        "type": "int",
+        "secret": False,
+        "choices": [],
+        "help": "Port tiskárny štítků"
+    },
+    {
+        "key": "LABEL_ZPL_TEMPLATE",
+        "label": "Šablona ZPL štítku",
+        "group": "Inventární čísla a štítky",
+        "type": "text",
+        "secret": False,
+        "choices": [],
+        "help": "Šablona ZPL pro tisk štítků (placeholdery: {asset_tag} {brand} {model} {serial_number} {url} {company})"
     }
 ]
 
@@ -207,129 +253,149 @@ SETTINGS_SCHEMA = [
 class SettingsService:
     MASK = '••••••••'
 
-    def __init__(self, repo: 'SettingsRepository'):
+    def __init__(self, repo):
         self.repo = repo
 
-    def effective(self, base: Dict[str, Any]) -> Dict[str, Any]:
+    def effective(self, base: dict) -> dict:
         """Copy of base with every stored setting applied, coerced by type."""
-        result = base.copy()
+        result = {}
         
         # Get all stored settings
         stored_settings = self.repo.all()
         
+        # Process only the keys that exist in base or have stored values
         for setting_def in SETTINGS_SCHEMA:
-            key = setting_def['key']
-            if key in stored_settings:
-                value = stored_settings[key]
+            key = setting_def["key"]
+            
+            # Check if this key is in base or has a stored value
+            if key in base or key in stored_settings:
+                # Get the value - either from base or stored
+                if key in stored_settings:
+                    value = stored_settings[key]
+                else:
+                    value = base.get(key, '')
                 
                 # Apply type coercion
-                if setting_def['type'] == 'int':
+                if setting_def["type"] == "int":
                     try:
                         result[key] = int(value)
-                    except ValueError:
-                        # If conversion fails, keep original value
+                    except (ValueError, TypeError):
+                        # If conversion fails, keep the original value
                         result[key] = value
-                elif setting_def['type'] == 'bool':
-                    # Convert string to boolean (case insensitive)
-                    result[key] = value.lower() in ('1', 'true', 'yes', 'on')
-                elif setting_def['type'] == 'json':
-                    # Keep JSON as string (raw text)
+                elif setting_def["type"] == "bool":
+                    # Convert string values to boolean (case insensitive)
+                    if isinstance(value, str):
+                        result[key] = value.lower() in ('1', 'true', 'yes', 'on')
+                    else:
+                        result[key] = bool(value)
+                elif setting_def["type"] == "json":
+                    # Keep JSON as string for now, validation will check it
                     result[key] = value
                 else:
-                    # For str, choice, text types - keep as string
-                    result[key] = value
+                    # For str, choice, text - just convert to string
+                    result[key] = str(value)
+        
+        # Also ensure all base keys are in the result (they might not be in schema)
+        for key, value in base.items():
+            if key not in result:
+                result[key] = value
         
         return result
 
-    def save(self, values: Dict[str, Any], updated_by: str) -> None:
+    def save(self, values: dict, updated_by: str) -> None:
         """Save settings to repository."""
-        for setting_def in SETTINGS_SCHEMA:
-            key = setting_def['key']
-            if key in values:
-                value = values[key]
-                
-                # Handle secret fields
-                if setting_def['secret'] and value == self.MASK:
-                    # Skip saving if it's a masked secret
-                    continue
-                
-                # Handle empty values - delete the setting
-                if value == '':
-                    self.repo.delete(key)
-                else:
-                    # Save the setting
-                    self.repo.set(key, str(value), updated_by)
-
-    def validate(self, values: Dict[str, Any]) -> List[str]:
-        """Validate settings and return list of problems."""
-        problems = []
+        stored_settings = self.repo.all()
         
         for setting_def in SETTINGS_SCHEMA:
-            key = setting_def['key']
+            key = setting_def["key"]
+            
+            # Skip if key not in values
             if key not in values:
                 continue
                 
             value = values[key]
             
-            # Skip validation for empty values (they will be deleted)
+            # Handle secret fields with masking
+            if setting_def["secret"] and value == self.MASK:
+                # Skip saving if it's a masked secret (keep existing value)
+                continue
+            
+            # Handle empty string - delete the setting
             if value == '':
+                self.repo.delete(key)
+            else:
+                # Save the setting
+                self.repo.set(key, str(value), updated_by)
+
+    def validate(self, values: dict) -> List[str]:
+        """Validate settings and return list of problems."""
+        problems = []
+        
+        for setting_def in SETTINGS_SCHEMA:
+            key = setting_def["key"]
+            
+            # Skip unknown keys
+            if key not in values:
                 continue
                 
+            value = values[key]
+            
             # Validate based on type
-            if setting_def['type'] == 'int':
+            if setting_def["type"] == "int":
                 try:
                     int_value = int(value)
-                    if key in ['HANDOVER_TOKEN_HOURS', 'SMTP_PORT']:
-                        if int_value <= 0:
-                            problems.append(f"{key}: Musí být větší než 0")
+                    # Validate that it's > 0 for specific fields
+                    if key in ["HANDOVER_TOKEN_HOURS", "SMTP_PORT"] and int_value <= 0:
+                        problems.append(f"{key}: Musí být větší než 0")
                 except ValueError:
-                    problems.append(f"{key}: Musí být celé číslo")
+                    problems.append(f"{key}: Musí být platné číslo")
                     
-            elif setting_def['type'] == 'choice':
-                if value not in setting_def['choices']:
+            elif setting_def["type"] == "choice":
+                if value not in setting_def["choices"]:
                     problems.append(f"{key}: Neplatná volba")
                     
-            elif setting_def['type'] == 'json':
+            elif setting_def["type"] == "json":
                 try:
                     json.loads(value)
-                except (json.JSONDecodeError, TypeError):
-                    problems.append(f"{key}: Musí být platný JSON objekt")
+                except json.JSONDecodeError:
+                    problems.append(f"{key}: Musí být platný JSON")
+                    
+            # For other types, we don't validate specific constraints here
         
         return problems
 
-    def for_form(self, base: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def for_form(self, base: dict) -> List[Dict]:
         """Prepare settings for form display."""
         result = []
         
-        # Get all stored settings
         stored_settings = self.repo.all()
         
         for setting_def in SETTINGS_SCHEMA:
-            key = setting_def['key']
+            key = setting_def["key"]
+            value = stored_settings.get(key)
             
-            # Prepare the value for display
-            if setting_def['secret'] and key in stored_settings:
-                # For secret fields with stored values, show masked value
-                value = self.MASK
-            elif key in stored_settings:
-                # For non-secret fields with stored values, show the actual value
-                value = stored_settings[key]
+            # If it's a secret and we have a stored value, mask it
+            if setting_def["secret"] and value is not None:
+                display_value = self.MASK
+            elif value is not None:
+                # Use stored value
+                display_value = value
             else:
-                # For fields not yet set, use base value or empty string
-                value = str(base.get(key, ''))
-                
-            # Create the form item
-            item = {
-                'key': key,
-                'label': setting_def['label'],
-                'group': setting_def['group'],
-                'type': setting_def['type'],
-                'secret': setting_def['secret'],
-                'choices': setting_def['choices'],
-                'help': setting_def['help'],
-                'value': value
+                # Use base value or empty string
+                display_value = str(base.get(key, ''))
+            
+            # Create form item
+            form_item = {
+                "key": key,
+                "label": setting_def["label"],
+                "group": setting_def["group"],
+                "type": setting_def["type"],
+                "secret": setting_def["secret"],
+                "choices": setting_def["choices"],
+                "help": setting_def["help"],
+                "value": display_value
             }
             
-            result.append(item)
+            result.append(form_item)
             
         return result
