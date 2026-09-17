@@ -1,6 +1,7 @@
 from flask import Blueprint, request, session, redirect, url_for, current_app, jsonify, render_template
 import msal
 import os
+from urllib.parse import urlencode
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -23,24 +24,22 @@ def login():
         return render_template('login.html')
     elif auth_mode == 'oidc':
         oidc_config = get_oidc_config()
-        app = msal.ConfidentialClientApplication(
-            client_id=oidc_config['client_id'],
-            authority=f'https://login.microsoftonline.com/{oidc_config["tenant"]}',
-            client_credential=oidc_config['client_secret']
-        )
-        
-        # Generate state and store in session
+        # The authorization URL is assembled locally; MSAL (which contacts the
+        # tenant's discovery endpoint) is used only to exchange the code.
         state = os.urandom(24).hex()
         session['oauth_state'] = state
-        
         redirect_uri = get_base_url() + oidc_config['redirect_path']
-        
-        auth_url = app.get_authorization_request_url(
-            scopes=['User.Read'],
-            state=state,
-            redirect_uri=redirect_uri
+        auth_url = (
+            f"https://login.microsoftonline.com/{oidc_config['tenant']}/oauth2/v2.0/authorize?"
+            + urlencode({
+                'client_id': oidc_config['client_id'],
+                'response_type': 'code',
+                'redirect_uri': redirect_uri,
+                'response_mode': 'query',
+                'scope': 'openid profile email User.Read',
+                'state': state,
+            })
         )
-        
         return redirect(auth_url)
     else:
         # Handle unknown auth mode

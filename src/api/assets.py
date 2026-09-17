@@ -10,7 +10,7 @@ from src.services.asset_service import AssetService, AssetValidationError, Dupli
 from src.repositories.assets import AssetRepository
 from src.repositories.audit import AuditRepository
 
-bp = Blueprint('api_assets', __name__, url_prefix='/assets')
+bp = Blueprint('api_assets', __name__)
 logger = logging.getLogger(__name__)
 
 def build_asset_service():
@@ -20,7 +20,7 @@ def build_asset_service():
         AuditRepository(get_db())
     )
 
-@bp.route('', methods=['GET'])
+@bp.route('/assets', methods=['GET'])
 @api_auth_required
 def list_assets():
     """List assets with optional filtering."""
@@ -36,7 +36,7 @@ def list_assets():
         logger.exception("Error listing assets")
         return jsonify({'error': 'Internal server error'}), 500
 
-@bp.route('', methods=['POST'])
+@bp.route('/assets', methods=['POST'])
 @api_auth_required
 def create_asset():
     """Create a new asset."""
@@ -72,7 +72,7 @@ def create_asset():
         logger.exception("Error creating asset")
         return jsonify({'error': 'Internal server error'}), 500
 
-@bp.route('/<int:id>', methods=['GET'])
+@bp.route('/assets/<int:id>', methods=['GET'])
 @api_auth_required
 def get_asset(id):
     """Get a specific asset by ID."""
@@ -88,7 +88,7 @@ def get_asset(id):
         logger.exception("Error getting asset")
         return jsonify({'error': 'Internal server error'}), 500
 
-@bp.route('/<int:id>', methods=['PATCH'])
+@bp.route('/assets/<int:id>', methods=['PATCH'])
 @api_auth_required
 def update_asset(id):
     """Update a specific asset by ID."""
@@ -111,7 +111,7 @@ def update_asset(id):
         logger.exception("Error updating asset")
         return jsonify({'error': 'Internal server error'}), 500
 
-@bp.route('/<int:id>/retire', methods=['POST'])
+@bp.route('/assets/<int:id>/retire', methods=['POST'])
 @api_auth_required
 def retire_asset(id):
     """Retire an asset."""
@@ -129,7 +129,7 @@ def retire_asset(id):
         logger.exception("Error retiring asset")
         return jsonify({'error': 'Internal server error'}), 500
 
-@bp.route('/<int:id>/lost', methods=['POST'])
+@bp.route('/assets/<int:id>/lost', methods=['POST'])
 @api_auth_required
 def mark_asset_lost(id):
     """Mark an asset as lost."""

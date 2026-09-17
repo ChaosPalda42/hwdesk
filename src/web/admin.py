@@ -91,8 +91,11 @@ def assets_detail(id):
     handovers = handover_service.handovers.list_for_asset(id)
     handovers_with_details = [handover_service.with_details(h) for h in handovers]
     
-    # Get assignment history
-    assignments = handover_service.assignments.history_for_asset(id)
+    # Get assignment history, each with its employee
+    assignments = [
+        {**a, 'employee': handover_service.employees.get(a['employee_id'])}
+        for a in handover_service.assignments.history_for_asset(id)
+    ]
     
     # Get the open assignment if exists
     open_assignment = None
@@ -351,4 +354,4 @@ def audit():
     
     audit_log = audit_repo.list_recent(200)
     
-    return render_template('admin/audit.html', audit_log=audit_log)
+    return render_template('admin/audit.html', entries=audit_log)

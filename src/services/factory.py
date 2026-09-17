@@ -1,4 +1,5 @@
 import sqlite3
+from flask import current_app
 from src.services.handover_service import HandoverService
 from src.services.asset_service import AssetService
 from src.services.email_sender import EmailSender
@@ -11,9 +12,9 @@ from src.repositories.audit import AuditRepository
 
 
 def build_handover_service(db: sqlite3.Connection) -> HandoverService:
-    """Build a HandoverService wired from flask.current_app.config."""
+    """Build a HandoverService wired from current_app.config."""
     # Get config values from flask app config
-    config = getattr(flask.current_app, 'config', {})
+    config = getattr(current_app, 'config', {})
     
     # Create the dependencies
     handovers = HandoverRepository(db)

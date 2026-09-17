@@ -23,14 +23,13 @@ def home():
         return render_template('my/not_registered.html'), 200
     
     # Build the handover service to get employee overview
-    try:
-        service = build_handover_service(get_db())
-        overview = service.overview_for_employee(employee['id'])
-    except Exception as e:
-        logger.exception("Failed to get employee overview")
-        return render_template('my/not_registered.html'), 200
-    
-    return render_template('my/home.html', overview=overview, user=user)
+    service = build_handover_service(get_db())
+    overview = service.overview_for_employee(employee['id'])
+    confirm_links = {
+        h['id']: url_for('my.confirm_handover', token=service.tokens.issue(handover_id=h['id'], email=employee['email']))
+        for h in overview['pending']
+    }
+    return render_template('my/home.html', employee=employee, overview=overview, confirm_links=confirm_links, user=user)
 
 @bp.route('/handovers/confirm/<token>', methods=['GET', 'POST'])
 @login_required

@@ -68,19 +68,13 @@ def api_auth_required(f):
             if email in current_app.config['ADMIN_EMAILS']:
                 return f(*args, **kwargs)
         
-        # If no valid API key and not admin session
-        if auth_header is None or not auth_header.startswith('Bearer '):
-            # Return 401 JSON for API routes, HTML for others
-            if request.path.startswith('/api/'):
-                return jsonify({'error': 'unauthorized'}), 401
-            else:
-                return 'Unauthorized', 401
-        
-        # Invalid API key but session exists
-        if request.path.startswith('/api/'):
+        # A wrong key is unauthorized; a non-admin session is forbidden;
+        # nothing at all is unauthorized.
+        if auth_header and auth_header.startswith('Bearer '):
+            return jsonify({'error': 'unauthorized'}), 401
+        if 'email' in session:
             return jsonify({'error': 'admin required'}), 403
-        else:
-            return 'Forbidden', 403
+        return jsonify({'error': 'unauthorized'}), 401
     
     return decorated_function
 

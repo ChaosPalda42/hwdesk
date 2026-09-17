@@ -11,7 +11,7 @@
         <ul>
             {% for h in overview.pending %}
                 <li>
-                    {{ h.asset_tag }} - {{ h.brand }} {{ h.model }} 
+                    {{ h.asset.asset_tag }} - {{ h.asset.brand }} {{ h.asset.model }} 
                     {% if h.kind == 'handover' %}(převzetí){% else %}(vrácení){% endif %}
                     <a href="{{ confirm_links[h.id] }}">Potvrdit</a>
                 </li>
@@ -39,7 +39,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for asset in overview.assigned %}
+                {% for item in overview.assigned %}{% set asset = item.asset %}
                 <tr>
                     <td>{{ asset.asset_tag }}</td>
                     <td><span class="status status-{{ asset.status }}">{{ asset.status }}</span></td>
@@ -47,8 +47,8 @@
                     <td>{{ asset.brand }}</td>
                     <td>{{ asset.model }}</td>
                     <td>{{ asset.serial_number }}</td>
-                    <td>{{ asset.started_at }}</td>
-                    <td><a href="/my/protocols/{{ asset.protocol_number }}.pdf">PDF</a></td>
+                    <td>{{ item.assignment.started_at }}</td>
+                    <td><a href="/my/protocols/{{ item.handover.protocol_number }}.pdf">{{ item.handover.protocol_number }}</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
