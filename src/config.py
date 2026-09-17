@@ -61,6 +61,8 @@ def load_config(overrides: dict | None = None) -> dict:
         "LABEL_PRINTER_PORT": int(env.get("HWDESK_LABEL_PRINTER_PORT", "9100")),
         "LABEL_ZPL_TEMPLATE": env.get("HWDESK_LABEL_ZPL_TEMPLATE", ""),
         "ATTACHMENT_MAX_MB": int(env.get("HWDESK_ATTACHMENT_MAX_MB", "20")),
+        # Appended to static URLs so browsers pick up a new stylesheet after a deploy.
+        "ASSET_VERSION": env.get("HWDESK_ASSET_VERSION", "3"),
     }
     if overrides:
         config.update(overrides)

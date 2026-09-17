@@ -103,6 +103,7 @@ textarea { min-height: 84px; resize: vertical; }
 .btn.sm { padding: 5px 10px; font-size: 12.5px; } .btn svg { width: 15px; height: 15px; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 form.inline { display: inline; }
+form.row-edit { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; } form.row-edit input[type=text] { width: 120px; flex: 1 1 120px; } form.row-edit select { width: auto; }
 .flash { padding: 10px 14px; margin: 0 0 16px; border-radius: var(--radius); background: var(--ok-soft); color: var(--ok); border: 1px solid #bbf7d0; font-weight: 500; }
 .flash.error { background: var(--bad-soft); color: var(--bad); border-color: #fecaca; }
 .flash.info { background: var(--info-soft); color: var(--info); border-color: #bfdbfe; }
@@ -155,6 +156,6 @@ form.inline { display: inline; }
 
 /* labels (print) */
 .labels { display: grid; grid-template-columns: repeat(auto-fill, 50mm); gap: 4mm; }
-.label { width: 50mm; height: 25mm; border: 1px dashed var(--rule-2); border-radius: 2mm; padding: 2mm; display: grid; grid-template-columns: 20mm 1fr; gap: 1.5mm; align-items: center; background: #fff; font-family: var(--font); overflow: hidden; }
-.label svg { width: 20mm; height: 20mm; } .label .t { font-weight: 800; font-size: 13pt; letter-spacing: -.01em; } .label .m { font-size: 7.5pt; line-height: 1.25; color: #111; } .label .c { font-size: 6.5pt; color: #555; margin-top: 1mm; }
-@media print { body { background: #fff; } .side, .topbar, .no-print, .flash { display: none !important; } .shell { display: block; } .content { padding: 0; } .label { border-color: transparent; break-inside: avoid; } .labels { gap: 0; } }
+.labels .label { width: 50mm; height: 25mm; border: 1px dashed var(--rule-2); border-radius: 2mm; padding: 2mm; display: grid; grid-template-columns: 20mm 1fr; gap: 1.5mm; align-items: center; background: #fff; font-family: var(--font); overflow: hidden; }
+.labels .label svg { width: 20mm; height: 20mm; } .labels .label .t { font-weight: 800; font-size: 13pt; letter-spacing: -.01em; } .labels .label .m { font-size: 7.5pt; line-height: 1.25; color: #111; } .labels .label .c { font-size: 6.5pt; color: #555; margin-top: 1mm; }
+@media print { body { background: #fff; } .side, .topbar, .no-print, .flash { display: none !important; } .shell { display: block; } .content { padding: 0; } .labels .label { border-color: transparent; break-inside: avoid; } .labels { gap: 0; } }

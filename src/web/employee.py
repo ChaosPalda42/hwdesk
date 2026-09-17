@@ -20,6 +20,8 @@ def home():
     employee = employee_repo.get_by_email(user['email'])
     
     if employee is None:
+        if user.get('is_admin'):
+            return redirect('/admin')
         return render_template('my/not_registered.html'), 200
     
     # Build the handover service to get employee overview

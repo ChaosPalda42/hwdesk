@@ -1,559 +1,359 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
-import logging
-from src.auth.guards import admin_required, actor
-from src.services.factory import build_handover_service, build_asset_service
+"""Admin web: dashboard, the asset catalogue, handovers, employees, audit.
+
+Every route is admin_required; the actor of every change is the signed-in
+admin (guards.actor()), never a form field. Catalogue side pages (invoices,
+tags, locations, labels, intake) live in src/web/catalog.py.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+
+from flask import Blueprint, Response, abort, flash, redirect, render_template, request
+
+from src.auth.guards import actor, admin_required
+from src.config import ASSET_CONDITIONS, ASSET_STATUSES, ASSET_TYPES
 from src.db import get_db
-from src.config import ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, HANDOVER_KINDS, HANDOVER_STATUSES
-from src.services.handover_service import HandoverError
-from src.services.asset_service import AssetValidationError, DuplicateAssetTag
-from src.repositories.tags import TagRepository
-from src.repositories.locations import LocationRepository
-from src.repositories.invoices import InvoiceRepository
-from src.repositories.employees import EmployeeRepository
 from src.repositories.attachments import AttachmentRepository
 from src.repositories.audit import AuditRepository
+from src.repositories.employees import EmployeeRepository
+from src.repositories.invoices import InvoiceRepository
+from src.repositories.locations import LocationRepository
+from src.repositories.tags import TagRepository
 from src.services.asset_import_export import export_assets_csv
+from src.services.asset_service import AssetValidationError, DuplicateAssetTag
+from src.services.factory import build_asset_service, build_dashboard_service, build_handover_service
+from src.services.handover_service import HandoverError
 
-# Set up logging
-logger = logging.getLogger(__name__)
+bp = Blueprint("admin", __name__, url_prefix="/admin")
 
-bp = Blueprint('admin', __name__, url_prefix='/admin')
+PER_PAGE = 50
+_FILTER_KEYS = ("q", "status", "type", "location_id", "tag_id", "employee_id", "condition")
 
-@bp.route('/assets')
+
+def _int_or_none(value: str | None) -> int | None:
+    value = (value or "").strip()
+    return int(value) if value.isdigit() else None
+
+
+def _ids(raw: str | None) -> list[int]:
+    ids: list[int] = []
+    for value in request.form.getlist("ids") if raw is None else [raw]:
+        ids.extend(int(p) for p in value.split(",") if p.strip().isdigit())
+    return ids
+
+
+# --- dashboard -------------------------------------------------------------
+
+@bp.route("")
+@bp.route("/")
+@bp.route("/dashboard")
+@admin_required
+def dashboard():
+    stats = build_dashboard_service(get_db()).stats(today=date.today().isoformat(), warranty_days=90)
+    return render_template("admin/dashboard.html", stats=stats)
+
+
+# --- assets ---------------------------------------------------------------
+
+@bp.get("/assets")
 @admin_required
 def assets_list():
-    q = request.args.get('q', '')
-    status = request.args.get('status', '')
-    type_filter = request.args.get('type', '')
-    location_id = request.args.get('location_id', '')
-    tag_id = request.args.get('tag_id', '')
-    employee_id = request.args.get('employee_id', '')
-    condition = request.args.get('condition', '')
-    sort = request.args.get('sort', 'asset_tag')
-    
-    # Pagination
-    page = int(request.args.get('page', 1))
-    per_page = 50
-    
     db = get_db()
-    asset_service = build_asset_service(db)
-    tag_repo = TagRepository(db)
-    location_repo = LocationRepository(db)
-    invoice_repo = InvoiceRepository(db)
-    employee_repo = EmployeeRepository(db)
-    
-    # Get all filter values for the template
-    filters = {
-        'q': q,
-        'status': status,
-        'type': type_filter,
-        'location_id': location_id,
-        'tag_id': tag_id,
-        'employee_id': employee_id,
-        'condition': condition
-    }
-    
-    # Search assets with pagination using the list method and manual pagination
-    try:
-        assets = asset_service.list(
-            status=status or None,
-            type=type_filter or None,
-            q=q
-        )
-        
-        # Apply additional filters manually since AssetService.list doesn't support them directly
-        filtered_assets = []
-        for asset in assets:
-            # Apply status filter if specified
-            if status and asset.get('status') != status:
-                continue
-                
-            # Apply type filter if specified
-            if type_filter and asset.get('type') != type_filter:
-                continue
-                
-            # Apply location filter if specified
-            if location_id and asset.get('location_id') != int(location_id):
-                continue
-                
-            # Apply tag filter if specified
-            if tag_id:
-                asset_tags = tag_repo.for_asset(asset['id'])
-                if not any(tag['id'] == int(tag_id) for tag in asset_tags):
-                    continue
-                    
-            # Apply employee filter if specified
-            if employee_id:
-                # This is more complex - would need assignment info, so we'll skip for now
-                pass
-                
-            # Apply condition filter if specified
-            if condition and asset.get('condition') != condition:
-                continue
-                
-            filtered_assets.append(asset)
-        
-        # Apply pagination
-        total = len(filtered_assets)
-        start = (page - 1) * per_page
-        end = start + per_page
-        assets_with_tags = filtered_assets[start:end]
-        
-        # Enrich assets with tags
-        assets_with_tags_enriched = []
-        for asset in assets_with_tags:
-            asset_with_tags = asset.copy()
-            asset_with_tags['tags'] = tag_repo.for_asset(asset['id'])
-            assets_with_tags_enriched.append(asset_with_tags)
-        
-        pages = (total + per_page - 1) // per_page
-        
-        return render_template('admin/assets.html', 
-                               assets=assets_with_tags_enriched,
-                               filters=filters,
-                               asset_types=ASSET_TYPES,
-                               asset_statuses=ASSET_STATUSES,
-                               asset_conditions=ASSET_CONDITIONS,
-                               tags=tag_repo.list_all(),
-                               locations=location_repo.list_all(),
-                               employees=employee_repo.list_all(active_only=True),
-                               sort=sort,
-                               total=total,
-                               page=page,
-                               pages=pages)
-    except Exception as e:
-        logger.exception("Error in assets_list")
-        # Return the template with empty assets and error context
-        return render_template('admin/assets.html', 
-                               assets=[],
-                               filters=filters,
-                               asset_types=ASSET_TYPES,
-                               asset_statuses=ASSET_STATUSES,
-                               asset_conditions=ASSET_CONDITIONS,
-                               tags=tag_repo.list_all(),
-                               locations=location_repo.list_all(),
-                               employees=employee_repo.list_all(active_only=True),
-                               sort=sort,
-                               total=0,
-                               page=page,
-                               pages=0)
+    filters = {key: (request.args.get(key) or "").strip() for key in _FILTER_KEYS}
+    sort = request.args.get("sort") or "asset_tag"
+    page = max(1, _int_or_none(request.args.get("page")) or 1)
+    rows = build_asset_service(db).assets.search_assets(
+        q=filters["q"],
+        status=filters["status"] or None,
+        type=filters["type"] or None,
+        location_id=_int_or_none(filters["location_id"]),
+        tag_id=_int_or_none(filters["tag_id"]),
+        employee_id=_int_or_none(filters["employee_id"]),
+        condition=filters["condition"] or None,
+        sort=sort,
+    )
+    total = len(rows)
+    pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
+    page = min(page, pages)
+    window = rows[(page - 1) * PER_PAGE : page * PER_PAGE]
+    tags = TagRepository(db).for_assets([r["id"] for r in window])
+    return render_template(
+        "admin/assets.html",
+        assets=[{**r, "tags": tags.get(r["id"], [])} for r in window],
+        filters=filters,
+        types=ASSET_TYPES,
+        statuses=ASSET_STATUSES,
+        conditions=ASSET_CONDITIONS,
+        tags=TagRepository(db).list_all(),
+        locations=LocationRepository(db).list_all(),
+        employees=EmployeeRepository(db).list_all(active_only=True),
+        sort=sort,
+        total=total,
+        page=page,
+        pages=pages,
+    )
 
-@bp.route('/assets/bulk', methods=['POST'])
+
+@bp.post("/assets/bulk")
 @admin_required
 def assets_bulk():
     db = get_db()
-    asset_service = build_asset_service(db)
-    
-    ids = request.form.get('ids', '').split(',')
-    action = request.form.get('action', '')
-    value = request.form.get('value', '')
-    
-    # Validate IDs
-    ids = [int(id.strip()) for id in ids if id.strip().isdigit()]
-    
+    service = build_asset_service(db)
+    ids = _ids(request.form.get("ids"))
+    action = request.form.get("action") or ""
+    value = (request.form.get("value") or "").strip()
+    back = request.form.get("back") or "/admin/assets"
     if not ids:
-        flash('Nebyla vybrána žádná zařízení.', 'error')
-        return redirect(url_for('admin.assets_list'))
-    
+        flash("Nejdřív vyberte zařízení.", "error")
+        return redirect(back)
     try:
-        if action == 'tag':
-            asset_service.bulk_tag(actor(), ids, value)
-        elif action == 'untag':
-            # For untag, value is the tag name to remove
-            asset_service.bulk_untag(actor(), ids, value)
-        elif action == 'location':
-            # Update location_id for all assets
-            asset_service.update_location(actor(), ids, value)
-        elif action == 'invoice':
-            # Attach invoice to all assets
-            asset_service.attach_invoice(actor(), ids, value)
-        elif action == 'export':
-            # Export to CSV
-            csv_content = export_assets_csv(asset_service.assets, TagRepository(db))
-            return csv_content, 200, {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="assets_export.csv"'}
+        if action == "tag" and value:
+            n = service.bulk_tag(actor(), ids, value)
+            flash(f"Štítek „{value}“ přidán: {n} zařízení.")
+        elif action == "untag" and value:
+            n = service.bulk_tag(actor(), ids, value, remove=True)
+            flash(f"Štítek „{value}“ odebrán: {n} zařízení.")
+        elif action == "location":
+            location_id = _int_or_none(value)
+            n = 0
+            for asset_id in ids:
+                service.update(actor(), asset_id, location_id=location_id)
+                n += 1
+            flash(f"Lokalita změněna: {n} zařízení.")
+        elif action == "invoice":
+            invoice_id = _int_or_none(value)
+            if invoice_id is None:
+                invoice = InvoiceRepository(db).get_by_number(value)
+                invoice_id = invoice["id"] if invoice else None
+            if invoice_id is None:
+                flash("Faktura nenalezena.", "error")
+                return redirect(back)
+            n = service.attach_invoice(actor(), ids, invoice_id)
+            flash(f"Faktura přiřazena: {n} zařízení.")
+        elif action == "labels":
+            return redirect("/admin/labels?ids=" + ",".join(str(i) for i in ids))
+        elif action == "export":
+            lines = export_assets_csv(service.assets, TagRepository(db)).splitlines(keepends=True)
+            header, body = lines[0], lines[1:]
+            wanted = {a["asset_tag"] for a in (service.assets.get(i) for i in ids) if a}
+            selected = [line for line in body if line.split(";", 1)[0].strip('"') in wanted]
+            return Response(
+                header + "".join(selected),
+                mimetype="text/csv",
+                headers={"Content-Disposition": "attachment; filename=zarizeni.csv"},
+            )
         else:
-            flash('Neplatná akce.', 'error')
-            return redirect(url_for('admin.assets_list'))
-            
-    except Exception as e:
-        logger.exception("Error in assets_bulk")
-        flash(f'Chyba při hromadném zpracování: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_list'))
-    
-    flash('Zařízení byla úspěšně zpracována.', 'success')
-    return redirect(url_for('admin.assets_list'))
+            flash("Neznámá hromadná akce nebo chybí hodnota.", "error")
+    except AssetValidationError as exc:
+        flash(str(exc), "error")
+    return redirect(back)
 
-@bp.route('/assets/new', methods=['GET', 'POST'])
+
+def _form_context(db, asset, error=None, next_tag=None):
+    return dict(
+        asset=asset,
+        types=ASSET_TYPES,
+        conditions=ASSET_CONDITIONS,
+        tags=TagRepository(db).list_all(),
+        locations=LocationRepository(db).list_all(),
+        invoices=InvoiceRepository(db).list_all(),
+        next_tag=next_tag,
+        error=error,
+    )
+
+
+def _asset_fields() -> dict:
+    form = request.form
+    price = (form.get("price") or "0").replace(",", ".").replace(" ", "")
+    return dict(
+        type=form.get("type") or "",
+        brand=(form.get("brand") or "").strip(),
+        model=(form.get("model") or "").strip(),
+        serial_number=(form.get("serial_number") or "").strip(),
+        purchase_date=(form.get("purchase_date") or "").strip(),
+        price=float(price or 0),
+        notes=form.get("notes") or "",
+        location_id=_int_or_none(form.get("location_id")),
+        condition=form.get("condition") or "good",
+        supplier=(form.get("supplier") or "").strip(),
+        warranty_until=(form.get("warranty_until") or "").strip(),
+        cost_center=(form.get("cost_center") or "").strip(),
+        invoice_id=_int_or_none(form.get("invoice_id")),
+        invoice_number=(form.get("invoice_number") or "").strip(),
+        tag_names=[t.strip() for t in (form.get("tags") or "").split(",") if t.strip()],
+    )
+
+
+def _form_echo() -> dict:
+    """The submitted form as the template's asset dict (tags as dicts)."""
+    echo = dict(request.form)
+    echo["tags"] = [{"name": t.strip()} for t in (request.form.get("tags") or "").split(",") if t.strip()]
+    echo["location_id"] = _int_or_none(request.form.get("location_id"))
+    echo["invoice_id"] = _int_or_none(request.form.get("invoice_id"))
+    return echo
+
+
+@bp.route("/assets/new", methods=["GET", "POST"])
 @admin_required
 def assets_new():
     db = get_db()
-    
-    if request.method == 'POST':
-        asset_service = build_asset_service(db)
-        current_actor = actor()
-        
-        asset_tag = request.form.get('asset_tag', '').strip().upper()
-        type = request.form.get('type', '')
-        brand = request.form.get('brand', '')
-        model = request.form.get('model', '')
-        serial_number = request.form.get('serial_number', '')
-        purchase_date = request.form.get('purchase_date', '')
-        price = request.form.get('price', '0')
-        notes = request.form.get('notes', '')
-        location_id = request.form.get('location_id', '')
-        condition = request.form.get('condition', '')
-        supplier = request.form.get('supplier', '')
-        warranty_until = request.form.get('warranty_until', '')
-        cost_center = request.form.get('cost_center', '')
-        invoice_id = request.form.get('invoice_id', '')
-        invoice_number = request.form.get('invoice_number', '')
-        tags = request.form.get('tags', '').split(',')
-        tags = [tag.strip() for tag in tags if tag.strip()]
-        
-        try:
-            asset = asset_service.create(
-                actor=current_actor,
-                asset_tag=asset_tag,
-                type=type,
-                brand=brand,
-                model=model,
-                serial_number=serial_number,
-                purchase_date=purchase_date,
-                price=float(price) if price else 0.0,
-                notes=notes,
-                location_id=int(location_id) if location_id else None,
-                condition=condition,
-                supplier=supplier,
-                warranty_until=warranty_until,
-                cost_center=cost_center,
-                invoice_id=int(invoice_id) if invoice_id else None,
-                invoice_number=invoice_number,
-                tag_names=tags
-            )
-        except (AssetValidationError, DuplicateAssetTag) as e:
-            return render_template('admin/asset_form.html', 
-                                   asset=request.form, 
-                                   types=ASSET_TYPES,
-                                   conditions=ASSET_CONDITIONS,
-                                   tags=TagRepository(db).list_all(),
-                                   locations=LocationRepository(db).list_all(),
-                                   invoices=InvoiceRepository(db).list_all(),
-                                   error=str(e))
-        
-        flash('Zařízení bylo vytvořeno.', 'success')
-        return redirect(url_for('admin.assets_detail', id=asset['id']))
-            
-    
-    # GET request
-    asset_service = build_asset_service(db)
-    
-    return render_template('admin/asset_form.html', 
-                           asset=None, 
-                           errors=[],
-                           types=ASSET_TYPES,
-                           conditions=ASSET_CONDITIONS,
-                           tags=TagRepository(db).list_all(),
-                           locations=LocationRepository(db).list_all(),
-                           invoices=InvoiceRepository(db).list_all(),
-                           next_tag=asset_service.next_asset_tag('notebook'),
-                           error=None)
+    service = build_asset_service(db)
+    if request.method == "GET":
+        return render_template("admin/asset_form.html", **_form_context(db, None, next_tag=service.next_asset_tag("notebook")))
+    try:
+        fields = _asset_fields()
+        asset = service.create(actor(), (request.form.get("asset_tag") or "").strip().upper(), **fields)
+    except (AssetValidationError, DuplicateAssetTag, ValueError) as exc:
+        return render_template("admin/asset_form.html", **_form_context(db, _form_echo(), error=str(exc)))
+    flash(f"Zařízení {asset['asset_tag']} založeno.")
+    return redirect(f"/admin/assets/{asset['id']}")
 
-@bp.route('/assets/<int:id>')
+
+@bp.get("/assets/<int:id>")
 @admin_required
-def assets_detail(id):
+def assets_detail(id: int):
     db = get_db()
-    
-    asset_service = build_asset_service(db)
-    handover_service = build_handover_service(db)
-    
-    asset = asset_service.get(id)
-    if not asset:
+    service = build_asset_service(db)
+    handovers = build_handover_service(db)
+    asset = service.get(id)
+    if asset is None:
         abort(404)
-    
-    # Get handovers for this asset with details
-    handovers = handover_service.handovers.list_for_asset(id)
-    handovers_with_details = [handover_service.with_details(h) for h in handovers]
-    
-    # Get assignment history, each with its employee
-    assignments = [
-        {**a, 'employee': handover_service.employees.get(a['employee_id'])}
-        for a in handover_service.assignments.history_for_asset(id)
+    history = [
+        {**a, "employee": handovers.employees.get(a["employee_id"])}
+        for a in handovers.assignments.history_for_asset(id)
     ]
-    
-    # Get the open assignment if exists
-    open_assignment = None
-    for assignment in assignments:
-        if assignment['ended_at'] is None:
-            open_assignment = assignment
-            break
-    
-    # Get active employees for handover picker
-    employees = handover_service.employees.list_all(active_only=True)
-    
-    # Get attachments for this asset
-    from src.repositories.attachments import AttachmentRepository
-    attachments = AttachmentRepository(db).list_for('asset', id)
-    
-    return render_template('admin/asset_detail.html', 
-                           asset=asset,
-                           handovers=handovers_with_details,
-                           assignments=assignments,
-                           open_assignment=open_assignment,
-                           employees=employees,
-                           attachments=attachments)
+    open_assignment = next((a for a in history if a["ended_at"] is None), None)
+    return render_template(
+        "admin/asset_detail.html",
+        asset=asset,
+        location=LocationRepository(db).get(asset["location_id"]) if asset.get("location_id") else None,
+        holder=open_assignment["employee"] if open_assignment else None,
+        open_assignment=open_assignment,
+        handovers=[handovers.with_details(h) for h in handovers.handovers.list_for_asset(id)],
+        history=history,
+        attachments=AttachmentRepository(db).list_for("asset", id),
+        employees=handovers.employees.list_all(active_only=True),
+        tags_all=TagRepository(db).list_all(),
+        locations_all=LocationRepository(db).list_all(),
+    )
 
-@bp.route('/assets/<int:id>/edit', methods=['GET', 'POST'])
+
+@bp.route("/assets/<int:id>/edit", methods=["GET", "POST"])
 @admin_required
-def assets_edit(id):
+def assets_edit(id: int):
     db = get_db()
-    
-    asset_service = build_asset_service(db)
-    handover_service = build_handover_service(db)
-    
-    asset = asset_service.get(id)
-    if not asset:
+    service = build_asset_service(db)
+    asset = service.get(id)
+    if asset is None:
         abort(404)
-    
-    if request.method == 'POST':
-        current_actor = actor()
-        
-        # Get form data
-        type = request.form.get('type', asset.get('type', ''))
-        brand = request.form.get('brand', asset.get('brand', ''))
-        model = request.form.get('model', asset.get('model', ''))
-        serial_number = request.form.get('serial_number', asset.get('serial_number', ''))
-        purchase_date = request.form.get('purchase_date', asset.get('purchase_date', ''))
-        price = request.form.get('price', asset.get('price', 0))
-        notes = request.form.get('notes', asset.get('notes', ''))
-        location_id = request.form.get('location_id', asset.get('location_id', ''))
-        condition = request.form.get('condition', asset.get('condition', ''))
-        supplier = request.form.get('supplier', asset.get('supplier', ''))
-        warranty_until = request.form.get('warranty_until', asset.get('warranty_until', ''))
-        cost_center = request.form.get('cost_center', asset.get('cost_center', ''))
-        invoice_id = request.form.get('invoice_id', asset.get('invoice_id', ''))
-        invoice_number = request.form.get('invoice_number', asset.get('invoice_number', ''))
-        tags = request.form.get('tags', '').split(',')
-        tags = [tag.strip() for tag in tags if tag.strip()]
-        
-        try:
-            updated_asset = asset_service.update(
-                actor=current_actor,
-                asset_id=id,
-                type=type,
-                brand=brand,
-                model=model,
-                serial_number=serial_number,
-                purchase_date=purchase_date,
-                price=float(price) if price else 0.0,
-                notes=notes,
-                location_id=int(location_id) if location_id else None,
-                condition=condition,
-                supplier=supplier,
-                warranty_until=warranty_until,
-                cost_center=cost_center,
-                invoice_id=int(invoice_id) if invoice_id else None,
-                invoice_number=invoice_number,
-                tag_names=tags
-            )
-        except (AssetValidationError, DuplicateAssetTag) as e:
-            return render_template('admin/asset_form.html', 
-                                   asset={**asset, **request.form}, 
-                                   types=ASSET_TYPES,
-                                   conditions=ASSET_CONDITIONS,
-                                   tags=TagRepository(db).list_all(),
-                                   locations=LocationRepository(db).list_all(),
-                                   invoices=InvoiceRepository(db).list_all(),
-                                   error=str(e))
-        
-        flash('Zařízení bylo upraveno.', 'success')
-        return redirect(url_for('admin.assets_detail', id=updated_asset['id']))
-            
-    
-    # GET request
-    return render_template('admin/asset_form.html', 
-                           asset=asset, 
-                           errors=[],
-                           types=ASSET_TYPES,
-                           conditions=ASSET_CONDITIONS,
-                           tags=TagRepository(db).list_all(),
-                           locations=LocationRepository(db).list_all(),
-                           invoices=InvoiceRepository(db).list_all(),
-                           error=None)
-
-@bp.route('/assets/<int:id>/handover', methods=['POST'])
-@admin_required
-def assets_handover(id):
-    db = get_db()
-    handover_service = build_handover_service(db)
-    
+    if request.method == "GET":
+        return render_template("admin/asset_form.html", **_form_context(db, asset))
     try:
-        employee_email = request.form.get('employee_email')
-        note = request.form.get('note', '')
-        
-        # Get employee by email
-        employee = handover_service.employees.get_by_email(employee_email)
-        if not employee:
-            flash('Zaměstnanec nenalezen.', 'error')
-            return redirect(url_for('admin.assets_detail', id=id))
-        
-        # Start handover
-        handover = handover_service.start_handover(
-            actor=actor(),
-            asset_id=id,
-            employee_id=employee['id'],
-            note=note
-        )
-        
-        flash('Žádost o potvrzení převzetí byla odeslána.', 'success')
-        return redirect(url_for('admin.assets_detail', id=id))
-        
-    except HandoverError as e:
-        flash(f'Handover error: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_detail', id=id))
+        fields = _asset_fields()
+        new_tag = (request.form.get("asset_tag") or "").strip().upper()
+        if new_tag and new_tag != asset["asset_tag"]:
+            fields["asset_tag"] = new_tag
+        service.update(actor(), id, **fields)
+    except (AssetValidationError, DuplicateAssetTag, ValueError) as exc:
+        return render_template("admin/asset_form.html", **_form_context(db, {**asset, **_form_echo()}, error=str(exc)))
+    flash("Zařízení uloženo.")
+    return redirect(f"/admin/assets/{id}")
 
-@bp.route('/assets/<int:id>/return', methods=['POST'])
+
+@bp.post("/assets/<int:id>/handover")
 @admin_required
-def assets_return(id):
-    db = get_db()
-    handover_service = build_handover_service(db)
-    
+def assets_handover(id: int):
+    service = build_handover_service(get_db())
+    email = (request.form.get("employee_email") or "").strip().lower()
+    employee = service.employees.get_by_email(email) if email else None
+    if employee is None:
+        flash("Vyberte zaměstnance.", "error")
+        return redirect(f"/admin/assets/{id}")
     try:
-        note = request.form.get('note', '')
-        
-        # Start return
-        handover = handover_service.start_return(
-            actor=actor(),
-            asset_id=id,
-            note=note
-        )
-        
-        flash('Žádost o potvrzení vrácení byla odeslána.', 'success')
-        return redirect(url_for('admin.assets_detail', id=id))
-        
-    except HandoverError as e:
-        flash(f'Return error: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_detail', id=id))
+        handover = service.start_handover(actor(), id, employee["id"], note=request.form.get("note") or "")
+        flash(f"Žádost o potvrzení převzetí {handover['protocol_number']} odeslána na {employee['email']}.")
+    except HandoverError as exc:
+        flash(str(exc), "error")
+    return redirect(f"/admin/assets/{id}")
 
-@bp.route('/assets/<int:id>/retire', methods=['POST'])
+
+@bp.post("/assets/<int:id>/return")
 @admin_required
-def assets_retire(id):
-    db = get_db()
-    asset_service = build_asset_service(db)
-    
-    asset_service.retire(
-        actor=actor(),
-        asset_id=id
-    )
-    
-    flash('Zařízení bylo vyřazeno.', 'success')
-    return redirect(url_for('admin.assets_detail', id=id))
-    
+def assets_return(id: int):
+    try:
+        handover = build_handover_service(get_db()).start_return(actor(), id, note=request.form.get("note") or "")
+        flash(f"Žádost o potvrzení vrácení {handover['protocol_number']} odeslána.")
+    except HandoverError as exc:
+        flash(str(exc), "error")
+    return redirect(f"/admin/assets/{id}")
 
-@bp.route('/assets/<int:id>/lost', methods=['POST'])
+
+@bp.post("/assets/<int:id>/retire")
 @admin_required
-def assets_lost(id):
-    db = get_db()
-    asset_service = build_asset_service(db)
-    
-    asset_service.mark_lost(
-        actor=actor(),
-        asset_id=id
-    )
-    
-    flash('Zařízení bylo označeno jako ztracené.', 'success')
-    return redirect(url_for('admin.assets_detail', id=id))
-    
+def assets_retire(id: int):
+    try:
+        build_asset_service(get_db()).retire(actor(), id)
+        flash("Zařízení vyřazeno.")
+    except AssetValidationError as exc:
+        flash(str(exc), "error")
+    return redirect(f"/admin/assets/{id}")
 
-@bp.route('/handovers')
+
+@bp.post("/assets/<int:id>/lost")
+@admin_required
+def assets_lost(id: int):
+    try:
+        build_asset_service(get_db()).mark_lost(actor(), id)
+        flash("Zařízení označeno jako ztracené.")
+    except AssetValidationError as exc:
+        flash(str(exc), "error")
+    return redirect(f"/admin/assets/{id}")
+
+
+# --- handovers ------------------------------------------------------------
+
+@bp.get("/handovers")
 @admin_required
 def handovers_list():
-    status = request.args.get('status', '')
-    
-    db = get_db()
-    handover_service = build_handover_service(db)
-    
-    handovers = handover_service.handovers.list_all(status=status or None, kind=None)
-    handovers_with_details = [handover_service.with_details(h) for h in handovers]
-    
-    return render_template('admin/handovers.html', 
-                           handovers=handovers_with_details,
-                           status=status,
-                           handover_kinds=HANDOVER_KINDS,
-                           handover_statuses=HANDOVER_STATUSES)
+    service = build_handover_service(get_db())
+    status = (request.args.get("status") or "").strip()
+    rows = service.handovers.list_all(status=status or None)
+    return render_template("admin/handovers.html", handovers=[service.with_details(h) for h in rows], status=status)
 
-@bp.route('/handovers/<int:id>/cancel', methods=['POST'])
+
+@bp.post("/handovers/<int:id>/cancel")
 @admin_required
-def handovers_cancel(id):
-    db = get_db()
-    handover_service = build_handover_service(db)
-    
+def handovers_cancel(id: int):
     try:
-        handover_service.cancel(
-            actor=actor(),
-            handover_id=id
-        )
-        
-        flash('Předání bylo zrušeno.', 'success')
-        return redirect(url_for('admin.handovers_list'))
-        
-    except HandoverError as e:
-        flash(f'Handover cancellation error: {str(e)}', 'error')
-        return redirect(url_for('admin.handovers_list'))
+        build_handover_service(get_db()).cancel(actor(), id)
+        flash("Žádost zrušena.")
+    except HandoverError as exc:
+        flash(str(exc), "error")
+    return redirect(request.form.get("back") or "/admin/handovers")
 
-@bp.route('/employees')
+
+# --- employees, audit -----------------------------------------------------
+
+@bp.get("/employees")
 @admin_required
 def employees_list():
-    q = request.args.get('q', '')
-    
-    db = get_db()
-    # Import the EmployeeRepository properly
-    from src.repositories.employees import EmployeeRepository
-    employees_repo = EmployeeRepository(db)
-    
-    if q:
-        employees = employees_repo.search(q)
-    else:
-        employees = employees_repo.list_all()
-    
-    return render_template('admin/employees.html', employees=employees, q=q)
+    repo = EmployeeRepository(get_db())
+    q = (request.args.get("q") or "").strip()
+    return render_template("admin/employees.html", employees=repo.search(q) if q else repo.list_all(), q=q)
 
-@bp.route('/employees/<path:email>')
+
+@bp.get("/employees/<path:email>")
 @admin_required
-def employees_detail(email):
-    db = get_db()
-    handover_service = build_handover_service(db)
-    
-    employee = handover_service.employees.get_by_email(email)
-    if not employee:
+def employees_detail(email: str):
+    service = build_handover_service(get_db())
+    employee = service.employees.get_by_email(email.lower())
+    if employee is None:
         abort(404)
-    
-    overview = handover_service.overview_for_employee(employee['id'])
-    
-    return render_template('admin/employee_detail.html', 
-                           employee=employee,
-                           overview=overview)
+    return render_template("admin/employee_detail.html", employee=employee, overview=service.overview_for_employee(employee["id"]))
 
-@bp.route('/audit')
+
+@bp.get("/audit")
 @admin_required
 def audit():
-    db = get_db()
-    # Import the AuditRepository properly
-    from src.repositories.audit import AuditRepository
-    audit_repo = AuditRepository(db)
-    
-    audit_log = audit_repo.list_recent(200)
-    
-    return render_template('admin/audit.html', entries=audit_log)
-
-@bp.route('/dashboard')
-@admin_required
-def dashboard():
-    db = get_db()
-    # Import the DashboardService properly - but we don't have it, so let's just return a simple dashboard
-    from src.repositories.assets import AssetRepository
-    from src.repositories.handovers import HandoverRepository
-    from src.repositories.audit import AuditRepository
-    from src.repositories.employees import EmployeeRepository
-    
-    # For now, just return a basic dashboard view
-    return render_template('admin/dashboard.html', stats={})
+    return render_template("admin/audit.html", entries=AuditRepository(get_db()).list_recent(200))

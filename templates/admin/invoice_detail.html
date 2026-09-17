@@ -11,7 +11,7 @@
           <div class="field"><label>Číslo</label><input type="text" name="number" value="{{ invoice.number }}" class="mono"></div>
           <div class="field"><label>Dodavatel</label><input type="text" name="supplier" value="{{ invoice.supplier }}"></div>
           <div class="field"><label>Vystaveno</label><input type="date" name="issued_at" value="{{ invoice.issued_at }}"></div>
-          <div class="field"><label>Částka</label><input type="number" step="0.01" name="total" value="{{ invoice.total }}"></div>
+          <div class="field"><label>Částka</label><input type="number" step="0.01" name="total" value="{{ '%g'|format(invoice.total) }}"></div>
           <div class="field"><label>Měna</label><input type="text" name="currency" value="{{ invoice.currency }}"></div>
         </div>
         <div class="field"><label>Poznámka</label><textarea name="notes">{{ invoice.notes }}</textarea></div>

@@ -177,7 +177,8 @@ class AssetRepository:
         employee_id: Optional[int] = None,
         invoice_id: Optional[int] = None,
         warranty_before: Optional[str] = None,
-        sort: str = "asset_tag"
+        sort: str = "asset_tag",
+        condition: Optional[str] = None
     ) -> List[Dict]:
         # Build the base query with joins
         query = """
@@ -221,6 +222,10 @@ class AssetRepository:
         if invoice_id is not None:
             where_clauses.append("a.invoice_id = ?")
             params.append(invoice_id)
+
+        if condition is not None:
+            where_clauses.append("a.condition = ?")
+            params.append(condition)
             
         if warranty_before is not None:
             where_clauses.append("a.warranty_until != '' AND a.warranty_until <= ?")
@@ -229,7 +234,7 @@ class AssetRepository:
         if q:
             search_term = f"%{q.strip().upper()}%"
             where_clauses.append(
-                "UPPER(a.asset_tag) LIKE ? OR UPPER(a.brand) LIKE ? OR UPPER(a.model) LIKE ? OR UPPER(a.serial_number) LIKE ?"
+                "(UPPER(a.asset_tag) LIKE ? OR UPPER(a.brand) LIKE ? OR UPPER(a.model) LIKE ? OR UPPER(a.serial_number) LIKE ?)"
             )
             params.extend([search_term, search_term, search_term, search_term])
             
