@@ -7,6 +7,12 @@ inventárních čísel a tiskem štítků s QR, přehled pro každého zaměstna
 přihlášení účtem Microsoft 365, JSON API pro integrace, synchronizace
 zaměstnanců z HR, audit log.
 
+## Ukázka
+
+Klikací statická ukázka se vzorovými daty (bez serveru, formuláře jsou vypnuté):
+**https://chaospalda42.github.io/hwdesk/** — generuje ji `tools/snapshot.py`
+z běžící aplikace při každém pushi na `main` (GitHub Actions → Pages).
+
 ## Spuštění pro vývoj
 
     uv sync
