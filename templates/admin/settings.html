@@ -1,12 +1,14 @@
 {% extends "base.html" %}{% import "_macros.html" as m %}
-{% block title %}Nastavení{% endblock %}
-{% block topbar %}<div class="topbar"><div><h1>Nastavení</h1><div class="muted">Hodnoty uložené zde mají přednost před proměnnými prostředí</div></div></div>{% endblock %}
+{% block title %}Nastavení · {{ group }}{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Nastavení</h1><div class="muted">Hodnoty uložené zde mají přednost před proměnnými prostředí (.env)</div></div></div>{% endblock %}
 {% block content %}
+{{ m.settings_nav(section_url) }}
 {% if problems %}<div class="flash error">{% for p in problems %}{{ p }}<br>{% endfor %}</div>{% endif %}
-<div class="flash info">Redirect URI pro registraci aplikace v Entra ID: <code>{{ redirect_uri }}</code></div>
-<form method="post" action="/admin/settings" class="stack"><input type="hidden" name="_all" value="1">
-  {% for group, rows in groups %}
-  <div class="card" id="{{ 'hr' if 'HR' in group else ('email' if 'SMTP' in group else ('entra' if 'Entra' in group else loop.index)) }}">
+{% if section == 'auth' %}<div class="flash info">Redirect URI pro registraci aplikace v Entra ID: <code>{{ redirect_uri }}</code></div>{% endif %}
+{% if section == 'labels' %}<div class="flash info">Prefixy inventárních čísel jsou JSON <code>{"typ": "PREFIX"}</code>; první volné číslo pro každý typ vidíte v <a href="/admin/intake">Příjmu zařízení</a>. Typy zařízení: {% for t, l in m.TYPE_LABELS.items() %}<code>{{ t }}</code>{{ ', ' if not loop.last }}{% endfor %}.</div>{% endif %}
+<form method="post" action="{{ section_url }}" class="stack">
+  <input type="hidden" name="_bools" value="{{ rows|selectattr('type', 'equalto', 'bool')|map(attribute='key')|join(',') }}">
+  <div class="card">
     <h2>{{ group }}</h2>
     <div class="grid-2">
     {% for row in rows %}
@@ -21,12 +23,12 @@
       </div>
     {% endfor %}
     </div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn" type="submit">{{ m.icon('check') }} Uložit</button></div>
   </div>
-  {% endfor %}
-  <div class="btn-row"><button class="btn" type="submit">{{ m.icon('check') }} Uložit nastavení</button></div>
 </form>
-<div class="grid-2" style="margin-top:16px">
-  <div class="card"><h2>Ověření e-mailu</h2><p class="muted">Pošle testovací zprávu na váš účet ({{ user.email }}).</p><form method="post" action="/admin/settings/test-email"><button class="btn secondary" type="submit">Odeslat testovací e-mail</button></form></div>
-  <div class="card"><h2>HR synchronizace</h2><p class="muted">Načte zaměstnance z Drupalu podle nastavení výše.</p><form method="post" action="/admin/settings/hr-sync"><button class="btn secondary" type="submit">Synchronizovat zaměstnance z HR teď</button></form></div>
-</div>
+{% if section == 'email' %}
+<div class="card" style="margin-top:16px"><h2>Ověření e-mailu</h2><p class="muted">Pošle testovací zprávu na váš účet ({{ user.email }}) podle uloženého nastavení.</p><form method="post" action="/admin/settings/test-email"><button class="btn secondary" type="submit">Odeslat testovací e-mail</button></form></div>
+{% elif section == 'hr' %}
+<div class="card" style="margin-top:16px"><h2>Synchronizace teď</h2><p class="muted">Načte zaměstnance z Drupalu podle nastavení výše; neaktivní účty se označí k vrácení zařízení.</p><form method="post" action="/admin/settings/hr-sync"><button class="btn secondary" type="submit">Synchronizovat zaměstnance z HR</button></form></div>
+{% endif %}
 {% endblock %}

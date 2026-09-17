@@ -12,6 +12,7 @@
   <div class="field"><label>Lokalita</label><select name="location_id"><option value="">Vše</option>{% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if f.location_id|string == l.id|string }}>{{ l.name }}</option>{% endfor %}</select></div>
   <div class="field"><label>Držitel</label><select name="employee_id"><option value="">Kdokoli</option>{% for e in employees %}<option value="{{ e.id }}" {{ 'selected' if f.employee_id|string == e.id|string }}>{{ e.display_name }}</option>{% endfor %}</select></div>
   <div class="field"><label>Stav kusu</label><select name="condition"><option value="">Vše</option>{% for c in conditions %}<option value="{{ c }}" {{ 'selected' if f.condition == c }}>{{ m.CONDITION_LABELS.get(c, c) }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Záruka</label><select name="warranty"><option value="">Vše</option>{% for v, l in [('30', 'končí do 30 dnů'), ('90', 'končí do 90 dnů'), ('180', 'končí do 180 dnů'), ('expired', 'prošlá')] %}<option value="{{ v }}" {{ 'selected' if f.warranty == v }}>{{ l }}</option>{% endfor %}</select></div>
   <input type="hidden" name="sort" value="{{ sort }}">
   <button class="btn secondary" type="submit">{{ m.icon('search') }} Filtrovat</button>
   {% if f.q or f.type or f.status or f.tag_id or f.location_id or f.employee_id or f.condition %}<a class="btn ghost" href="/admin/assets">Zrušit filtry</a>{% endif %}
@@ -24,7 +25,7 @@
   <button class="btn sm" type="submit">Provést</button>
   <button class="btn sm secondary" type="submit" formaction="/admin/labels" formmethod="get">{{ m.icon('print') }} Štítky</button>
 </form>
-{% set base = '/admin/assets?q=' ~ (f.q or '') ~ '&type=' ~ (f.type or '') ~ '&status=' ~ (f.status or '') ~ '&tag_id=' ~ (f.tag_id or '') ~ '&location_id=' ~ (f.location_id or '') ~ '&employee_id=' ~ (f.employee_id or '') ~ '&condition=' ~ (f.condition or '') %}
+{% set base = '/admin/assets?q=' ~ (f.q or '') ~ '&type=' ~ (f.type or '') ~ '&status=' ~ (f.status or '') ~ '&tag_id=' ~ (f.tag_id or '') ~ '&location_id=' ~ (f.location_id or '') ~ '&employee_id=' ~ (f.employee_id or '') ~ '&warranty=' ~ (f.warranty or '') ~ '&condition=' ~ (f.condition or '') %}
 {% macro th(col, label) -%}{% set desc = sort == '-' ~ col %}<th><a class="{{ 'sorted' if sort in (col, '-' ~ col) }} {{ 'desc' if desc }}" href="{{ base }}&sort={{ col if desc or sort != col else '-' ~ col }}">{{ label }}</a></th>{%- endmacro %}
 <div class="table-wrap">
 <table>
@@ -34,11 +35,11 @@
     <tr>
       <td><input type="checkbox" class="rowsel" value="{{ a.id }}"></td>
       <td>{{ m.asset_cell(a) }}</td>
-      <td>{{ m.type_label(a.type) }}</td>
+      <td><a class="quiet" href="/admin/assets?type={{ a.type }}">{{ m.type_label(a.type) }}</a></td>
       <td class="mono">{{ a.serial_number or '—' }}</td>
       <td>{{ m.status(a.status) }}</td>
       <td>{% if a.holder_name %}<a href="/admin/employees/{{ a.holder_email }}">{{ a.holder_name }}</a>{% else %}<span class="muted">—</span>{% endif %}</td>
-      <td>{{ a.location_name or '—' }}</td>
+      <td>{% if a.location_id %}<a class="quiet" href="/admin/assets?location_id={{ a.location_id }}">{{ a.location_name }}</a>{% else %}—{% endif %}</td>
       <td>{{ m.tags(a.tags) }}</td>
       <td class="nowrap {{ 'muted' if not a.warranty_until }}">{{ a.warranty_until or '—' }}</td>
       <td class="actions"><a class="btn ghost sm" href="/admin/assets/{{ a.id }}">Detail</a></td>

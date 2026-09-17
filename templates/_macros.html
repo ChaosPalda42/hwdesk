@@ -43,7 +43,18 @@
 {% macro status(value) -%}<span class="badge status-{{ value }}" data-status="{{ value }}" title="{{ value }}">{{ STATUS_LABELS.get(value, value) }}</span>{%- endmacro %}
 {% macro condition(value) -%}<span class="badge cond-{{ value }}">{{ CONDITION_LABELS.get(value, value) }}</span>{%- endmacro %}
 {% macro type_label(value) -%}{{ TYPE_LABELS.get(value, value) }}{%- endmacro %}
-{% macro tags(list) -%}{% for t in list %}<span class="tag tag-{{ t.color }}">{{ t.name }}</span>{% endfor %}{%- endmacro %}
+{% macro tags(list) -%}{% for t in list %}<a class="tag tag-{{ t.color }}" href="/admin/assets?tag_id={{ t.id }}" title="Zařízení se štítkem {{ t.name }}">{{ t.name }}</a>{% endfor %}{%- endmacro %}
+{% macro entity_link(entity, id) -%}
+{%- if entity == 'asset' %}<a href="/admin/assets/{{ id }}">zařízení #{{ id }}</a>
+{%- elif entity == 'invoice' %}<a href="/admin/invoices/{{ id }}">faktura #{{ id }}</a>
+{%- elif entity == 'handover' %}<a href="/admin/handovers?q={{ id }}">protokol #{{ id }}</a>
+{%- elif entity == 'employee' %}<a href="/admin/employees?id={{ id }}">zaměstnanec #{{ id }}</a>
+{%- else %}{{ entity }} #{{ id }}{% endif %}
+{%- endmacro %}
+{% set SETTINGS_NAV = [('/admin/settings', 'Obecné'), ('/admin/settings/auth', 'Přihlášení (Entra ID)'), ('/admin/settings/email', 'E-mail (SMTP)'), ('/admin/settings/hr', 'HR synchronizace'), ('/admin/settings/labels', 'Inventární čísla a štítky'), ('/admin/locations', 'Lokality'), ('/admin/tags', 'Štítky')] %}
+{% macro settings_nav(current) -%}
+<div class="subnav">{% for href, label in SETTINGS_NAV %}<a href="{{ href }}" class="{{ 'active' if href == current }}">{{ label }}</a>{% endfor %}</div>
+{%- endmacro %}
 {% macro asset_cell(a) -%}
 <div class="asset-cell">
   <span class="ico">{{ icon(a.type) }}</span>

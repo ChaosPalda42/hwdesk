@@ -49,79 +49,91 @@ def check_settings_version():
         apply_settings(current_app)
 
 
-@bp.route('', methods=['GET'])
-@admin_required
-def settings_page():
-    """Display the admin settings page."""
+# Sections of the settings area: URL slug -> schema group. Locations and
+# tags live in src/web/catalog.py and share the same sub-navigation.
+SECTIONS = {
+    'general': 'Obecné',
+    'auth': 'Přihlášení Microsoft 365 (Entra ID)',
+    'email': 'E-mail (SMTP)',
+    'hr': 'HR synchronizace (Drupal)',
+    'labels': 'Inventární čísla a štítky',
+}
+
+
+def _section_url(section: str) -> str:
+    return '/admin/settings' if section == 'general' else f'/admin/settings/{section}'
+
+
+def _section_for_keys(keys) -> str:
+    """The section most of the posted keys belong to (ties: schema order)."""
+    groups = {d['key']: d['group'] for d in SETTINGS_SCHEMA}
+    counts: dict[str, int] = {}
+    for key in keys:
+        group = groups.get(key)
+        if group:
+            counts[group] = counts.get(group, 0) + 1
+    if not counts:
+        return 'general'
+    best = max(counts.values())
+    for slug, group in SECTIONS.items():
+        if counts.get(group) == best:
+            return slug
+    return 'general'
+
+
+def _render_section(section: str, problems=None, status=200):
     service = SettingsService(SettingsRepository(get_db()))
-    
-    # Group settings by group
-    rows = service.for_form(current_app.config)
-    
-    # Group by group name
-    groups = []
-    group_dict = {}
-    
-    for row in rows:
-        group_name = row['group']
-        if group_name not in group_dict:
-            group_dict[group_name] = []
-            groups.append((group_name, group_dict[group_name]))
-        group_dict[group_name].append(row)
-    
+    group = SECTIONS[section]
+    rows = [row for row in service.for_form(current_app.config) if row['group'] == group]
     return render_template(
         'admin/settings.html',
+        section=section,
+        section_url=_section_url(section),
+        group=group,
         rows=rows,
-        groups=groups,
         redirect_uri=current_app.config['BASE_URL'] + current_app.config['OIDC_REDIRECT_PATH'],
-        problems=[]
-    )
+        problems=problems or [],
+    ), status
+
+
+@bp.route('', methods=['GET'])
+@bp.route('/<section>', methods=['GET'])
+@admin_required
+def settings_page(section: str = 'general'):
+    if section not in SECTIONS:
+        return redirect('/admin/settings')
+    return _render_section(section)
 
 
 @bp.route('', methods=['POST'])
+@bp.route('/<section>', methods=['POST'])
 @admin_required
-def save_settings():
-    """Save admin settings."""
+def save_settings(section: str | None = None):
+    """Save the keys present in the form; other sections stay untouched.
+
+    An unchecked checkbox is absent from the form, so each page lists its
+    bool keys in `_bools` to turn absence into '0'.
+    """
     service = SettingsService(SettingsRepository(get_db()))
-    
-    # Process form values
-    # Only keys present in the form change; an unchecked checkbox is absent,
-    # so the full page marks itself with `_all` to turn absence into '0'.
-    full_form = '_all' in request.form
+    bools = set((request.form.get('_bools') or '').split(','))
     values = {}
     for setting_def in SETTINGS_SCHEMA:
         key = setting_def['key']
         if setting_def['type'] == 'bool':
-            if key in request.form or full_form:
+            if key in request.form or key in bools:
                 values[key] = '1' if key in request.form else '0'
         elif key in request.form:
             values[key] = request.form.get(key, '')
-    
-    # Validate settings
+    if section not in SECTIONS:
+        # A post to the bare URL (scripts, older forms): land where the keys live.
+        section = _section_for_keys(values)
     problems = service.validate(values)
-    
     if problems:
-        # Re-render the page with validation errors
-        return render_template(
-            'admin/settings.html',
-            rows=service.for_form(current_app.config),
-            groups=[(group, [row for row in service.for_form(current_app.config) if row['group'] == group]) 
-                    for group in set(row['group'] for row in service.for_form(current_app.config))],
-            redirect_uri=current_app.config['BASE_URL'] + current_app.config['OIDC_REDIRECT_PATH'],
-            problems=problems
-        ), 200
-    
-    # Save the settings
+        return _render_section(section, problems=problems)
     service.save(values, updated_by=actor())
-    
-    # Apply the new settings to app config
     apply_settings(current_app)
-    
-    # Log audit event
-    changed_keys = [key for key in values if key in SETTINGS_SCHEMA]
     flash('Nastavení uloženo.')
-    
-    return redirect(url_for('settings.settings_page'))
+    return redirect(_section_url(section))
 
 
 @bp.route('/test-email', methods=['POST'])
@@ -136,7 +148,7 @@ def test_email():
         user = current_user()
         if not user:
             flash('Chyba: Nejste přihlášen', 'error')
-            return redirect(url_for('settings.settings_page'))
+            return redirect('/admin/settings/email')
         
         # Send test email
         email_sender.send(
@@ -151,7 +163,7 @@ def test_email():
         logging.exception("Failed to send test email")
         flash(f'Chyba při odesílání e-mailu: {str(e)}', 'error')
     
-    return redirect(url_for('settings.settings_page'))
+    return redirect('/admin/settings/email')
 
 
 @bp.route('/hr-sync', methods=['POST'])
@@ -161,7 +173,7 @@ def hr_sync():
     # Check if DRUPAL_URL is set
     if not current_app.config.get('DRUPAL_URL'):
         flash('Nejprve nastavte DRUPAL_URL.', 'error')
-        return redirect(url_for('settings.settings_page'))
+        return redirect('/admin/settings/hr')
     
     try:
         # Build Drupal HR client
@@ -208,4 +220,4 @@ def hr_sync():
         logging.exception("Failed to sync HR data")
         flash(f'Neznámá chyba: {str(e)}', 'error')
     
-    return redirect(url_for('settings.settings_page'))
+    return redirect('/admin/settings/hr')

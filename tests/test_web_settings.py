@@ -34,7 +34,7 @@ def test_test_email_button_sends_to_the_admin(app, client):
 
 def test_oidc_redirect_uri_is_shown(client):
     login(client, "admin@firma.cz")
-    assert "http://testserver/auth/callback" in client.get("/admin/settings").get_data(as_text=True)
+    assert "http://testserver/auth/callback" in client.get("/admin/settings/auth").get_data(as_text=True)
 
 
 def test_hr_sync_now_uses_the_configured_drupal(app, client):

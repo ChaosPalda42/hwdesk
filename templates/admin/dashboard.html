@@ -4,41 +4,41 @@
 <div class="actions"><a class="btn secondary" href="/admin/intake">{{ m.icon('inbox') }} Příjem zařízení</a><a class="btn" href="/admin/assets/new">{{ m.icon('plus') }} Nové zařízení</a></div></div>{% endblock %}
 {% block content %}
 <div class="grid-4">
-  <div class="stat"><div class="label">Zařízení celkem</div><div class="value">{{ stats.totals.assets }}</div><div class="sub">hodnota {{ m.money(stats.totals.value) }}</div></div>
-  <div class="stat ok"><div class="label">Přiděleno</div><div class="value">{{ stats.by_status.get('assigned', 0) }}</div><div class="sub">{{ stats.by_status.get('in_stock', 0) }} skladem</div></div>
-  <div class="stat {{ 'warn' if stats.pending_handovers else '' }}"><div class="label">Čeká na potvrzení</div><div class="value">{{ stats.pending_handovers|length }}</div><div class="sub">předání a vrácení</div></div>
-  <div class="stat {{ 'bad' if stats.warranty_expiring else '' }}"><div class="label">Končící záruka</div><div class="value">{{ stats.warranty_expiring|length }}</div><div class="sub">do 90 dnů</div></div>
+  <a class="stat" href="/admin/assets"><div class="label">Zařízení celkem</div><div class="value">{{ stats.totals.assets }}</div><div class="sub">hodnota {{ m.money(stats.totals.value) }}</div></a>
+  <a class="stat ok" href="/admin/assets?status=assigned"><div class="label">Přiděleno</div><div class="value">{{ stats.by_status.get('assigned', 0) }}</div><div class="sub">{{ stats.by_status.get('in_stock', 0) }} skladem</div></a>
+  <a class="stat {{ 'warn' if stats.pending_handovers else '' }}" href="/admin/handovers?status=pending"><div class="label">Čeká na potvrzení</div><div class="value">{{ stats.pending_handovers|length }}</div><div class="sub">předání a vrácení</div></a>
+  <a class="stat {{ 'bad' if stats.warranty_expiring else '' }}" href="/admin/assets?warranty=90"><div class="label">Končící záruka</div><div class="value">{{ stats.warranty_expiring|length }}</div><div class="sub">do 90 dnů</div></a>
 </div>
 <div class="grid-2" style="margin-top:16px">
   <div class="card">
-    <h2>Čeká na potvrzení zaměstnancem</h2>
+    <h2><a href="/admin/handovers?status=pending">Čeká na potvrzení zaměstnancem</a></h2>
     {% if stats.pending_handovers %}
     <div class="table-wrap" style="box-shadow:none"><table><thead><tr><th>Zařízení</th><th>Zaměstnanec</th><th>Druh</th><th>Od</th></tr></thead><tbody>
-      {% for h in stats.pending_handovers %}<tr><td>{{ m.asset_cell(h.asset) }}</td><td>{{ h.employee.display_name }}<div class="small muted">{{ h.employee.email }}</div></td><td>{{ 'převzetí' if h.kind == 'handover' else 'vrácení' }}</td><td class="nowrap">{{ h.created_at|dt }}</td></tr>{% endfor %}
+      {% for h in stats.pending_handovers %}<tr><td>{{ m.asset_cell(h.asset) }}</td><td><a href="/admin/employees/{{ h.employee.email }}">{{ h.employee.display_name }}</a><div class="small muted">{{ h.employee.email }}</div></td><td>{{ 'převzetí' if h.kind == 'handover' else 'vrácení' }}</td><td class="nowrap">{{ h.created_at|dt }}</td></tr>{% endfor %}
     </tbody></table></div>
     {% else %}{{ m.empty('Nic nečeká na potvrzení.', 'check') }}{% endif %}
   </div>
   <div class="card">
     <h2>Podle typu</h2>
     {% set total = stats.totals.assets or 1 %}
-    <div class="bars">{% for t, n in stats.by_type|dictsort(by='value', reverse=true) %}<div class="bar"><span>{{ m.type_label(t) }}</span><i style="width:{{ (100 * n / total)|round }}%"></i><span class="n">{{ n }}</span></div>{% endfor %}</div>
+    <div class="bars">{% for t, n in stats.by_type|dictsort(by='value', reverse=true) %}<a class="bar" href="/admin/assets?type={{ t }}"><span>{{ m.type_label(t) }}</span><i style="width:{{ (100 * n / total)|round }}%"></i><span class="n">{{ n }}</span></a>{% endfor %}</div>
     <h2 style="margin-top:18px">Podle stavu</h2>
     <div class="btn-row">{% for s, n in stats.by_status.items() %}<a href="/admin/assets?status={{ s }}">{{ m.status(s) }} <b>{{ n }}</b></a>{% endfor %}</div>
   </div>
 </div>
 <div class="grid-2" style="margin-top:16px">
   <div class="card">
-    <h2>Končící záruka (90 dnů)</h2>
+    <h2><a href="/admin/assets?warranty=90">Končící záruka (90 dnů)</a></h2>
     {% if stats.warranty_expiring %}
     <div class="table-wrap" style="box-shadow:none"><table><thead><tr><th>Zařízení</th><th>Držitel</th><th>Záruka do</th></tr></thead><tbody>
-      {% for a in stats.warranty_expiring %}<tr><td>{{ m.asset_cell(a) }}</td><td>{{ a.holder_name or '—' }}</td><td class="nowrap">{{ a.warranty_until }}</td></tr>{% endfor %}
+      {% for a in stats.warranty_expiring %}<tr><td>{{ m.asset_cell(a) }}</td><td>{% if a.holder_email %}<a href="/admin/employees/{{ a.holder_email }}">{{ a.holder_name }}</a>{% else %}—{% endif %}</td><td class="nowrap">{{ a.warranty_until }}</td></tr>{% endfor %}
     </tbody></table></div>
     {% else %}{{ m.empty('Žádná záruka nekončí.', 'shield') }}{% endif %}
   </div>
   <div class="card">
-    <h2>Poslední aktivita</h2>
+    <h2><a href="/admin/audit">Poslední aktivita</a></h2>
     <ul class="timeline">
-      {% for e in stats.recent_activity[:10] %}<li class="{{ 'ok' if 'confirmed' in e.action or 'created' in e.action else ('bad' if 'declined' in e.action or 'lost' in e.action else '') }}"><div>{{ e.action }} <span class="muted">· {{ e.entity }} #{{ e.entity_id }}</span></div><div class="when">{{ e.at|dt }} · {{ e.actor }}</div></li>{% else %}<li>Zatím žádná aktivita.</li>{% endfor %}
+      {% for e in stats.recent_activity[:10] %}<li class="{{ 'ok' if 'confirmed' in e.action or 'created' in e.action else ('bad' if 'declined' in e.action or 'lost' in e.action else '') }}"><div>{{ e.action }} <span class="muted">· {{ m.entity_link(e.entity, e.entity_id) }}</span></div><div class="when">{{ e.at|dt }} · {{ e.actor }}</div></li>{% else %}<li>Zatím žádná aktivita.</li>{% endfor %}
     </ul>
     <a class="btn ghost sm" href="/admin/audit">Celý audit →</a>
   </div>

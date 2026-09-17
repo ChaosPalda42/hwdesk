@@ -1,7 +1,8 @@
 {% extends "base.html" %}{% import "_macros.html" as m %}
 {% block title %}Štítky{% endblock %}
-{% block topbar %}<div class="topbar"><div><h1>Štítky</h1><div class="muted">Libovolné třídění napříč typy: projekty, zápůjčky, audity, VIP…</div></div></div>{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Nastavení · Štítky</h1><div class="muted">Libovolné třídění napříč typy: projekty, zápůjčky, audity, VIP…</div></div></div>{% endblock %}
 {% block content %}
+{{ m.settings_nav('/admin/tags') }}
 <div class="grid-2">
   <div class="table-wrap"><table><thead><tr><th>Štítek</th><th class="right">Zařízení</th><th></th></tr></thead><tbody>
     {% for t in tags %}<tr><td><form class="row-edit" method="post" action="/admin/tags/{{ t.id }}/edit"><span class="tag tag-{{ t.color }}">{{ t.name }}</span> <input type="text" name="name" value="{{ t.name }}"> <select name="color">{% for c in colors %}<option value="{{ c }}" {{ 'selected' if c == t.color }}>{{ c }}</option>{% endfor %}</select> <button class="btn ghost sm" type="submit">Uložit</button></form></td><td class="right num"><a href="/admin/assets?tag_id={{ t.id }}">{{ t.asset_count }}</a></td><td class="actions"><form class="inline" method="post" action="/admin/tags/{{ t.id }}/delete" onsubmit="return confirm('Smazat štítek {{ t.name }}?')"><button class="btn ghost sm" type="submit">Smazat</button></form></td></tr>

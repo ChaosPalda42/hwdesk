@@ -7,7 +7,7 @@ tags, locations, labels, intake) live in src/web/catalog.py.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 
 from flask import Blueprint, Response, abort, flash, redirect, render_template, request
 
@@ -28,7 +28,7 @@ from src.services.handover_service import HandoverError
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 PER_PAGE = 50
-_FILTER_KEYS = ("q", "status", "type", "location_id", "tag_id", "employee_id", "condition")
+_FILTER_KEYS = ("q", "status", "type", "location_id", "tag_id", "employee_id", "condition", "warranty")
 
 
 def _int_or_none(value: str | None) -> int | None:
@@ -63,8 +63,14 @@ def assets_list():
     filters = {key: (request.args.get(key) or "").strip() for key in _FILTER_KEYS}
     sort = request.args.get("sort") or "asset_tag"
     page = max(1, _int_or_none(request.args.get("page")) or 1)
+    warranty_before = None
+    if filters["warranty"] == "expired":
+        warranty_before = date.today().isoformat()
+    elif filters["warranty"].isdigit():
+        warranty_before = (date.today() + timedelta(days=int(filters["warranty"]))).isoformat()
     rows = build_asset_service(db).assets.search_assets(
         q=filters["q"],
+        warranty_before=warranty_before,
         status=filters["status"] or None,
         type=filters["type"] or None,
         location_id=_int_or_none(filters["location_id"]),

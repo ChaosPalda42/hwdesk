@@ -52,6 +52,12 @@ p { margin: 0 0 10px; } .muted { color: var(--ink-2); } .small { font-size: 12px
 @media (max-width: 720px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0,1fr); } }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .stat { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); }
+a.stat { display: block; color: inherit; } a.stat:hover { text-decoration: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+a.bar { color: inherit; } a.bar:hover { text-decoration: none; } a.bar:hover span:first-child { color: var(--accent); }
+a.quiet { color: inherit; } a.quiet:hover { color: var(--accent); }
+.card h2 a { color: inherit; } .card h2 a:hover { color: var(--accent); text-decoration: none; }
+.subnav { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; } .subnav a { padding: 6px 12px; border-radius: 7px; color: var(--ink-2); font-weight: 500; } .subnav a:hover { background: var(--surface-2, #f1f3f7); text-decoration: none; } .subnav a.active { background: var(--accent); color: #fff; }
+.side nav .sub { display: flex; flex-direction: column; gap: 1px; margin: 2px 0 6px 18px; border-left: 1px solid var(--side-active); padding-left: 6px; } .side nav .sub a { padding: 5px 8px; font-size: 12.5px; }
 .stat .label { font-size: 12px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; }
 .stat .value { font-size: 28px; font-weight: 650; letter-spacing: -.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .stat .sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; }

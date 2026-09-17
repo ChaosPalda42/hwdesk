@@ -77,6 +77,12 @@ vstupy: Entra ID registrace, SMTP účet, Drupal URL/auth, server.
   Pages při každém pushi na main; `tools/snapshot.py` ji staví z aplikace
   se smyšlenými daty). Stejný postup jako u webu školy.
 
+- 2026-09-17 (Michael): „vše, co ukazuje číslo, je odkaz na seznam s tím
+  filtrem“ — statistiky na Přehledu, sloupce typ/lokalita/štítek, audit.
+  Nastavení má vlastní podmenu (Obecné, Přihlášení, E-mail, HR, Inventární
+  čísla a štítky, Lokality, Štítky); číselníky patří pod Nastavení, ne do
+  hlavního menu. Každá sekce ukládá jen své klíče.
+
 ## Pravidla projektu
 - Stack: Python 3.11+, Flask 3, sqlite3 (raw SQL, `sqlite3.Row`), Jinja2, reportlab, msal.
 - Testy: `uv run pytest -q`

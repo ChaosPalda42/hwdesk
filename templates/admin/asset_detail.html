@@ -13,11 +13,11 @@
     <div class="card"><h2>Zařízení</h2>
       <dl class="kv">
         <dt>Inventární číslo</dt><dd class="mono">{{ asset.asset_tag }}</dd>
-        <dt>Typ</dt><dd>{{ m.type_label(asset.type) }}</dd>
+        <dt>Typ</dt><dd><a href="/admin/assets?type={{ asset.type }}">{{ m.type_label(asset.type) }}</a></dd>
         <dt>Výrobce / model</dt><dd>{{ asset.brand }} {{ asset.model }}</dd>
         <dt>Sériové číslo</dt><dd class="mono">{{ asset.serial_number or '—' }}</dd>
         <dt>Stav kusu</dt><dd>{{ m.condition(asset.condition) }}</dd>
-        <dt>Lokalita</dt><dd>{{ location.name if location else '—' }}</dd>
+        <dt>Lokalita</dt><dd>{% if location %}<a href="/admin/assets?location_id={{ location.id }}">{{ location.name }}</a>{% else %}—{% endif %}</dd>
         <dt>Štítky</dt><dd>{{ m.tags(asset.tags) or '—' }}</dd>
         <dt>Poznámka</dt><dd>{{ asset.notes or '—' }}</dd>
       </dl>
