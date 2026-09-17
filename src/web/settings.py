@@ -85,13 +85,16 @@ def save_settings():
     service = SettingsService(SettingsRepository(get_db()))
     
     # Process form values
+    # Only keys present in the form change; an unchecked checkbox is absent,
+    # so the full page marks itself with `_all` to turn absence into '0'.
+    full_form = '_all' in request.form
     values = {}
     for setting_def in SETTINGS_SCHEMA:
         key = setting_def['key']
-        # For boolean fields, check if they're present in form data
         if setting_def['type'] == 'bool':
-            values[key] = '1' if key in request.form else '0'
-        else:
+            if key in request.form or full_form:
+                values[key] = '1' if key in request.form else '0'
+        elif key in request.form:
             values[key] = request.form.get(key, '')
     
     # Validate settings
