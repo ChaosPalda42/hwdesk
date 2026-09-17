@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-container">
+    <h2>Přihlášení</h2>
+    
+    <!-- Dev mode login form -->
+    <form method="POST" action="/auth/dev-login">
+        <input type="email" name="email" placeholder="E-mail" required />
+        <input type="hidden" name="next" value="{{ request.args.get('next','/') }}" />
+        <button type="submit">Přihlásit</button>
+    </form>
+
+    <!-- Microsoft 365 login link -->
+    {% if config.AUTH_MODE == 'oidc' %}
+        <p><a href="/auth/login">Přihlásit účtem Microsoft 365</a></p>
+    {% endif %}
+</div>
+{% endblock %}
