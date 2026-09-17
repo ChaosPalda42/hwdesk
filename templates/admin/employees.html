@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Seznam zaměstnanců{% endblock %}
+
+{% block content %}
+<h1>Seznam zaměstnanců</h1>
+
+<form method="GET" action="/admin/employees">
+    <label for="q">Hledat:</label>
+    <input type="text" id="q" name="q" value="{{ q or '' }}">
+    <button type="submit">Hledat</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Zobrazované jméno</th>
+            <th>Email</th>
+            <th>Oddělení</th>
+            <th>Mgr. email</th>
+            <th>Aktivní</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for employee in employees %}
+        <tr>
+            <td><a href="/admin/employees/{{ employee.email }}">{{ employee.display_name }}</a></td>
+            <td>{{ employee.email }}</td>
+            <td>{{ employee.department or '' }}</td>
+            <td>{{ employee.manager_email or '' }}</td>
+            <td>{{ 'ano' if employee.active else 'ne' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
