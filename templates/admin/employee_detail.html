@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Detail zaměstnance{% endblock %}
+
+{% block content %}
+<div class="employee-detail">
+    <h1>Detail zaměstnance</h1>
+    
+    <!-- Employee fields -->
+    <div class="employee-info">
+        <h2>Základní informace</h2>
+        <p><strong>Jméno:</strong> {{ employee.name }}</p>
+        <p><strong>Příjmení:</strong> {{ employee.surname }}</p>
+        <p><strong>E-mail:</strong> {{ employee.email }}</p>
+        <p><strong>Telefon:</strong> {{ employee.phone }}</p>
+        <p><strong>Oddělení:</strong> {{ employee.department }}</p>
+        <p><strong>Pozice:</strong> {{ employee.position }}</p>
+        <p><strong>ID zaměstnance:</strong> {{ employee.employee_id }}</p>
+    </div>
+
+    <!-- Přidělená zařízení table -->
+    <div class="assigned-assets">
+        <h2>Přidělená zařízení</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Číslo majetku</th>
+                    <th>Typ</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Přiděleno od</th>
+                    <th>Protokol</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in overview.assigned %}
+                <tr>
+                    <td><a href="/admin/assets/{{ asset.id }}">{{ asset.asset_tag }}</a></td>
+                    <td>{{ asset.type }}</td>
+                    <td>{{ asset.brand }}</td>
+                    <td>{{ asset.model }}</td>
+                    <td>{{ asset.started_at }}</td>
+                    <td>{{ asset.protocol_number }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Čeká na potvrzení -->
+    <div class="pending-assets">
+        <h2>Čeká na potvrzení</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Číslo majetku</th>
+                    <th>Typ</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Přiděleno od</th>
+                    <th>Protokol</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in overview.pending %}
+                <tr>
+                    <td><a href="/admin/assets/{{ asset.id }}">{{ asset.asset_tag }}</a></td>
+                    <td>{{ asset.type }}</td>
+                    <td>{{ asset.brand }}</td>
+                    <td>{{ asset.model }}</td>
+                    <td>{{ asset.started_at }}</td>
+                    <td>{{ asset.protocol_number }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Historie -->
+    <div class="asset-history">
+        <h2>Historie</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Číslo majetku</th>
+                    <th>Typ</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Přiděleno od</th>
+                    <th>Protokol</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in overview.history %}
+                <tr>
+                    <td><a href="/admin/assets/{{ asset.id }}">{{ asset.asset_tag }}</a></td>
+                    <td>{{ asset.type }}</td>
+                    <td>{{ asset.brand }}</td>
+                    <td>{{ asset.model }}</td>
+                    <td>{{ asset.started_at }}</td>
+                    <td>{{ asset.protocol_number }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
