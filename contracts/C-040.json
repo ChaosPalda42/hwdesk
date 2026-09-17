@@ -1,0 +1,20 @@
+{
+  "id": "C-040",
+  "file": "src/repositories/locations.py",
+  "role": "coder",
+  "title": "Location repository",
+  "interface": "class LocationRepository(conn). create(name, address='', notes='') -> dict (IntegrityError on duplicate name — do not catch). get(id) -> dict | None. get_by_name(name) -> dict | None (case-insensitive). update(id, name=None, address=None, notes=None) -> dict | None. delete(id) -> bool: raises sqlite3.IntegrityError when any asset references it (check with a SELECT and raise sqlite3.IntegrityError('location is referenced by assets') yourself); False when unknown. list_all() -> list[dict] ordered by name, each with 'asset_count'. Dict keys: id, name, address, notes (+ asset_count). the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+  "uses": {
+    "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_taxonomy.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-002"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

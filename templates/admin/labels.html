@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Štítky k tisku{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Štítky k tisku</h1><div class="muted">{{ labels|length }} štítků · 50 × 25 mm · QR vede na detail zařízení</div></div>
+<div class="actions">
+  <button class="btn secondary" type="button" onclick="window.print()">{{ m.icon('print') }} Tisk z prohlížeče</button>
+  <a class="btn secondary" href="/admin/labels/zpl?ids={{ request.args.get('ids', '') }}">{{ m.icon('download') }} Stáhnout ZPL</a>
+  <form method="post" action="/admin/labels/print" class="inline"><input type="hidden" name="ids" value="{{ request.args.get('ids', '') }}"><button class="btn" type="submit" {{ '' if printer_configured else 'title=Není nastavena tiskárna' }}>{{ m.icon('print') }} Poslat na štítkovou tiskárnu</button></form>
+</div></div>{% endblock %}
+{% block content %}
+{% if not printer_configured %}<div class="flash info no-print">Přímý tisk vyžaduje síťovou štítkovou tiskárnu (Zebra/ZPL) — nastavte <code>LABEL_PRINTER_HOST</code> v Nastavení. Tisk z prohlížeče funguje vždy.</div>{% endif %}
+{% if labels %}
+<div class="labels">
+  {% for l in labels %}<div class="label">{{ l.qr_svg|safe }}<div><div class="t">{{ l.asset.asset_tag }}</div><div class="m">{{ l.asset.brand }} {{ l.asset.model }}<br>SN {{ l.asset.serial_number or '—' }}</div><div class="c">{{ config.COMPANY_NAME }}</div></div></div>{% endfor %}
+</div>
+{% else %}{{ m.empty('Vyberte zařízení v seznamu (zaškrtávátka) a zvolte Štítky.', 'print') }}{% endif %}
+{% endblock %}

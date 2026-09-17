@@ -1,3 +1,4 @@
+{% import "_macros.html" as m %}
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -7,30 +8,58 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header class="top">
-  <a class="brand" href="/">HW Desk</a>
-  {% if user %}
-    <a href="/">Moje zařízení</a>
-    {% if user.is_admin %}
-      <a href="/admin/assets">Zařízení</a>
-      <a href="/admin/handovers">Předání</a>
-      <a href="/admin/employees">Zaměstnanci</a>
-      <a href="/admin/audit">Audit</a>
-      <a href="/admin/settings">Nastavení</a>
-    {% endif %}
-    <span class="me">{{ user.email }}</span>
-    <form method="post" action="/auth/logout" class="inline"><button type="submit" class="link">Odhlásit</button></form>
-  {% else %}
-    <span class="me">{{ config.COMPANY_NAME }}</span>
-  {% endif %}
-</header>
-<main>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="flash {{ 'error' if category == 'error' else '' }}">{{ message }}</div>
-    {% endfor %}
-  {% endwith %}
-  {% block content %}{% endblock %}
-</main>
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="/"><span class="logo">{{ m.icon('box') }}</span><span>HW Desk<small>{{ config.COMPANY_NAME }}</small></span></a>
+    <nav>
+      <a href="/" class="{{ 'active' if request.path == '/' }}">{{ m.icon('home') }} Moje zařízení</a>
+      {% if user and user.is_admin %}
+        <div class="group">Správa</div>
+        <a href="/admin" class="{{ 'active' if request.path == '/admin' }}">{{ m.icon('home') }} Přehled</a>
+        <a href="/admin/assets" class="{{ 'active' if request.path.startswith('/admin/assets') }}">{{ m.icon('laptop') }} Zařízení</a>
+        <a href="/admin/intake" class="{{ 'active' if request.path.startswith('/admin/intake') }}">{{ m.icon('inbox') }} Příjem zařízení</a>
+        <a href="/admin/handovers" class="{{ 'active' if request.path.startswith('/admin/handovers') }}">{{ m.icon('handover') }} Předání a vrácení</a>
+        <a href="/admin/employees" class="{{ 'active' if request.path.startswith('/admin/employees') }}">{{ m.icon('users') }} Zaměstnanci</a>
+        <div class="group">Evidence</div>
+        <a href="/admin/invoices" class="{{ 'active' if request.path.startswith('/admin/invoices') }}">{{ m.icon('invoice') }} Faktury</a>
+        <a href="/admin/tags" class="{{ 'active' if request.path.startswith('/admin/tags') }}">{{ m.icon('tag') }} Štítky</a>
+        <a href="/admin/locations" class="{{ 'active' if request.path.startswith('/admin/locations') }}">{{ m.icon('pin') }} Lokality</a>
+        <a href="/admin/audit" class="{{ 'active' if request.path.startswith('/admin/audit') }}">{{ m.icon('audit') }} Audit</a>
+        <a href="/admin/settings" class="{{ 'active' if request.path.startswith('/admin/settings') }}">{{ m.icon('settings') }} Nastavení</a>
+      {% endif %}
+    </nav>
+    <div class="foot">
+      {% if user %}<strong title="{{ user.email }}">{{ user.email }}</strong>{{ 'správce' if user.is_admin else 'zaměstnanec' }} · <form method="post" action="/auth/logout"><button type="submit">odhlásit</button></form>{% endif %}
+    </div>
+  </aside>
+  <main class="content">
+    {% block topbar %}{% endblock %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}<div class="flash {{ 'error' if category == 'error' else ('info' if category == 'info' else '') }}">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+// Tabs: <a data-tab="x"> switches .tab-panel#x; the hash remembers the tab.
+document.querySelectorAll('.tabs a[data-tab]').forEach(function (a) {
+  a.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelectorAll('.tabs a[data-tab]').forEach(function (b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+    a.classList.add('active'); var p = document.getElementById(a.dataset.tab); if (p) p.classList.add('active'); history.replaceState(null, '', '#' + a.dataset.tab);
+  });
+});
+if (location.hash) { var t = document.querySelector('.tabs a[data-tab="' + location.hash.slice(1) + '"]'); if (t) t.click(); }
+// Bulk selection on the assets list.
+var bulk = document.getElementById('bulkbar');
+if (bulk) {
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input.rowsel'));
+  var all = document.getElementById('selall');
+  function refresh() { var ids = boxes.filter(function (b) { return b.checked; }).map(function (b) { return b.value; }); bulk.classList.toggle('on', ids.length > 0); document.getElementById('bulkcount').textContent = ids.length; document.querySelectorAll('input[name=ids]').forEach(function (i) { i.value = ids.join(','); }); }
+  boxes.forEach(function (b) { b.addEventListener('change', refresh); });
+  if (all) all.addEventListener('change', function () { boxes.forEach(function (b) { b.checked = all.checked; }); refresh(); });
+}
+</script>
 </body>
 </html>

@@ -1,0 +1,25 @@
+{
+  "id": "C-045",
+  "file": "src/services/asset_import_export.py",
+  "role": "coder",
+  "title": "CSV export and import of assets",
+  "interface": "export_assets_csv(assets: AssetRepository, tags: TagRepository) -> str: UTF-8 text with header asset_tag;type;brand;model;serial_number;status;condition;location;tags;holder_email;warranty_until;supplier;cost_center;invoice;purchase_date;price;notes (delimiter ';'), rows from assets.search_assets() (location = location_name or '', tags joined with '|', holder_email or '', invoice = the invoice number looked up via assets.conn: SELECT number FROM invoices WHERE id=? or ''). import_assets_csv(service: AssetService, locations: LocationRepository, actor: str, text: str) -> dict {'created', 'updated', 'errors': [str]}: delimiter ';' or ',' (csv.Sniffer, fallback ';'), header required; asset_tag required; existing tag (service.assets.get_by_tag) -> service.update with the given columns, else service.create (type required for create); 'location' name -> locations.get_by_name or locations.create(name); 'tags' split on '|' -> tag_names; 'invoice' -> invoice_number; price float; every row error is collected as 'řádek N: <message>' (N = 1-based line number in the file, header = 1) and processing continues. Never catch generic Exception except to record a row error from AssetValidationError/DuplicateAssetTag/ValueError.",
+  "uses": {
+    "AssetService": "src/services/asset_service.py",
+    "AssetRepository": "src/repositories/assets.py (attribute conn; search_assets rows have location_name, holder_email)",
+    "TagRepository": "src/repositories/tags.py: for_assets",
+    "LocationRepository": "src/repositories/locations.py"
+  },
+  "database": "",
+  "acceptance": "tests/test_service_import_export.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-009",
+    "C-039",
+    "C-040"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

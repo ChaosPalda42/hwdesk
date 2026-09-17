@@ -3,23 +3,27 @@
   "file": "src/api/assets.py",
   "role": "coder",
   "title": "JSON API: assets",
-  "interface": "Blueprint `bp` (name 'api_assets'; the app mounts it at /api/v1). All routes require api_auth_required. GET /assets?status=&type=&q= -> 200 list. POST /assets JSON -> 201 dict; AssetValidationError -> 400 {'error'}; DuplicateAssetTag -> 409 {'error'}; missing asset_tag/type -> 400. GET /assets/<int:id> -> 200 | 404 {'error': 'not found'}. PATCH /assets/<int:id> JSON -> 200 updated | 400 | 404. POST /assets/<int:id>/retire -> 200 | 400 | 404. POST /assets/<int:id>/lost -> 200 | 400 | 404. Build AssetService(AssetRepository(get_db()), AuditRepository(get_db())) per request; actor from guards.actor().",
+  "interface": "Blueprint `bp` (name 'api_assets', constructed WITHOUT url_prefix; mounted at /api/v1, so every path below starts with /assets). All routes api_auth_required. GET /assets?q=&status=&type=&location_id=&tag=&tag_id=&employee_email=&invoice_id=&warranty_before=&sort= -> 200 list from AssetService.assets.search_assets (tag name resolved via tags.get_by_name -> tag_id; employee_email via EmployeeRepository.get_by_email -> employee_id), each row enriched with 'tags' (TagRepository.for_assets in one query). POST /assets JSON -> 201 service.create(**fields) where JSON keys map 1:1 (asset_tag optional -> generated; 'tags' list of names -> tag_names; invoice_id/invoice_number/location_id/condition/supplier/warranty_until/cost_center accepted); AssetValidationError -> 400 {'error'}; DuplicateAssetTag -> 409; missing type -> 400. GET /assets/<int:id> -> 200 service.get | 404. PATCH /assets/<int:id> -> 200 | 400 | 404 (JSON 'tags' -> tag_names). POST /assets/<int:id>/retire, /assets/<int:id>/lost -> 200 | 400 | 404. GET /assets/export.csv -> text/csv from export_assets_csv (Content-Disposition attachment; filename assets.csv). POST /assets/import.csv (raw CSV body) -> 200 import_assets_csv result dict. Service built with build_asset_service(get_db()).",
   "uses": {
-    "AssetService": "src/services/asset_service.py: create/get/update/retire/mark_lost/list; AssetValidationError, DuplicateAssetTag",
-    "AssetRepository": "src/repositories/assets.py",
-    "AuditRepository": "src/repositories/audit.py",
+    "build_asset_service": "src/services/factory.py: build_asset_service(db) -> AssetService (with tags/locations/invoices and tag prefixes from config)",
+    "AssetService": "src/services/asset_service.py",
+    "TagRepository": "src/repositories/tags.py: get_by_name, for_assets(ids) -> {asset_id: [tags]}",
+    "EmployeeRepository": "src/repositories/employees.py",
+    "export_assets_csv/import_assets_csv": "src/services/asset_import_export.py",
+    "LocationRepository": "src/repositories/locations.py",
     "get_db": "src/db.py",
     "guards": "src/auth/guards.py: api_auth_required, actor()"
   },
   "database": "AssetService(AssetRepository(get_db()), AuditRepository(get_db())) per request",
-  "acceptance": "",
+  "acceptance": "tests/test_api.py",
   "forbidden": [],
   "depends_on": [
-    "C-009",
+    "C-017",
+    "C-045",
     "C-012"
   ],
   "budget": {
-    "iterations": 12
+    "iterations": 16
   },
   "notes": ""
 }

@@ -10,13 +10,13 @@
       "updated_at": "2026-09-17T08:54:10+00:00"
     },
     "C-002": {
-      "status": "green",
+      "status": "pending",
       "attempts": 2,
       "iterations": 18,
       "commit": "738cf58",
-      "last_finding": "",
+      "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": "2026-09-17T09:02:19+00:00"
+      "updated_at": "2026-09-17T11:25:35+00:00"
     },
     "C-005": {
       "status": "green",
@@ -199,13 +199,13 @@
       "updated_at": ""
     },
     "C-009": {
-      "status": "green",
+      "status": "pending",
       "attempts": 1,
       "iterations": 4,
       "commit": "b6e4512",
-      "last_finding": "",
+      "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": "2026-09-17T09:03:08+00:00"
+      "updated_at": "2026-09-17T11:25:35+00:00"
     },
     "C-010": {
       "status": "green",
@@ -226,13 +226,13 @@
       "updated_at": "2026-09-17T09:10:46+00:00"
     },
     "C-014": {
-      "status": "green",
+      "status": "pending",
       "attempts": 1,
       "iterations": 14,
       "commit": "90c84c0",
-      "last_finding": "",
+      "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": "2026-09-17T09:13:32+00:00"
+      "updated_at": "2026-09-17T11:25:35+00:00"
     },
     "C-015": {
       "status": "green",
@@ -253,22 +253,22 @@
       "updated_at": ""
     },
     "C-017": {
-      "status": "green",
+      "status": "pending",
       "attempts": 0,
       "iterations": 0,
       "commit": "0d7a460",
-      "last_finding": "",
+      "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T11:25:35+00:00"
     },
     "C-018": {
-      "status": "green",
+      "status": "pending",
       "attempts": 0,
       "iterations": 0,
       "commit": "928b594",
-      "last_finding": "",
+      "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T11:25:35+00:00"
     },
     "C-019": {
       "status": "green",
@@ -325,13 +325,13 @@
       "updated_at": "2026-09-17T10:50:45+00:00"
     },
     "C-035": {
-      "status": "green",
+      "status": "pending",
       "attempts": 1,
       "iterations": 2,
       "commit": "adea3c4",
-      "last_finding": "",
+      "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": "2026-09-17T10:50:17+00:00"
+      "updated_at": "2026-09-17T11:25:35+00:00"
     },
     "C-037": {
       "status": "green",

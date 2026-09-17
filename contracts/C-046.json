@@ -1,0 +1,23 @@
+{
+  "id": "C-046",
+  "file": "src/services/intake_service.py",
+  "role": "coder",
+  "title": "Goods intake: create a batch of assets on one invoice",
+  "interface": "class IntakeService(assets: AssetService, invoices: InvoiceRepository, audit: AuditRepository). create_batch(actor, type, brand, model, quantity: int, invoice_number: str, supplier: str, unit_price, location_id, tag_names: list[str], warranty_until: str, condition='new') -> dict {'invoice': invoice dict or None, 'assets': [asset dicts]}: quantity must be 1..500 else ValueError; invoice: when invoice_number given -> get_by_number or create(number, supplier, issued_at='', total=quantity*unit_price, currency='CZK', notes='', created_by=actor); assets created one by one with assets.create(actor, asset_tag='', type=..., brand, model, serial_number='', purchase_date='', price=unit_price, notes='', location_id, condition, supplier, warranty_until, invoice_id, tag_names); audit 'intake.batch' with quantity and asset ids. set_serials(actor, serials: dict[int, str]) -> int: assets.update(actor, asset_id, serial_number=value) for each non-empty value; returns count.",
+  "uses": {
+    "AssetService": "src/services/asset_service.py: create(..., asset_tag='' generates), update",
+    "InvoiceRepository": "src/repositories/invoices.py",
+    "AuditRepository": "src/repositories/audit.py"
+  },
+  "database": "",
+  "acceptance": "tests/test_tag_numbering_and_intake.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-009",
+    "C-041"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

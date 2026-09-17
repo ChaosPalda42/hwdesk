@@ -1,0 +1,23 @@
+{
+  "id": "C-044",
+  "file": "src/services/dashboard_service.py",
+  "role": "coder",
+  "title": "Dashboard statistics",
+  "interface": "class DashboardService(assets: AssetRepository, handovers: HandoverRepository, audit: AuditRepository, employees: EmployeeRepository). stats(today: str, warranty_days: int = 90) -> dict: 'totals' {'assets': count of all assets, 'value': sum of price as float, 'employees': count of active employees}; 'by_status' (assets.count_by('status')); 'by_type' (count_by('type')); 'by_condition'; 'pending_handovers': handovers.list_all(status='pending') each with 'asset' (assets.get) and 'employee' (employees.get); 'warranty_expiring': assets.search_assets(warranty_before=today + warranty_days (date arithmetic, ISO)) excluding retired/lost, sorted by warranty_until; 'recent_activity': audit.list_recent(20). Never catch generic Exception.",
+  "uses": {
+    "repositories": "src/repositories/{assets,handovers,audit,employees}.py (assets.search_assets(warranty_before=...), assets.count_by(field))"
+  },
+  "database": "",
+  "acceptance": "tests/test_service_dashboard.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-002",
+    "C-003",
+    "C-005",
+    "C-001"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

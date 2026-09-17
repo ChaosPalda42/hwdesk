@@ -1,56 +1,32 @@
-{% extends "base.html" %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
 {% block title %}Nastavení{% endblock %}
-
+{% block topbar %}<div class="topbar"><div><h1>Nastavení</h1><div class="muted">Hodnoty uložené zde mají přednost před proměnnými prostředí</div></div></div>{% endblock %}
 {% block content %}
-{% if problems %}
-  <div class="flash error">
-    {% for problem in problems %}
-      {{ problem }}<br>
-    {% endfor %}
-  </div>
-{% endif %}
-
-<div class="info">
-  <p>Redirect URI pro registraci aplikace v Entra ID:</p>
-  <code>{{ redirect_uri }}</code>
-</div>
-
-<form method="post" action="/admin/settings">
+{% if problems %}<div class="flash error">{% for p in problems %}{{ p }}<br>{% endfor %}</div>{% endif %}
+<div class="flash info">Redirect URI pro registraci aplikace v Entra ID: <code>{{ redirect_uri }}</code></div>
+<form method="post" action="/admin/settings" class="stack">
   {% for group, rows in groups %}
+  <div class="card" id="{{ 'hr' if 'HR' in group else ('email' if 'SMTP' in group else ('entra' if 'Entra' in group else loop.index)) }}">
     <h2>{{ group }}</h2>
+    <div class="grid-2">
     {% for row in rows %}
-      <p>
-        <label>{{ row.label }}:</label><br>
-        {% if row.type == 'choice' %}
-          <select name="{{ row.key }}">
-            {% for choice in row.choices %}
-              <option value="{{ choice }}" {% if choice == row.value %}selected{% endif %}>{{ choice }}</option>
-            {% endfor %}
-          </select>
-        {% elif row.type == 'bool' %}
-          <input type="checkbox" name="{{ row.key }}" value="1" {% if row.value in ('1','true','True') %}checked{% endif %}>
-        {% elif row.type == 'json' or row.type == 'text' %}
-          <textarea name="{{ row.key }}" rows="4">{{ row.value }}</textarea>
-        {% elif row.type == 'secret' %}
-          <input type="password" name="{{ row.key }}" value="{{ row.value }}">
-        {% else %}
-          <input name="{{ row.key }}" value="{{ row.value }}">
-        {% endif %}
-        {% if row.help %}
-          <small class="muted">{{ row.help }}</small>
-        {% endif %}
-      </p>
+      <div class="field {{ 'grid-span' if row.type in ('json','text') }}">
+        <label for="f-{{ row.key }}">{{ row.label }}</label>
+        {% if row.type == 'choice' %}<select id="f-{{ row.key }}" name="{{ row.key }}">{% for c in row.choices %}<option value="{{ c }}" {{ 'selected' if c == row.value }}>{{ c }}</option>{% endfor %}</select>
+        {% elif row.type == 'bool' %}<label class="check"><input type="checkbox" name="{{ row.key }}" value="1" {{ 'checked' if row.value in ('1','true','True') }}> zapnuto</label>
+        {% elif row.type in ('json','text') %}<textarea id="f-{{ row.key }}" name="{{ row.key }}" rows="4" class="mono">{{ row.value }}</textarea>
+        {% elif row.secret %}<input id="f-{{ row.key }}" type="password" name="{{ row.key }}" value="{{ row.value }}" autocomplete="new-password">
+        {% else %}<input id="f-{{ row.key }}" type="text" name="{{ row.key }}" value="{{ row.value }}">{% endif %}
+        <div class="hint">{{ row.help }} <span class="mono muted">{{ row.key }}</span></div>
+      </div>
     {% endfor %}
+    </div>
+  </div>
   {% endfor %}
-  <button type="submit">Uložit</button>
+  <div class="btn-row"><button class="btn" type="submit">{{ m.icon('check') }} Uložit nastavení</button></div>
 </form>
-
-<form method="post" action="/admin/settings/test-email">
-  <button type="submit">Odeslat testovací e-mail</button>
-</form>
-
-<form method="post" action="/admin/settings/hr-sync">
-  <button type="submit">Synchronizovat zaměstnance z HR teď</button>
-</form>
+<div class="grid-2" style="margin-top:16px">
+  <div class="card"><h2>Ověření e-mailu</h2><p class="muted">Pošle testovací zprávu na váš účet ({{ user.email }}).</p><form method="post" action="/admin/settings/test-email"><button class="btn secondary" type="submit">Odeslat testovací e-mail</button></form></div>
+  <div class="card"><h2>HR synchronizace</h2><p class="muted">Načte zaměstnance z Drupalu podle nastavení výše.</p><form method="post" action="/admin/settings/hr-sync"><button class="btn secondary" type="submit">Synchronizovat zaměstnance z HR teď</button></form></div>
+</div>
 {% endblock %}

@@ -3,21 +3,27 @@
   "file": "src/services/asset_service.py",
   "role": "coder",
   "title": "Asset service",
-  "interface": "Exceptions AssetValidationError(ValueError), DuplicateAssetTag(ValueError). class AssetService(assets: AssetRepository, audit: AuditRepository). create(actor, asset_tag, type, brand, model, serial_number, purchase_date, price, notes) -> dict: strips and upper-cases asset_tag (empty -> AssetValidationError), type must be in config.ASSET_TYPES, purchase_date '' or ISO date YYYY-MM-DD (else AssetValidationError), price coerced to float (invalid -> AssetValidationError); sqlite3.IntegrityError from the repository -> DuplicateAssetTag; records audit 'asset.created'. get(id) -> dict | None. update(actor, asset_id, **fields) -> dict (same validation for the fields given; unknown id -> AssetValidationError; audit 'asset.updated'). retire(actor, asset_id) -> dict and mark_lost(actor, asset_id) -> dict: refuse (AssetValidationError) when the asset status is 'assigned', 'pending_handover' or 'pending_return'; set status 'retired'/'lost'; audit 'asset.retired'/'asset.lost'. list(status=None, type=None, q='') -> list[dict] (search when q given, then filter by status/type). Never catch generic Exception.",
+  "interface": "Exceptions AssetValidationError(ValueError), DuplicateAssetTag(ValueError). class AssetService(assets: AssetRepository, audit: AuditRepository, tags: TagRepository | None = None, locations: LocationRepository | None = None, invoices: InvoiceRepository | None = None, tag_prefixes: dict | None = None, tag_pad: int = 4) — stored as public attributes. next_asset_tag(type) -> str: prefix = tag_prefixes.get(type) or tag_prefixes.get('other') or 'AS'; the next number = 1 + the highest existing numeric suffix among assets whose asset_tag starts with '<prefix>-' (parse int after the dash, ignore non-numeric); zero-padded to tag_pad. create(actor, asset_tag, type, brand, model, serial_number, purchase_date, price, notes, location_id=None, condition='good', supplier='', warranty_until='', cost_center='', invoice_id=None, invoice_number='', tag_names=None) -> dict: asset_tag stripped/upper-cased and, when empty, generated with next_asset_tag(type); type in ASSET_TYPES; condition in ASSET_CONDITIONS; purchase_date and warranty_until '' or ISO date; price -> float; location_id must exist (locations.get) when given; invoice_id must exist when given; invoice_number (non-empty) -> invoices.get_by_number or invoices.create(number, supplier=supplier, issued_at='', total=0, currency='CZK', notes='', created_by=actor) and used as invoice_id; sqlite3.IntegrityError -> DuplicateAssetTag; tag_names -> for each name: tags.get_by_name or tags.create(name, 'gray'), then tags.set_for_asset; audit 'asset.created'; returns get(id). get(id) -> dict | None enriched with 'tags' (list of tag dicts, [] when no tag repo) and 'invoice' (invoice dict or None). update(actor, asset_id, **fields) -> dict: same validation for the given fields; tag_names (when given) replaces the tag set; invoice_number as in create; unknown id -> AssetValidationError; audit 'asset.updated' with the changed keys. retire/mark_lost(actor, asset_id) -> dict as before (refuse assigned/pending). list(status=None, type=None, q='') -> list[dict]. bulk_tag(actor, asset_ids, tag_name, remove=False) -> int (count of assets changed; creates the tag when needed). attach_invoice(actor, asset_ids, invoice_id) -> int (invoice must exist; sets invoice_id on each; audit once). Never catch generic Exception.",
   "uses": {
-    "AssetRepository": "src/repositories/assets.py: create/get/get_by_tag/update/set_status/list_all/search",
-    "AuditRepository": "src/repositories/audit.py: record(actor, action, entity, entity_id, details)",
-    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES, load_config(overrides) -> dict"
+    "AssetRepository": "src/repositories/assets.py: create/get/get_by_tag/update/set_status/list_all/search/search_assets/count_by",
+    "AuditRepository": "src/repositories/audit.py: record(...)",
+    "TagRepository": "src/repositories/tags.py: create/get_by_name/for_asset/set_for_asset/assign/unassign",
+    "LocationRepository": "src/repositories/locations.py: get",
+    "InvoiceRepository": "src/repositories/invoices.py: get/get_by_number/create",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
   },
   "database": "through injected repositories only",
   "acceptance": "tests/test_service_assets.py",
   "forbidden": [],
   "depends_on": [
     "C-002",
-    "C-005"
+    "C-005",
+    "C-039",
+    "C-040",
+    "C-041"
   ],
   "budget": {
-    "iterations": 12
+    "iterations": 16
   },
-  "notes": ""
+  "notes": "Also exercised by tests/test_service_assets_v2.py, tests/test_invoices.py, tests/test_tag_numbering_and_intake.py."
 }

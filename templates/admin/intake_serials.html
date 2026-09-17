@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Příjem · sériová čísla{% endblock %}
+{% block topbar %}<div class="topbar"><div><div class="crumbs"><a href="/admin/intake">Příjem zařízení</a></div><h1>Sériová čísla</h1><div class="muted">{{ assets|length }} kusů založeno{% if assets and assets[0].invoice %} · faktura <a href="/admin/invoices/{{ assets[0].invoice.id }}">{{ assets[0].invoice.number }}</a>{% endif %}</div></div></div>{% endblock %}
+{% block content %}
+<form method="post" action="{{ request.path }}/serials" class="card">
+  <p class="muted">Načtěte sériová čísla čtečkou — po každém načtení kurzor skočí na další řádek. Prázdné lze doplnit později v detailu.</p>
+  <div class="table-wrap" style="box-shadow:none"><table><thead><tr><th>Inventární číslo</th><th>Zařízení</th><th>Sériové číslo</th></tr></thead><tbody>
+    {% for a in assets %}<tr><td class="mono"><b>{{ a.asset_tag }}</b></td><td>{{ a.brand }} {{ a.model }}</td><td><input type="text" name="serial_{{ a.id }}" value="{{ a.serial_number }}" class="mono" {{ 'autofocus' if loop.first }} onkeydown="if(event.key==='Enter'){event.preventDefault();var i=this.closest('tr').nextElementSibling;if(i){i.querySelector('input').focus();}}"></td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="btn-row" style="margin-top:14px"><button class="btn" type="submit">{{ m.icon('check') }} Uložit a přejít na štítky</button><a class="btn secondary" href="/admin/labels?ids={{ assets|map(attribute='id')|join(',') }}">Přeskočit na štítky</a></div>
+</form>
+{% endblock %}

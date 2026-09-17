@@ -1,63 +1,53 @@
-{% extends "base.html" %}
-
-{% block title %}Správa majetku{% endblock %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Zařízení{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Zařízení</h1><div class="muted">{{ total }} položek v evidenci</div></div>
+<div class="actions"><a class="btn secondary" href="/api/v1/assets/export.csv">{{ m.icon('download') }} Export CSV</a><a class="btn secondary" href="/admin/intake">{{ m.icon('inbox') }} Příjem</a><a class="btn" href="/admin/assets/new">{{ m.icon('plus') }} Nové zařízení</a></div></div>{% endblock %}
 {% block content %}
-<h1>Správa majetku</h1>
-
-<a href="/admin/assets/new">Přidat nové zařízení</a>
-
-<form method="GET">
-    <div class="search-form">
-        <label for="q">Hledat:</label>
-        <input type="text" id="q" name="q" value="{{ q or '' }}">
-
-        <label for="status">Stav:</label>
-        <select id="status" name="status">
-            <option value="">Vše</option>
-            {% for status in statuses %}
-                <option value="{{ status }}" {% if status == selected_status %}selected{% endif %}>
-                    {{ status }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <label for="type">Typ:</label>
-        <select id="type" name="type">
-            <option value="">Vše</option>
-            {% for asset_type in types %}
-                <option value="{{ asset_type }}" {% if asset_type == selected_type %}selected{% endif %}>
-                    {{ asset_type }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <button type="submit">Filtrovat</button>
-    </div>
+{% set f = filters %}
+<form method="get" class="filters">
+  <div class="field grow"><label>Hledat</label><input type="search" name="q" value="{{ f.q or '' }}" placeholder="inventární číslo, sériové číslo, model…"></div>
+  <div class="field"><label>Typ</label><select name="type"><option value="">Vše</option>{% for t in types %}<option value="{{ t }}" {{ 'selected' if f.type == t }}>{{ m.type_label(t) }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Stav</label><select name="status"><option value="">Vše</option>{% for s in statuses %}<option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ m.STATUS_LABELS.get(s, s) }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Štítek</label><select name="tag_id"><option value="">Vše</option>{% for t in tags %}<option value="{{ t.id }}" {{ 'selected' if f.tag_id|string == t.id|string }}>{{ t.name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Lokalita</label><select name="location_id"><option value="">Vše</option>{% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if f.location_id|string == l.id|string }}>{{ l.name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Držitel</label><select name="employee_id"><option value="">Kdokoli</option>{% for e in employees %}<option value="{{ e.id }}" {{ 'selected' if f.employee_id|string == e.id|string }}>{{ e.display_name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Stav kusu</label><select name="condition"><option value="">Vše</option>{% for c in conditions %}<option value="{{ c }}" {{ 'selected' if f.condition == c }}>{{ m.CONDITION_LABELS.get(c, c) }}</option>{% endfor %}</select></div>
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <button class="btn secondary" type="submit">{{ m.icon('search') }} Filtrovat</button>
+  {% if f.q or f.type or f.status or f.tag_id or f.location_id or f.employee_id or f.condition %}<a class="btn ghost" href="/admin/assets">Zrušit filtry</a>{% endif %}
 </form>
-
-<table class="assets-table">
-    <thead>
-        <tr>
-            <th>Štítek zařízení</th>
-            <th>Typ</th>
-            <th>Marka</th>
-            <th>Model</th>
-            <th>Seriové číslo</th>
-            <th>Stav</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for asset in assets %}
-        <tr>
-            <td><a href="/admin/assets/{{ asset.id }}">{{ asset.asset_tag }}</a></td>
-            <td>{{ asset.type }}</td>
-            <td>{{ asset.brand }}</td>
-            <td>{{ asset.model }}</td>
-            <td>{{ asset.serial_number }}</td>
-            <td><span class="status status-{{ asset.status }}">{{ asset.status }}</span></td>
-        </tr>
-        {% endfor %}
-    </tbody>
+<form method="post" action="/admin/assets/bulk" id="bulkbar" class="bulkbar">
+  <input type="hidden" name="ids" value="">
+  <span><b id="bulkcount">0</b> vybráno</span>
+  <select name="action"><option value="tag">Přidat štítek</option><option value="untag">Odebrat štítek</option><option value="location">Nastavit lokalitu</option><option value="invoice">Přiřadit fakturu (ID)</option><option value="export">Export CSV</option></select>
+  <input type="text" name="value" placeholder="hodnota (název štítku / ID lokality / ID faktury)">
+  <button class="btn sm" type="submit">Provést</button>
+  <button class="btn sm secondary" type="submit" formaction="/admin/labels" formmethod="get">{{ m.icon('print') }} Štítky</button>
+</form>
+{% set base = '/admin/assets?q=' ~ (f.q or '') ~ '&type=' ~ (f.type or '') ~ '&status=' ~ (f.status or '') ~ '&tag_id=' ~ (f.tag_id or '') ~ '&location_id=' ~ (f.location_id or '') ~ '&employee_id=' ~ (f.employee_id or '') ~ '&condition=' ~ (f.condition or '') %}
+{% macro th(col, label) -%}{% set desc = sort == '-' ~ col %}<th><a class="{{ 'sorted' if sort in (col, '-' ~ col) }} {{ 'desc' if desc }}" href="{{ base }}&sort={{ col if desc or sort != col else '-' ~ col }}">{{ label }}</a></th>{%- endmacro %}
+<div class="table-wrap">
+<table>
+  <thead><tr><th style="width:28px"><input type="checkbox" id="selall"></th>{{ th('asset_tag', 'Zařízení') }}{{ th('type', 'Typ') }}<th>Sériové číslo</th>{{ th('status', 'Stav') }}<th>Držitel</th><th>Lokalita</th><th>Štítky</th>{{ th('warranty_until', 'Záruka do') }}<th></th></tr></thead>
+  <tbody>
+  {% for a in assets %}
+    <tr>
+      <td><input type="checkbox" class="rowsel" value="{{ a.id }}"></td>
+      <td>{{ m.asset_cell(a) }}</td>
+      <td>{{ m.type_label(a.type) }}</td>
+      <td class="mono">{{ a.serial_number or '—' }}</td>
+      <td>{{ m.status(a.status) }}</td>
+      <td>{% if a.holder_name %}<a href="/admin/employees/{{ a.holder_email }}">{{ a.holder_name }}</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td>{{ a.location_name or '—' }}</td>
+      <td>{{ m.tags(a.tags) }}</td>
+      <td class="nowrap {{ 'muted' if not a.warranty_until }}">{{ a.warranty_until or '—' }}</td>
+      <td class="actions"><a class="btn ghost sm" href="/admin/assets/{{ a.id }}">Detail</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="10">{{ m.empty('Žádné zařízení neodpovídá filtru.') }}</td></tr>
+  {% endfor %}
+  </tbody>
 </table>
+<div class="table-foot"><span>Stránka {{ page }} z {{ pages }} · {{ total }} položek</span>{{ m.pagination(page, pages, base ~ '&sort=' ~ sort) }}</div>
+</div>
 {% endblock %}

@@ -23,6 +23,7 @@ def app(tmp_path):
             "DATABASE": str(tmp_path / "app.db"),
             "OUTBOX_DIR": str(tmp_path / "outbox"),
             "PROTOCOL_DIR": str(tmp_path / "protocols"),
+            "ATTACHMENTS_DIR": str(tmp_path / "attachments"),
             "AUTH_MODE": "dev",
             "EMAIL_MODE": "outbox",
             "ADMIN_EMAILS": ["admin@firma.cz"],

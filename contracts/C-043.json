@@ -1,0 +1,23 @@
+{
+  "id": "C-043",
+  "file": "src/services/attachment_service.py",
+  "role": "coder",
+  "title": "Attachment storage service",
+  "interface": "Exception AttachmentError(ValueError). class AttachmentService(repo: AttachmentRepository, audit: AuditRepository, directory: str, max_bytes: int, owner_exists: callable(owner_type, owner_id) -> bool). store(actor, owner_type, owner_id, kind, filename, mime_type, data: bytes) -> dict: owner_type in ATTACHMENT_OWNERS and owner_exists(...) else AttachmentError; kind in ATTACHMENT_KINDS; mime_type in ATTACHMENT_ALLOWED_TYPES; len(data) <= max_bytes and > 0; filename = os.path.basename(filename) stripped (empty -> 'soubor'); stored_name = f'{owner_type}-{owner_id}-{uuid4().hex}{ext}' where ext is the lower-cased extension of filename ('' if none); writes the bytes to directory/stored_name (directory created); repo.create; audit 'attachment.added' on entity owner_type/owner_id with details {filename, kind}. path_for(attachment_id) -> str absolute path (AttachmentError when unknown). delete(actor, attachment_id) -> bool: removes the file if present and the row; audit 'attachment.deleted'; False when unknown. Never catch generic Exception.",
+  "uses": {
+    "AttachmentRepository": "src/repositories/attachments.py",
+    "AuditRepository": "src/repositories/audit.py",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+  },
+  "database": "",
+  "acceptance": "tests/test_attachments.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-042",
+    "C-005"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

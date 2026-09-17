@@ -1,19 +1,24 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="login-container">
-    <h2>Přihlášení</h2>
-    
-    <!-- Dev mode login form -->
-    <form method="POST" action="/auth/dev-login">
-        <input type="email" name="email" placeholder="E-mail" required />
-        <input type="hidden" name="next" value="{{ request.args.get('next','/') }}" />
-        <button type="submit">Přihlásit</button>
-    </form>
-
-    <!-- Microsoft 365 login link -->
+{% import "_macros.html" as m %}
+<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Přihlášení · HW Desk</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<div class="login">
+  <div class="box">
+    <div class="brand"><span class="logo"></span><span>HW Desk<br><small class="muted">{{ config.COMPANY_NAME }}</small></span></div>
+    <h1 style="font-size:18px;margin-bottom:6px">Přihlášení</h1>
+    <p class="muted">Přihlaste se firemním účtem. Uvidíte zařízení, která máte u sebe, a potvrdíte převzetí nebo vrácení.</p>
     {% if config.AUTH_MODE == 'oidc' %}
-        <p><a href="/auth/login">Přihlásit účtem Microsoft 365</a></p>
+      <a class="ms" href="/auth/login"><svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg> Přihlásit účtem Microsoft 365</a>
+    {% else %}
+      <form method="post" action="/auth/dev-login">
+        <div class="field"><label for="email">E-mail</label><input id="email" type="email" name="email" placeholder="jmeno@firma.cz" required autofocus></div>
+        <input type="hidden" name="next" value="{{ request.args.get('next', '/') }}">
+        <button class="btn" type="submit" style="width:100%;justify-content:center">Přihlásit</button>
+        <div class="or">vývojový režim — bez hesla</div>
+      </form>
     {% endif %}
+  </div>
 </div>
-{% endblock %}
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "id": "C-049",
+  "file": "src/web/catalog.py",
+  "role": "coder",
+  "title": "Admin web: invoices, tags, locations, attachments, labels, intake, short links",
+  "interface": "Blueprint `bp` (name 'catalog', no url_prefix). admin_required on every /admin route. Invoices: GET /admin/invoices?q= -> 'admin/invoices.html' (invoices with asset_count/attachment_count, q). GET /admin/invoices/new and POST (form number, supplier, issued_at, total, currency, notes) -> create, redirect to /admin/invoices/<id>; duplicate -> re-render with error. GET /admin/invoices/<int:id> -> 'admin/invoice_detail.html' with invoice, assets (search_assets(invoice_id)), attachments (list_for('invoice', id)), unassigned assets for the picker (search_assets() rows with invoice_id None, limited to 200); 404 when unknown. POST /admin/invoices/<int:id>/edit (same form) -> redirect. POST /admin/invoices/<int:id>/assets form {asset_ids: comma-separated or multiple values} -> attach_invoice, redirect. Attachments: POST /admin/assets/<int:id>/attachments and POST /admin/invoices/<int:id>/attachments multipart {kind, file} -> store, flash, redirect back to the detail; AttachmentError -> flash error. GET /admin/attachments/<int:id> -> send_file(path, download_name=filename, mimetype) | 404. POST /admin/attachments/<int:id>/delete -> delete, redirect back (to the owner's detail). Tags: GET /admin/tags -> 'admin/tags.html' (tags with asset_count, TAG_COLORS); POST /admin/tags {name, color} -> create; POST /admin/tags/<int:id>/edit {name, color}; POST /admin/tags/<int:id>/delete. Locations: GET /admin/locations -> 'admin/locations.html'; POST /admin/locations {name, address, notes}; POST /admin/locations/<int:id>/edit; POST /admin/locations/<int:id>/delete (IntegrityError -> flash error). Labels: GET /admin/labels?ids=1,2,3 -> 'admin/labels.html' with labels=[{asset, qr_svg}] (empty ids -> empty list, 200) and printer_configured=bool(LABEL_PRINTER_HOST); GET /admin/labels/zpl?ids= -> text/plain with the concatenated ZPL; POST /admin/labels/print form {ids} -> if not LABEL_PRINTER_HOST flash error 'Není nastavena tiskárna (LABEL_PRINTER_HOST v Nastavení).' else print_zpl(assets, host, port) and flash the count (OSError -> flash error); redirect to /admin/labels?ids=. Intake: GET /admin/intake -> 'admin/intake.html' with types, conditions, locations, tags, invoices, next tags preview (service.next_asset_tag for each type); POST /admin/intake form {type, brand, model, quantity, invoice_number, supplier, unit_price, location_id, tags (comma), warranty_until, condition} -> create_batch; redirect to /admin/intake/<batch> where batch = comma-separated asset ids; ValueError -> re-render with error. GET /admin/intake/<ids> -> 'admin/intake_serials.html' with assets (service.get each) to fill serial numbers; POST /admin/intake/<ids>/serials form {serial_<id>: value} -> set_serials, flash, redirect to /admin/labels?ids=<ids>. Short link: GET /a/<tag> (login_required): asset by tag; admin -> redirect to /admin/assets/<id>; employee holding it -> redirect to '/'; otherwise 404. Services from src/services/factory.py on get_db().",
+  "uses": {
+    "factory": "src/services/factory.py: build_asset_service, build_attachment_service, build_label_service, build_intake_service",
+    "repositories": "src/repositories/{tags,locations,invoices,attachments,employees,assignments}.py",
+    "guards": "src/auth/guards.py: admin_required, login_required, actor(), current_user()",
+    "get_db": "src/db.py",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+  },
+  "database": "services from src/services/factory.py on get_db() per request",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-017",
+    "C-012",
+    "C-045"
+  ],
+  "budget": {
+    "iterations": 24
+  },
+  "notes": ""
+}

@@ -1,0 +1,27 @@
+{
+  "id": "C-048",
+  "file": "src/api/taxonomy.py",
+  "role": "coder",
+  "title": "JSON API: tags, locations, invoices, attachments, dashboard",
+  "interface": "Blueprint `bp` (name 'api_taxonomy', no url_prefix; mounted at /api/v1). All routes api_auth_required. Tags: GET /tags -> list; POST /tags {name, color?} -> 201 | 400 (bad color via ValueError) | 409 (IntegrityError); PATCH /tags/<int:id> -> 200 | 404; DELETE /tags/<int:id> -> 204 | 404. Locations: GET /locations; POST /locations {name, address?, notes?} -> 201 | 409; PATCH /locations/<int:id>; DELETE /locations/<int:id> -> 204 | 404 | 409 (IntegrityError: referenced). Invoices: GET /invoices?q= -> list (search when q else list_all); POST /invoices {number, supplier?, issued_at?, total?, currency?, notes?} -> 201 | 400 (missing number) | 409; GET /invoices/<int:id> -> invoice dict + 'assets' (AssetService.assets.search_assets(invoice_id=id)) + 'attachments' (AttachmentRepository.list_for('invoice', id)) | 404; PATCH /invoices/<int:id>; DELETE /invoices/<int:id> -> 204 | 409; POST /invoices/<int:id>/assets {asset_ids: [...]} -> 200 {'attached': n} via AssetService.attach_invoice. Attachments: GET /assets/<int:id>/attachments -> list; POST /assets/<int:id>/attachments multipart (fields kind, file) -> 201 attachment dict | 400 (AttachmentError) | 404; POST /invoices/<int:id>/attachments likewise (owner_type 'invoice'); GET /attachments/<int:id> -> the file via send_file(path_for(id), as_attachment=True, download_name=filename, mimetype=mime_type) | 404; DELETE /attachments/<int:id> -> 204 | 404. GET /dashboard -> DashboardService stats(today=date.today().isoformat()). Services from src/services/factory.py (build_asset_service, build_attachment_service, build_dashboard_service) and repositories on get_db(). Actor via guards.actor().",
+  "uses": {
+    "factory": "src/services/factory.py",
+    "repositories": "src/repositories/{tags,locations,invoices,attachments}.py",
+    "AssetService": "src/services/asset_service.py: attach_invoice, assets.search_assets",
+    "AttachmentService": "src/services/attachment_service.py: store/path_for/delete, AttachmentError",
+    "guards": "src/auth/guards.py",
+    "get_db": "src/db.py",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+  },
+  "database": "services from src/services/factory.py on get_db() per request",
+  "acceptance": "tests/test_api_taxonomy.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-017",
+    "C-012"
+  ],
+  "budget": {
+    "iterations": 20
+  },
+  "notes": ""
+}

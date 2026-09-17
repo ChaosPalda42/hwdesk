@@ -1,62 +1,42 @@
-{% extends "base.html" %}
-
-{% block title %}Správa zařízení - {{ 'Úprava' if asset else 'Vytvoření' }} zařízení{% endblock %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}{{ 'Upravit ' ~ asset.asset_tag if asset else 'Nové zařízení' }}{% endblock %}
+{% block topbar %}<div class="topbar"><div><div class="crumbs"><a href="/admin/assets">Zařízení</a> / {{ asset.asset_tag if asset else 'nové' }}</div><h1>{{ 'Upravit zařízení' if asset else 'Nové zařízení' }}</h1></div>
+<div class="actions"><a class="btn ghost" href="/admin/intake">Více kusů najednou? → Příjem zařízení</a></div></div>{% endblock %}
 {% block content %}
-<div class="form-container">
-    <h2>{{ 'Úprava' if asset else 'Vytvoření' }} zařízení</h2>
-    
-    {% if error %}
-        <div class="flash error">{{ error }}</div>
-    {% endif %}
-    
-    <form method="POST" action="{{ request.path }}">
-        <div class="form-group">
-            <label for="asset_tag">ID zařízení:</label>
-            <input type="text" id="asset_tag" name="asset_tag" value="{{ asset.asset_tag if asset else '' }}" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="type">Typ:</label>
-            <select id="type" name="type" required>
-                <option value="">Vyberte typ</option>
-                {% for t in types %}
-                    <option value="{{ t }}" {{ 'selected' if asset and asset.type == t else '' }}>{{ t }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="brand">Značka:</label>
-            <input type="text" id="brand" name="brand" value="{{ asset.brand if asset else '' }}" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="model">Model:</label>
-            <input type="text" id="model" name="model" value="{{ asset.model if asset else '' }}" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="serial_number">Sériové číslo:</label>
-            <input type="text" id="serial_number" name="serial_number" value="{{ asset.serial_number if asset else '' }}" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="purchase_date">Datum nákupu:</label>
-            <input type="date" id="purchase_date" name="purchase_date" value="{{ asset.purchase_date if asset else '' }}">
-        </div>
-        
-        <div class="form-group">
-            <label for="price">Cena (Kč):</label>
-            <input type="number" id="price" name="price" step="0.01" value="{{ asset.price if asset else '' }}">
-        </div>
-        
-        <div class="form-group">
-            <label for="notes">Poznámky:</label>
-            <textarea id="notes" name="notes">{{ asset.notes if asset else '' }}</textarea>
-        </div>
-        
-        <button type="submit">Uložit</button>
-    </form>
-</div>
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+{% set a = asset or {} %}
+<form method="post" action="{{ request.path }}" class="stack">
+  <div class="card">
+    <h2>Identifikace</h2>
+    <div class="grid-3">
+      <div class="field"><label>Inventární číslo</label><input type="text" name="asset_tag" value="{{ a.asset_tag or '' }}" placeholder="{{ next_tag or 'NB-0001' }}" class="mono"><div class="hint">Prázdné = vygeneruje se podle typu ({{ next_tag or '…' }}).</div></div>
+      <div class="field"><label>Typ</label><select name="type" required>{% for t in types %}<option value="{{ t }}" {{ 'selected' if a.get('type', 'notebook') == t }}>{{ m.type_label(t) }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Stav kusu</label><select name="condition">{% for c in conditions %}<option value="{{ c }}" {{ 'selected' if a.get('condition', 'good') == c }}>{{ m.CONDITION_LABELS.get(c, c) }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Výrobce</label><input type="text" name="brand" value="{{ a.brand or '' }}" placeholder="Dell, Apple, LG…"></div>
+      <div class="field"><label>Model</label><input type="text" name="model" value="{{ a.model or '' }}" placeholder="Latitude 5540"></div>
+      <div class="field"><label>Sériové číslo</label><input type="text" name="serial_number" value="{{ a.serial_number or '' }}" class="mono"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Zařazení</h2>
+    <div class="grid-3">
+      <div class="field"><label>Lokalita</label><select name="location_id"><option value="">—</option>{% for l in locations %}<option value="{{ l.id }}" {{ 'selected' if a.get('location_id') == l.id }}>{{ l.name }}</option>{% endfor %}</select><div class="hint"><a href="/admin/locations">Spravovat lokality</a></div></div>
+      <div class="field"><label>Štítky</label><input type="text" name="tags" value="{{ a.tags|map(attribute='name')|join(', ') if a.tags else '' }}" placeholder="VIP, Zápůjčka, Nákup 2026"><div class="hint">Oddělené čárkou; nové štítky se vytvoří.</div></div>
+      <div class="field"><label>Nákladové středisko</label><input type="text" name="cost_center" value="{{ a.cost_center or '' }}"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Pořízení a záruka</h2>
+    <div class="grid-3">
+      <div class="field"><label>Faktura</label><select name="invoice_id"><option value="">—</option>{% for i in invoices %}<option value="{{ i.id }}" {{ 'selected' if a.get('invoice_id') == i.id }}>{{ i.number }} · {{ i.supplier }}</option>{% endfor %}</select></div>
+      <div class="field"><label>… nebo nová faktura (číslo)</label><input type="text" name="invoice_number" placeholder="FV-2026-0117"><div class="hint">Vytvoří fakturu, pokud neexistuje.</div></div>
+      <div class="field"><label>Dodavatel</label><input type="text" name="supplier" value="{{ a.supplier or '' }}"></div>
+      <div class="field"><label>Datum pořízení</label><input type="date" name="purchase_date" value="{{ a.purchase_date or '' }}"></div>
+      <div class="field"><label>Cena (Kč)</label><input type="number" step="0.01" name="price" value="{{ a.price or '' }}"></div>
+      <div class="field"><label>Záruka do</label><input type="date" name="warranty_until" value="{{ a.warranty_until or '' }}"></div>
+    </div>
+    <div class="field"><label>Poznámka</label><textarea name="notes">{{ a.notes or '' }}</textarea></div>
+  </div>
+  <div class="btn-row"><button class="btn" type="submit">{{ m.icon('check') }} Uložit</button><a class="btn secondary" href="{{ '/admin/assets/' ~ a.id if a.id else '/admin/assets' }}">Zrušit</a></div>
+</form>
 {% endblock %}

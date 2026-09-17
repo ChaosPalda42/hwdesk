@@ -1,0 +1,21 @@
+{
+  "id": "C-039",
+  "file": "src/repositories/tags.py",
+  "role": "coder",
+  "title": "Tag repository",
+  "interface": "class TagRepository(conn). create(name, color='gray') -> dict (raises ValueError if color not in TAG_COLORS; sqlite3.IntegrityError on duplicate name — do not catch). get(id) -> dict | None. get_by_name(name) -> dict | None (case-insensitive, stripped). update(id, name=None, color=None) -> dict | None. delete(id) -> bool (asset_tags rows removed too). list_all() -> list[dict] ordered by name, each with 'asset_count'. assign(asset_id, tag_id) -> bool (False when already assigned: INSERT OR IGNORE and rowcount). unassign(asset_id, tag_id) -> bool. set_for_asset(asset_id, tag_ids: list[int]) -> None (replace). for_asset(asset_id) -> list[dict] ordered by name. for_assets(asset_ids) -> dict[asset_id, list[dict]] (one query; every requested id present, [] when none). asset_ids_with(tag_id) -> list[int]. Dict keys: id, name, color (+ asset_count in list_all). the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+  "uses": {
+    "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_taxonomy.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-002"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

@@ -1,0 +1,18 @@
+{
+  "id": "C-047",
+  "file": "src/services/label_service.py",
+  "role": "coder",
+  "title": "Asset labels: QR SVG, ZPL, network printing",
+  "interface": "class LabelService(base_url, company, zpl_template=None, connect=None). url_for(asset) -> f'{base_url.rstrip(\"/\")}/a/{asset_tag}'. qr_svg(asset) -> str: an <svg> string of the QR code of url_for(asset) built with the `segno` package (segno.make(url, error='m').svg_inline() or .svg_data_uri — return inline SVG markup starting with '<svg'). zpl(asset) -> str: template.format(asset_tag=, brand=, model=, serial_number=, url=, company=) where the default template is a 50x25 mm label: '^XA^CI28^PW400^LL200^FO20,20^BQN,2,4^FDQA,{url}^FS^FO150,25^A0N,36,36^FD{asset_tag}^FS^FO150,70^A0N,24,24^FD{brand} {model}^FS^FO150,100^A0N,22,22^FDSN {serial_number}^FS^FO150,140^A0N,20,20^FD{company}^FS^XZ' (the test only requires: starts with ^XA, ends with ^XZ, contains asset_tag, 'brand model', the url and the company). print_zpl(assets: list[dict], host, port=9100) -> int: connect(host, port, timeout) — default socket.create_connection((host, port), timeout=10) — used as a context manager; sendall(zpl.encode('utf-8')) per asset; returns the count. Never catch generic Exception.",
+  "uses": {
+    "segno": "pip package segno: segno.make(text, error='m') -> QRCode with .svg_inline(scale=...) returning an <svg …> string"
+  },
+  "database": "",
+  "acceptance": "tests/test_labels.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 14
+  },
+  "notes": ""
+}

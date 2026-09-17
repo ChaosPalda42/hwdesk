@@ -26,6 +26,37 @@ CREATE TABLE IF NOT EXISTS employees (
     synced_at     TEXT
 );
 
+CREATE TABLE IF NOT EXISTS locations (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    name     TEXT NOT NULL UNIQUE,
+    address  TEXT NOT NULL DEFAULT '',
+    notes    TEXT NOT NULL DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS tags (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    name   TEXT NOT NULL UNIQUE,
+    color  TEXT NOT NULL DEFAULT 'gray'          -- gray | blue | green | yellow | red | purple
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    number     TEXT NOT NULL UNIQUE,              -- invoice number as printed
+    supplier   TEXT NOT NULL DEFAULT '',
+    issued_at  TEXT NOT NULL DEFAULT '',          -- ISO date or ''
+    total      REAL NOT NULL DEFAULT 0,
+    currency   TEXT NOT NULL DEFAULT 'CZK',
+    notes      TEXT NOT NULL DEFAULT '',
+    created_by TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS asset_tags (
+    asset_id INTEGER NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+    tag_id   INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (asset_id, tag_id)
+);
+
 CREATE TABLE IF NOT EXISTS assets (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     asset_tag     TEXT NOT NULL UNIQUE,          -- inventory number, e.g. NB-0042
@@ -37,7 +68,14 @@ CREATE TABLE IF NOT EXISTS assets (
     price         REAL NOT NULL DEFAULT 0,
     status        TEXT NOT NULL DEFAULT 'in_stock',  -- one of config.ASSET_STATUSES
     notes         TEXT NOT NULL DEFAULT '',
-    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    location_id   INTEGER REFERENCES locations(id),
+    condition     TEXT NOT NULL DEFAULT 'good',    -- new | good | worn | broken
+    supplier      TEXT NOT NULL DEFAULT '',
+    warranty_until TEXT NOT NULL DEFAULT '',      -- ISO date or ''
+    cost_center   TEXT NOT NULL DEFAULT '',
+    invoice_id    INTEGER REFERENCES invoices(id),  -- one invoice covers many assets
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS handovers (
@@ -76,6 +114,19 @@ CREATE TABLE IF NOT EXISTS audit_log (
     details    TEXT NOT NULL DEFAULT ''          -- JSON
 );
 
+CREATE TABLE IF NOT EXISTS attachments (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_type  TEXT NOT NULL,                    -- 'asset' | 'invoice'
+    owner_id    INTEGER NOT NULL,
+    kind        TEXT NOT NULL DEFAULT 'other',    -- invoice | photo | document | other
+    filename    TEXT NOT NULL,                    -- original name shown to users
+    stored_name TEXT NOT NULL UNIQUE,             -- name on disk under ATTACHMENTS_DIR
+    mime_type   TEXT NOT NULL DEFAULT 'application/octet-stream',
+    size        INTEGER NOT NULL DEFAULT 0,
+    uploaded_by TEXT NOT NULL DEFAULT '',
+    uploaded_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS settings (
     key        TEXT PRIMARY KEY,
     value      TEXT NOT NULL DEFAULT '',
@@ -88,11 +139,32 @@ CREATE INDEX IF NOT EXISTS idx_handovers_status ON handovers(status);
 """
 
 
+# Columns added after the first release; applied to older databases on connect.
+_ASSET_COLUMNS_ADDED = (
+    ("location_id", "INTEGER REFERENCES locations(id)"),
+    ("condition", "TEXT NOT NULL DEFAULT 'good'"),
+    ("supplier", "TEXT NOT NULL DEFAULT ''"),
+    ("warranty_until", "TEXT NOT NULL DEFAULT ''"),
+    ("cost_center", "TEXT NOT NULL DEFAULT ''"),
+    ("invoice_id", "INTEGER REFERENCES invoices(id)"),
+    ("updated_at", "TEXT NOT NULL DEFAULT ''"),
+)
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    existing = {row["name"] for row in conn.execute("PRAGMA table_info(assets)")}
+    for column, definition in _ASSET_COLUMNS_ADDED:
+        if column not in existing:
+            conn.execute(f"ALTER TABLE assets ADD COLUMN {column} {definition}")
+    conn.commit()
+
+
 def connect(path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
+    _migrate(conn)
     return conn
 
 

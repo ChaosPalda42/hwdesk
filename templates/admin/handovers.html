@@ -1,57 +1,16 @@
-{% extends "base.html" %}
-
-{% block title %}Předání zařízení{% endblock %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Předání a vrácení{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Předání a vrácení</h1><div class="muted">Každý záznam je protokol; potvrzuje ho zaměstnanec e-mailem</div></div></div>{% endblock %}
 {% block content %}
-<h1>Předání zařízení</h1>
-
-<form method="GET" class="filter-form">
-    <label for="status">Stav:</label>
-    <select name="status" id="status">
-        <option value="all" {% if status == 'all' %}selected{% endif %}>Vše</option>
-        <option value="pending" {% if status == 'pending' %}selected{% endif %}>Čekající</option>
-        <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>Potvrzeno</option>
-        <option value="declined" {% if status == 'declined' %}selected{% endif %}>Zamítnuto</option>
-        <option value="expired" {% if status == 'expired' %}selected{% endif %}>Vypršelo</option>
-        <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Zrušeno</option>
-    </select>
-    <button type="submit">Filtrovat</button>
+<form method="get" class="filters">
+  <div class="field"><label>Stav</label><select name="status"><option value="">Vše</option>{% for s in ('pending','confirmed','declined','expired','cancelled') %}<option value="{{ s }}" {{ 'selected' if status == s }}>{{ m.STATUS_LABELS[s] }}</option>{% endfor %}</select></div>
+  <button class="btn secondary" type="submit">Filtrovat</button>
 </form>
-
-<table>
-    <thead>
-        <tr>
-            <th>Číslo protokolu</th>
-            <th>Druh</th>
-            <th>Majetek</th>
-            <th>Zaměstnanec</th>
-            <th>Stav</th>
-            <th>Vytvořeno</th>
-            <th>Potvrzeno</th>
-            <th>Akce</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for handover in handovers %}
-        <tr>
-            <td>{{ handover.protocol_number }}</td>
-            <td>{{ handover.kind }}</td>
-            <td><a href="/admin/assets/{{ handover.asset.id }}">{{ handover.asset.asset_tag }}</a></td>
-            <td>{{ handover.employee.display_name }} &lt;{{ handover.employee.email }}&gt;</td>
-            <td>{{ handover.status }}</td>
-            <td>{{ handover.created_at|dt }}</td>
-            <td>{{ handover.confirmed_at|dt }}</td>
-            <td>
-                {% if handover.status == 'pending' %}
-                    <form method="POST" action="/admin/handovers/{{ handover.id }}/cancel" style="display: inline;">
-                        <button type="submit" onclick="return confirm('Opravdu chcete zrušit tento předání?')">Zrušit</button>
-                    </form>
-                {% elif handover.protocol_path %}
-                    <a href="{{ handover.protocol_path }}" target="_blank">PDF</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-wrap"><table>
+  <thead><tr><th>Číslo</th><th>Druh</th><th>Zařízení</th><th>Zaměstnanec</th><th>Stav</th><th>Vytvořeno</th><th>Potvrzeno</th><th></th></tr></thead>
+  <tbody>{% for h in handovers %}
+    <tr><td class="mono">{{ h.protocol_number }}</td><td>{{ 'převzetí' if h.kind == 'handover' else 'vrácení' }}</td><td>{% if h.asset %}{{ m.asset_cell(h.asset) }}{% endif %}</td><td>{% if h.employee %}<a href="/admin/employees/{{ h.employee.email }}">{{ h.employee.display_name }}</a><div class="small muted">{{ h.employee.email }}</div>{% endif %}</td><td>{{ m.status(h.status) }}</td><td class="nowrap">{{ h.created_at|dt }}</td><td class="nowrap">{{ h.confirmed_at|dt }}</td>
+    <td class="actions">{% if h.status == 'pending' %}<form class="inline" method="post" action="/admin/handovers/{{ h.id }}/cancel"><button class="btn ghost sm" type="submit">Zrušit</button></form>{% endif %}{% if h.protocol_path %}<a class="btn ghost sm" href="/api/v1/handovers/{{ h.id }}/protocol.pdf">PDF</a>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="8">{{ m.empty('Žádné záznamy.', 'handover') }}</td></tr>{% endfor %}</tbody>
+</table></div>
 {% endblock %}

@@ -1,88 +1,31 @@
-{% extends "base.html" %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
 {% block title %}Moje zařízení{% endblock %}
-
+{% block topbar %}<div class="topbar"><div><h1>Dobrý den, {{ employee.display_name.split(' ')[0] }}</h1><div class="muted">Zařízení, která máte u sebe, a co je potřeba potvrdit</div></div></div>{% endblock %}
 {% block content %}
-<h1>Ahoj, {{ employee.display_name }}!</h1>
-
-<section>
-    <h2>Čeká na vaše potvrzení</h2>
-    {% if overview.pending %}
-        <ul>
-            {% for h in overview.pending %}
-                <li>
-                    {{ h.asset.asset_tag }} - {{ h.asset.brand }} {{ h.asset.model }} 
-                    {% if h.kind == 'handover' %}(převzetí){% else %}(vrácení){% endif %}
-                    <a href="{{ confirm_links[h.id] }}">Potvrdit</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Žádné čekající potvrzení.</p>
-    {% endif %}
-</section>
-
-<section>
-    <h2>Moje zařízení</h2>
-    {% if overview.assigned %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Přihlašovací jméno</th>
-                    <th>Stav</th>
-                    <th>Typ</th>
-                    <th>Marka</th>
-                    <th>Model</th>
-                    <th>Seriové číslo</th>
-                    <th>Od</th>
-                    <th>Protokol</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in overview.assigned %}{% set asset = item.asset %}
-                <tr>
-                    <td>{{ asset.asset_tag }}</td>
-                    <td><span class="status status-{{ asset.status }}">{{ asset.status }}</span></td>
-                    <td>{{ asset.type }}</td>
-                    <td>{{ asset.brand }}</td>
-                    <td>{{ asset.model }}</td>
-                    <td>{{ asset.serial_number }}</td>
-                    <td>{{ item.assignment.started_at|dt }}</td>
-                    <td><a href="/my/protocols/{{ item.handover.protocol_number }}.pdf">{{ item.handover.protocol_number }}</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Žádné přiřazené zařízení.</p>
-    {% endif %}
-</section>
-
-<section>
-    <h2>Historie</h2>
-    {% if overview.history %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Číslo protokolu</th>
-                    <th>Druh</th>
-                    <th>Stav</th>
-                    <th>Potvrzeno dne</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in overview.history %}
-                <tr>
-                    <td>{{ item.protocol_number }}</td>
-                    <td>{{ item.kind }}</td>
-                    <td>{{ item.status }}</td>
-                    <td>{{ item.confirmed_at|dt }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Žádná historie.</p>
-    {% endif %}
-</section>
+{% if overview.pending %}
+<div class="attention" style="margin-bottom:18px">
+  <h2>Čeká na vaše potvrzení</h2>
+  {% for h in overview.pending %}
+  <div class="item">{{ m.icon(h.asset.type) }}<div><b>{{ h.asset.asset_tag }}</b> · {{ h.asset.brand }} {{ h.asset.model }}<div class="small muted">{{ 'Převzetí zařízení' if h.kind == 'handover' else 'Vrácení zařízení' }} · odesláno {{ h.created_at|dt }}{% if h.note %} · {{ h.note }}{% endif %}</div></div><a class="btn sp" href="{{ confirm_links[h.id] }}">Potvrdit nebo odmítnout</a></div>
+  {% endfor %}
+</div>
+{% endif %}
+<h2>Moje zařízení</h2>
+{% if overview.assigned %}
+<div class="cards">
+  {% for x in overview.assigned %}{% set a = x.asset %}
+  <div class="device">
+    <div class="head"><span class="ico">{{ m.icon(a.type) }}</span><div><div class="name">{{ a.brand }} {{ a.model }}</div><div class="tagline">{{ m.type_label(a.type) }} · <span class="mono">{{ a.asset_tag }}</span></div></div></div>
+    <dl><dt>Sériové číslo</dt><dd class="mono">{{ a.serial_number or '—' }}</dd><dt>U vás od</dt><dd>{{ x.assignment.started_at|dt }}</dd><dt>Protokol</dt><dd><a href="/my/protocols/{{ x.handover.protocol_number }}.pdf">{{ x.handover.protocol_number }}</a></dd><dt>Stav</dt><dd>{{ m.status(a.status) }}</dd></dl>
+    <div class="foot">{% if a.status == 'assigned' %}<form method="post" action="/my/assets/{{ a.id }}/return" class="btn-row"><input type="text" name="note" placeholder="důvod (nepovinné)" style="width:150px"><button class="btn secondary sm" type="submit">Vrátit zařízení</button></form>{% else %}<span class="small muted">Vrácení čeká na vaše potvrzení výše.</span>{% endif %}</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}<div class="card">{{ m.empty('Nemáte u sebe žádné firemní zařízení.', 'laptop') }}</div>{% endif %}
+{% if overview.history %}
+<h2 style="margin-top:22px">Historie protokolů</h2>
+<div class="table-wrap"><table><thead><tr><th>Číslo</th><th>Druh</th><th>Stav</th><th>Potvrzeno</th><th></th></tr></thead><tbody>
+  {% for h in overview.history %}<tr><td class="mono">{{ h.protocol_number }}</td><td>{{ 'převzetí' if h.kind == 'handover' else 'vrácení' }}</td><td>{{ m.status(h.status) }}</td><td class="nowrap">{{ h.confirmed_at|dt }}</td><td class="actions">{% if h.protocol_path %}<a class="btn ghost sm" href="/my/protocols/{{ h.protocol_number }}.pdf">PDF</a>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
 {% endblock %}

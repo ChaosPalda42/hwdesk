@@ -3,20 +3,26 @@
   "file": "src/services/factory.py",
   "role": "coder",
   "title": "Service construction from the app config",
-  "interface": "build_handover_service(db: sqlite3.Connection) -> HandoverService wired from flask.current_app.config: EmailSender(mode=config['EMAIL_MODE'], outbox_dir=config['OUTBOX_DIR'], sender=config['EMAIL_FROM'], smtp={'host': config['SMTP_HOST'], 'port': config['SMTP_PORT'], 'user': config['SMTP_USER'], 'password': config['SMTP_PASSWORD'], 'starttls': config['SMTP_STARTTLS']}), HandoverTokens(secret=config['SECRET_KEY'], max_age_hours=config['HANDOVER_TOKEN_HOURS']), base_url=config['BASE_URL'], company=config['COMPANY_NAME'], protocol_dir=config['PROTOCOL_DIR'], and the five repositories on db. Also build_asset_service(db) -> AssetService.",
+  "interface": "build_handover_service(db: sqlite3.Connection) -> HandoverService wired from flask.current_app.config: EmailSender(mode=config['EMAIL_MODE'], outbox_dir=config['OUTBOX_DIR'], sender=config['EMAIL_FROM'], smtp={'host': config['SMTP_HOST'], 'port': config['SMTP_PORT'], 'user': config['SMTP_USER'], 'password': config['SMTP_PASSWORD'], 'starttls': config['SMTP_STARTTLS']}), HandoverTokens(secret=config['SECRET_KEY'], max_age_hours=config['HANDOVER_TOKEN_HOURS']), base_url=config['BASE_URL'], company=config['COMPANY_NAME'], protocol_dir=config['PROTOCOL_DIR'], and the five repositories on db. Also build_asset_service(db) -> AssetService. build_asset_service(db) -> AssetService(AssetRepository(db), AuditRepository(db), tags=TagRepository(db), locations=LocationRepository(db), invoices=InvoiceRepository(db), tag_prefixes=json.loads(config['TAG_PREFIXES']) if config.get('TAG_PREFIXES') else {}, tag_pad=int(config.get('TAG_PAD', 4))). build_dashboard_service(db) -> DashboardService(AssetRepository(db), HandoverRepository(db), AuditRepository(db), EmployeeRepository(db)). build_attachment_service(db) -> AttachmentService(AttachmentRepository(db), AuditRepository(db), directory=config['ATTACHMENTS_DIR'], max_bytes=config['ATTACHMENT_MAX_MB']*1024*1024, owner_exists=lambda owner_type, owner_id: (AssetRepository(db).get(owner_id) if owner_type == 'asset' else InvoiceRepository(db).get(owner_id)) is not None). build_label_service() -> LabelService(base_url=config['BASE_URL'], company=config['COMPANY_NAME'], zpl_template=config.get('LABEL_ZPL_TEMPLATE') or None). build_intake_service(db) -> IntakeService(build_asset_service(db), InvoiceRepository(db), AuditRepository(db)). build_email_sender(config) as before.",
   "uses": {
     "HandoverService": "src/services/handover_service.py",
     "AssetService": "src/services/asset_service.py",
     "EmailSender": "src/services/email_sender.py",
     "HandoverTokens": "src/services/tokens.py",
-    "repositories": "src/repositories/{employees,assets,handovers,assignments,audit}.py"
+    "repositories": "src/repositories/{employees,assets,handovers,assignments,audit}.py",
+    "new services": "src/services/{dashboard_service,attachment_service,label_service,intake_service}.py",
+    "new repositories": "src/repositories/{tags,locations,invoices,attachments}.py"
   },
   "database": "the connection is passed in",
   "acceptance": "",
   "forbidden": [],
   "depends_on": [
     "C-009",
-    "C-010"
+    "C-010",
+    "C-043",
+    "C-044",
+    "C-046",
+    "C-047"
   ],
   "budget": {
     "iterations": 12

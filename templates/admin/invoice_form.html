@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}{{ 'Upravit fakturu' if invoice else 'Nová faktura' }}{% endblock %}
+{% block topbar %}<div class="topbar"><div><div class="crumbs"><a href="/admin/invoices">Faktury</a></div><h1>{{ 'Upravit fakturu ' ~ invoice.number if invoice else 'Nová faktura' }}</h1></div></div>{% endblock %}
+{% block content %}
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+{% set i = invoice or {} %}
+<form method="post" action="{{ request.path }}" class="card">
+  <div class="grid-3">
+    <div class="field"><label>Číslo faktury</label><input type="text" name="number" value="{{ i.number or '' }}" required class="mono"></div>
+    <div class="field"><label>Dodavatel</label><input type="text" name="supplier" value="{{ i.supplier or '' }}"></div>
+    <div class="field"><label>Vystaveno</label><input type="date" name="issued_at" value="{{ i.issued_at or '' }}"></div>
+    <div class="field"><label>Částka celkem</label><input type="number" step="0.01" name="total" value="{{ i.total or '' }}"></div>
+    <div class="field"><label>Měna</label><input type="text" name="currency" value="{{ i.currency or 'CZK' }}"></div>
+  </div>
+  <div class="field"><label>Poznámka</label><textarea name="notes">{{ i.notes or '' }}</textarea></div>
+  <div class="btn-row"><button class="btn" type="submit">Uložit</button><a class="btn secondary" href="/admin/invoices">Zrušit</a></div>
+</form>
+{% endblock %}

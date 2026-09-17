@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}{{ invoice.number }}{% endblock %}
+{% block topbar %}<div class="topbar"><div class="hero"><span class="ico">{{ m.icon('invoice') }}</span><div><div class="crumbs"><a href="/admin/invoices">Faktury</a></div><h1 class="mono">{{ invoice.number }}</h1><div class="sub">{{ invoice.supplier or '—' }} · {{ invoice.issued_at or 'bez data' }} · {{ '{:,.2f}'.format(invoice.total).replace(',', ' ') }} {{ invoice.currency }}</div></div></div>
+<div class="actions"><a class="btn secondary" href="/admin/intake?invoice_number={{ invoice.number }}">{{ m.icon('inbox') }} Přijmout zařízení z této faktury</a></div></div>{% endblock %}
+{% block content %}
+<div class="grid-2">
+  <div class="stack">
+    <div class="card"><h2>Údaje</h2>
+      <form method="post" action="/admin/invoices/{{ invoice.id }}/edit">
+        <div class="grid-2">
+          <div class="field"><label>Číslo</label><input type="text" name="number" value="{{ invoice.number }}" class="mono"></div>
+          <div class="field"><label>Dodavatel</label><input type="text" name="supplier" value="{{ invoice.supplier }}"></div>
+          <div class="field"><label>Vystaveno</label><input type="date" name="issued_at" value="{{ invoice.issued_at }}"></div>
+          <div class="field"><label>Částka</label><input type="number" step="0.01" name="total" value="{{ invoice.total }}"></div>
+          <div class="field"><label>Měna</label><input type="text" name="currency" value="{{ invoice.currency }}"></div>
+        </div>
+        <div class="field"><label>Poznámka</label><textarea name="notes">{{ invoice.notes }}</textarea></div>
+        <button class="btn secondary sm" type="submit">Uložit změny</button>
+      </form>
+    </div>
+    <div class="card"><h2>Soubory faktury</h2>
+      <ul class="files">{% for f in attachments %}<li>{{ m.icon('invoice') }}<div><div class="name"><a href="/admin/attachments/{{ f.id }}">{{ f.filename }}</a></div><div class="meta">{{ (f.size / 1024)|round(0)|int }} kB · {{ f.uploaded_at|dt }} · {{ f.uploaded_by }}</div></div><form class="inline sp" method="post" action="/admin/attachments/{{ f.id }}/delete"><button class="btn ghost sm" type="submit">Smazat</button></form></li>{% else %}<li class="muted">Zatím nenahráno. Nahrajte PDF faktury.</li>{% endfor %}</ul>
+      <form method="post" action="/admin/invoices/{{ invoice.id }}/attachments" enctype="multipart/form-data" class="btn-row" style="margin-top:12px"><input type="hidden" name="kind" value="invoice"><input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required style="width:auto"><button class="btn secondary sm" type="submit">{{ m.icon('upload') }} Nahrát fakturu</button></form>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="card"><h2>Zařízení na faktuře ({{ assets|length }})</h2>
+      <div class="table-wrap" style="box-shadow:none"><table><thead><tr><th>Zařízení</th><th>Sériové číslo</th><th>Stav</th><th class="right">Cena</th></tr></thead><tbody>
+        {% for a in assets %}<tr><td>{{ m.asset_cell(a) }}</td><td class="mono">{{ a.serial_number or '—' }}</td><td>{{ m.status(a.status) }}</td><td class="right num">{{ m.money(a.price) }}</td></tr>{% else %}<tr><td colspan="4" class="muted">Žádné zařízení. Použijte Příjem nebo přiřaďte existující níže.</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% if assets %}<div class="btn-row" style="margin-top:10px"><a class="btn ghost sm" href="/admin/labels?ids={{ assets|map(attribute='id')|join(',') }}">{{ m.icon('print') }} Štítky pro všechna</a></div>{% endif %}
+    </div>
+    <div class="card"><h2>Přiřadit existující zařízení</h2>
+      <form method="post" action="/admin/invoices/{{ invoice.id }}/assets">
+        <div class="field"><label>Zařízení bez faktury</label><select name="asset_ids" multiple size="8">{% for a in unassigned %}<option value="{{ a.id }}">{{ a.asset_tag }} · {{ a.brand }} {{ a.model }}</option>{% endfor %}</select><div class="hint">Podržte ⌘/Ctrl pro výběr více položek.</div></div>
+        <button class="btn secondary sm" type="submit">Přiřadit k faktuře</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

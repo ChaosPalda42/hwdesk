@@ -1,32 +1,9 @@
-{% extends "base.html" %}
-
-{% block title %}Audit log{% endblock %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Audit{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Audit</h1><div class="muted">Kdo, co a kdy změnil — posledních 200 záznamů</div></div></div>{% endblock %}
 {% block content %}
-<h1>Audit log</h1>
-
-<table>
-    <thead>
-        <tr>
-            <th>Čas</th>
-            <th>Aktor</th>
-            <th>Akce</th>
-            <th>Entita</th>
-            <th>ID entity</th>
-            <th>Detail</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for entry in entries %}
-        <tr>
-            <td>{{ entry.at|dt }}</td>
-            <td>{{ entry.actor }}</td>
-            <td>{{ entry.action }}</td>
-            <td>{{ entry.entity }}</td>
-            <td>{{ entry.entity_id }}</td>
-            <td><pre>{{ entry.details | tojson }}</pre></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-wrap"><table>
+  <thead><tr><th>Kdy</th><th>Kdo</th><th>Akce</th><th>Objekt</th><th>Detail</th></tr></thead>
+  <tbody>{% for e in entries %}<tr><td class="nowrap">{{ e.at|dt }}</td><td>{{ e.actor }}</td><td class="mono">{{ e.action }}</td><td>{% if e.entity == 'asset' %}<a href="/admin/assets/{{ e.entity_id }}">zařízení #{{ e.entity_id }}</a>{% else %}{{ e.entity }} #{{ e.entity_id }}{% endif %}</td><td class="small muted">{{ e.details|tojson if e.details else '' }}</td></tr>{% else %}<tr><td colspan="5">{{ m.empty('Zatím žádné záznamy.', 'audit') }}</td></tr>{% endfor %}</tbody>
+</table></div>
 {% endblock %}

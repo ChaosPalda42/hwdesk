@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Lokality{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Lokality</h1><div class="muted">Kanceláře, sklady, pobočky</div></div></div>{% endblock %}
+{% block content %}
+<div class="grid-2">
+  <div class="table-wrap"><table><thead><tr><th>Lokalita</th><th>Adresa</th><th class="right">Zařízení</th><th></th></tr></thead><tbody>
+    {% for l in locations %}<tr><td><form class="inline" method="post" action="/admin/locations/{{ l.id }}/edit"><input type="text" name="name" value="{{ l.name }}" style="width:150px;display:inline-block"> <input type="text" name="address" value="{{ l.address }}" placeholder="adresa" style="width:180px;display:inline-block"> <input type="hidden" name="notes" value="{{ l.notes }}"> <button class="btn ghost sm" type="submit">Uložit</button></form></td><td class="muted">{{ l.address or '—' }}</td><td class="right num"><a href="/admin/assets?location_id={{ l.id }}">{{ l.asset_count }}</a></td><td class="actions"><form class="inline" method="post" action="/admin/locations/{{ l.id }}/delete"><button class="btn ghost sm" type="submit">Smazat</button></form></td></tr>
+    {% else %}<tr><td colspan="4">{{ m.empty('Zatím žádné lokality.', 'pin') }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="card"><h2>Nová lokalita</h2>
+    <form method="post" action="/admin/locations">
+      <div class="field"><label>Název</label><input type="text" name="name" required placeholder="Praha – HQ, 3. patro"></div>
+      <div class="field"><label>Adresa</label><input type="text" name="address"></div>
+      <div class="field"><label>Poznámka</label><input type="text" name="notes"></div>
+      <button class="btn" type="submit">Vytvořit</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

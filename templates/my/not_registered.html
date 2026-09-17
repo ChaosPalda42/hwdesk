@@ -1,7 +1,5 @@
-{% extends "base.html" %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Účet není v evidenci{% endblock %}
 {% block content %}
-<div class="not-registered">
-    <p>Váš účet {{ user.email }} není v evidenci zaměstnanců. Kontaktujte správce.</p>
-</div>
+<div class="card" style="max-width:560px;margin-top:24px">{{ m.empty('', 'users') }}<h2 style="text-align:center">Váš účet {{ user.email }} není v evidenci zaměstnanců.</h2><p class="muted" style="text-align:center">Kontaktujte správce nebo IT podporu — zaměstnanci se do systému načítají z HR.</p></div>
 {% endblock %}

@@ -1,46 +1,31 @@
-{% extends "base.html" %}
-
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Potvrzení{% endblock %}
+{% block topbar %}<div class="topbar"><div><div class="crumbs"><a href="/">Moje zařízení</a></div><h1>{% if handover %}{{ 'Převzetí zařízení' if handover.kind == 'handover' else 'Vrácení zařízení' }}{% else %}Potvrzení{% endif %}</h1></div></div>{% endblock %}
 {% block content %}
-<div class="handover-confirm">
-    {% if error %}
-        <div class="flash error">{{ error }}</div>
+{% if error %}<div class="flash error">{{ error }}</div><a class="btn secondary" href="/">Zpět na moje zařízení</a>
+{% else %}
+<div class="grid-2">
+  <div class="card">
+    <div class="hero"><span class="ico">{{ m.icon(handover.asset.type) }}</span><div><b>{{ handover.asset.brand }} {{ handover.asset.model }}</b><div class="sub">{{ m.type_label(handover.asset.type) }} · <span class="mono">{{ handover.asset.asset_tag }}</span></div></div></div>
+    <dl class="kv" style="margin-top:14px">
+      <dt>Sériové číslo</dt><dd class="mono">{{ handover.asset.serial_number or '—' }}</dd>
+      <dt>Protokol</dt><dd class="mono">{{ handover.protocol_number }}</dd>
+      <dt>Zadal</dt><dd>{{ handover.created_by }}</dd>
+      <dt>Poznámka</dt><dd>{{ handover.note or '—' }}</dd>
+      <dt>Stav</dt><dd>{{ m.status(handover.status) }}</dd>
+    </dl>
+  </div>
+  <div class="card">
+    {% if handover.status == 'pending' %}
+      <h2>{{ 'Potvrzuji, že jsem zařízení převzal/a' if handover.kind == 'handover' else 'Potvrzuji, že jsem zařízení vrátil/a' }}</h2>
+      <p class="muted">Potvrzením vzniká elektronicky podepsaný předávací protokol; kopii dostanete e-mailem.</p>
+      <form method="post" action="{{ request.path }}"><input type="hidden" name="action" value="confirm"><button class="btn" type="submit">{{ m.icon('check') }} Potvrzuji</button></form>
+      <hr style="border:0;border-top:1px solid var(--rule);margin:16px 0">
+      <form method="post" action="{{ request.path }}"><input type="hidden" name="action" value="decline"><div class="field"><label>Něco nesedí? Napište důvod</label><textarea name="reason" placeholder="např. zařízení jsem nedostal / jiné sériové číslo"></textarea></div><button class="btn secondary" type="submit">Odmítnout</button></form>
     {% else %}
-        <h1>
-            {% if handover.kind == 'handover' %}Převzetí zařízení{% elif handover.kind == 'return' %}Vrácení zařízení{% endif %}
-        </h1>
-        
-        <p><strong>Protokol:</strong> {{ handover.protocol_number }}</p>
-        
-        <h2>Asset</h2>
-        <p><strong>Tag:</strong> {{ handover.asset.asset_tag }}</p>
-        <p><strong>Typ:</strong> {{ handover.asset.type }}</p>
-        <p><strong>Brand:</strong> {{ handover.asset.brand }}</p>
-        <p><strong>Model:</strong> {{ handover.asset.model }}</p>
-        <p><strong>Seriové číslo:</strong> {{ handover.asset.serial_number }}</p>
-        
-        {% if handover.note %}
-            <h2>Poznámka</h2>
-            <p>{{ handover.note }}</p>
-        {% endif %}
-        
-        <h2>Informace o předání</h2>
-        <p><strong>Vytvořil:</strong> {{ handover.created_by }}</p>
-        
-        {% if handover.status == 'pending' %}
-            <form method="POST" action="{{ request.path }}">
-                <input type="hidden" name="action" value="confirm">
-                <button type="submit">Potvrzuji</button>
-            </form>
-            
-            <form method="POST" action="{{ request.path }}" class="decline-form">
-                <input type="hidden" name="action" value="decline">
-                <label for="reason">Důvod odmítnutí:</label>
-                <textarea id="reason" name="reason" required></textarea>
-                <button type="submit" class="secondary">Odmítnout</button>
-            </form>
-        {% else %}
-            <p><strong>Stav:</strong> {{ handover.status }}</p>
-        {% endif %}
+      <h2>Tento požadavek už není otevřený</h2><p class="muted">Stav: {{ m.STATUS_LABELS.get(handover.status, handover.status) }}.</p><a class="btn secondary" href="/">Zpět na moje zařízení</a>
     {% endif %}
+  </div>
 </div>
+{% endif %}
 {% endblock %}

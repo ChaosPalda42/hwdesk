@@ -9,6 +9,7 @@ dependencies = [
     "reportlab>=4.0",
     "pytest",
     "gunicorn>=26.2.0",
+    "segno>=1.6.6",
 ]
 
 [tool.pytest.ini_options]

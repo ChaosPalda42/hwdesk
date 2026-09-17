@@ -1,77 +1,107 @@
-{% extends "base.html" %}
-{% block title %}{{ asset.asset_tag }} — detail zařízení{% endblock %}
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}{{ asset.asset_tag }}{% endblock %}
+{% block topbar %}<div class="topbar">
+  <div class="hero"><span class="ico">{{ m.icon(asset.type) }}</span><div><div class="crumbs"><a href="/admin/assets">Zařízení</a> / {{ m.type_label(asset.type) }}</div><h1>{{ asset.asset_tag }} <span class="muted" style="font-weight:400">{{ asset.brand }} {{ asset.model }}</span></h1><div class="sub">{{ m.status(asset.status) }} {{ m.condition(asset.condition) }} {{ m.tags(asset.tags) }}</div></div></div>
+  <div class="actions"><a class="btn secondary" href="/admin/labels?ids={{ asset.id }}">{{ m.icon('print') }} Štítek</a><a class="btn secondary" href="/admin/assets/{{ asset.id }}/edit">Upravit</a></div>
+</div>{% endblock %}
 {% block content %}
-<h1>{{ asset.asset_tag }} <span class="status status-{{ asset.status }}">{{ asset.status }}</span></h1>
-<div class="grid">
-  <div class="card">
-    <p><strong>Typ:</strong> {{ asset.type }}</p>
-    <p><strong>Výrobce / model:</strong> {{ asset.brand }} {{ asset.model }}</p>
-    <p><strong>Sériové číslo:</strong> {{ asset.serial_number }}</p>
-    <p><strong>Pořízeno:</strong> {{ asset.purchase_date or "—" }} · <strong>Cena:</strong> {{ asset.price }}</p>
-    <p><strong>Poznámka:</strong> {{ asset.notes or "—" }}</p>
-    <p><strong>Držitel:</strong>
-      {% if open_assignment and open_assignment.employee %}{{ open_assignment.employee.display_name }} ({{ open_assignment.employee.email }}) od {{ open_assignment.started_at|dt }}{% else %}—{% endif %}
-    </p>
-    <a class="btn" href="/admin/assets/{{ asset.id }}/edit">Upravit</a>
+<div class="tabs"><a href="#overview" data-tab="overview" class="active">Přehled</a><a href="#history" data-tab="history">Historie</a><a href="#protocols" data-tab="protocols">Protokoly ({{ handovers|length }})</a><a href="#files" data-tab="files">Soubory ({{ attachments|length }})</a></div>
+
+<div class="tab-panel active" id="overview">
+<div class="grid-2">
+  <div class="stack">
+    <div class="card"><h2>Zařízení</h2>
+      <dl class="kv">
+        <dt>Inventární číslo</dt><dd class="mono">{{ asset.asset_tag }}</dd>
+        <dt>Typ</dt><dd>{{ m.type_label(asset.type) }}</dd>
+        <dt>Výrobce / model</dt><dd>{{ asset.brand }} {{ asset.model }}</dd>
+        <dt>Sériové číslo</dt><dd class="mono">{{ asset.serial_number or '—' }}</dd>
+        <dt>Stav kusu</dt><dd>{{ m.condition(asset.condition) }}</dd>
+        <dt>Lokalita</dt><dd>{{ location.name if location else '—' }}</dd>
+        <dt>Štítky</dt><dd>{{ m.tags(asset.tags) or '—' }}</dd>
+        <dt>Poznámka</dt><dd>{{ asset.notes or '—' }}</dd>
+      </dl>
+    </div>
+    <div class="card"><h2>Pořízení</h2>
+      <dl class="kv">
+        <dt>Faktura</dt><dd>{% if asset.invoice %}<a href="/admin/invoices/{{ asset.invoice.id }}">{{ asset.invoice.number }}</a> <span class="muted">· {{ asset.invoice.supplier }}</span>{% else %}—{% endif %}</dd>
+        <dt>Dodavatel</dt><dd>{{ asset.supplier or '—' }}</dd>
+        <dt>Datum pořízení</dt><dd>{{ asset.purchase_date or '—' }}</dd>
+        <dt>Cena</dt><dd>{{ m.money(asset.price) }}</dd>
+        <dt>Záruka do</dt><dd>{{ asset.warranty_until or '—' }}</dd>
+        <dt>Nákladové středisko</dt><dd>{{ asset.cost_center or '—' }}</dd>
+        <dt>V evidenci od</dt><dd>{{ asset.created_at|dt }}</dd>
+      </dl>
+    </div>
   </div>
-  <div class="card">
-    {% if asset.status == "in_stock" %}
-    <h2>Předat zaměstnanci</h2>
-    <form method="post" action="/admin/assets/{{ asset.id }}/handover">
-      <label>Zaměstnanec</label>
-      <select name="employee_email" required>
-        {% for e in employees %}<option value="{{ e.email }}">{{ e.display_name }} ({{ e.email }})</option>{% endfor %}
-      </select>
-      <label>Poznámka (např. příslušenství)</label>
-      <input name="note">
-      <button type="submit">Odeslat žádost o potvrzení převzetí</button>
-    </form>
-    {% elif asset.status == "assigned" %}
-    <h2>Vrácení</h2>
-    <form method="post" action="/admin/assets/{{ asset.id }}/return">
-      <label>Poznámka</label><input name="note">
-      <button type="submit">Odeslat žádost o potvrzení vrácení</button>
-    </form>
-    {% endif %}
-    {% if asset.status in ("in_stock", "retired", "lost") %}
-    <form method="post" action="/admin/assets/{{ asset.id }}/retire" style="display:inline"><button class="secondary" type="submit">Vyřadit</button></form>
-    <form method="post" action="/admin/assets/{{ asset.id }}/lost" style="display:inline"><button class="danger" type="submit">Ztraceno</button></form>
-    {% endif %}
+  <div class="stack">
+    <div class="card">
+      <h2>Držitel</h2>
+      {% if holder %}
+        <div class="hero"><span class="ico">{{ m.icon('users') }}</span><div><b><a href="/admin/employees/{{ holder.email }}">{{ holder.display_name }}</a></b><div class="sub">{{ holder.email }} · {{ holder.department or '—' }}</div>{% if open_assignment %}<div class="small muted">od {{ open_assignment.started_at|dt }}</div>{% endif %}</div></div>
+      {% else %}<p class="muted">Zařízení nikdo nemá u sebe.</p>{% endif %}
+    </div>
+    <div class="card">
+      {% if asset.status == 'in_stock' %}
+        <h2>Předat zaměstnanci</h2>
+        <form method="post" action="/admin/assets/{{ asset.id }}/handover">
+          <div class="field"><label>Zaměstnanec</label><select name="employee_email" required>{% for e in employees %}<option value="{{ e.email }}">{{ e.display_name }} ({{ e.email }})</option>{% endfor %}</select></div>
+          <div class="field"><label>Poznámka do protokolu</label><input type="text" name="note" placeholder="včetně nabíječky a tašky"></div>
+          <button class="btn" type="submit">{{ m.icon('handover') }} Odeslat žádost o potvrzení převzetí</button>
+          <div class="hint" style="margin-top:8px">Zaměstnanec dostane e-mail s odkazem; po potvrzení vznikne protokol PDF.</div>
+        </form>
+      {% elif asset.status == 'assigned' %}
+        <h2>Vrácení</h2>
+        <form method="post" action="/admin/assets/{{ asset.id }}/return">
+          <div class="field"><label>Poznámka</label><input type="text" name="note" placeholder="ukončení pracovního poměru"></div>
+          <button class="btn" type="submit">Odeslat žádost o potvrzení vrácení</button>
+        </form>
+      {% elif asset.status in ('pending_handover', 'pending_return') %}
+        <h2>Čeká na zaměstnance</h2>
+        <p class="muted">Žádost byla odeslána; zrušit ji lze v záložce Protokoly.</p>
+      {% else %}
+        <h2>Mimo provoz</h2><p class="muted">Zařízení je {{ m.STATUS_LABELS.get(asset.status, asset.status)|lower }}.</p>
+      {% endif %}
+      {% if asset.status in ('in_stock', 'retired', 'lost') %}
+        <div class="btn-row" style="margin-top:14px">
+          {% if asset.status != 'retired' %}<form class="inline" method="post" action="/admin/assets/{{ asset.id }}/retire"><button class="btn secondary sm" type="submit">Vyřadit</button></form>{% endif %}
+          {% if asset.status != 'lost' %}<form class="inline" method="post" action="/admin/assets/{{ asset.id }}/lost"><button class="btn secondary sm" type="submit">Označit jako ztracené</button></form>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="tab-panel" id="history">
+  <div class="card"><h2>Historie přiřazení</h2>
+    <ul class="timeline">
+      {% for a in history %}<li class="{{ 'ok' if a.ended_at is none else '' }}"><div><b>{{ a.employee.display_name if a.employee else a.employee_id }}</b> {{ 'má u sebe' if a.ended_at is none else 'měl/a u sebe' }}</div><div class="when">{{ a.started_at|dt }} – {{ a.ended_at|dt if a.ended_at else 'dosud' }}</div></li>{% else %}<li>Zařízení zatím nikdo neměl.</li>{% endfor %}
+    </ul>
   </div>
 </div>
 
-<h2>Předávací protokoly</h2>
-<table>
-  <thead><tr><th>Číslo</th><th>Druh</th><th>Zaměstnanec</th><th>Stav</th><th>Vytvořeno</th><th>Potvrzeno</th><th></th></tr></thead>
-  <tbody>
-  {% for h in handovers %}
-    <tr>
-      <td>{{ h.protocol_number }}</td>
-      <td>{{ "převzetí" if h.kind == "handover" else "vrácení" }}</td>
-      <td>{{ h.employee.display_name if h.employee else h.employee_id }}</td>
-      <td><span class="status">{{ h.status }}</span></td>
-      <td>{{ h.created_at|dt }}</td>
-      <td>{{ h.confirmed_at|dt }}</td>
-      <td>
-        {% if h.status == "pending" %}<form method="post" action="/admin/handovers/{{ h.id }}/cancel"><button class="secondary" type="submit">Zrušit</button></form>{% endif %}
-        {% if h.protocol_path %}<a href="/api/v1/handovers/{{ h.id }}/protocol.pdf">PDF</a>{% endif %}
-      </td>
-    </tr>
-  {% else %}
-    <tr><td colspan="7" class="muted">Zatím žádné protokoly.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+<div class="tab-panel" id="protocols">
+  <div class="table-wrap"><table>
+    <thead><tr><th>Číslo</th><th>Druh</th><th>Zaměstnanec</th><th>Stav</th><th>Vytvořeno</th><th>Potvrzeno</th><th></th></tr></thead>
+    <tbody>{% for h in handovers %}
+      <tr><td class="mono">{{ h.protocol_number }}</td><td>{{ 'převzetí' if h.kind == 'handover' else 'vrácení' }}</td><td>{{ h.employee.display_name if h.employee else h.employee_id }}</td><td>{{ m.status(h.status) }}{% if h.decline_reason %}<div class="small muted">{{ h.decline_reason }}</div>{% endif %}</td><td class="nowrap">{{ h.created_at|dt }}</td><td class="nowrap">{{ h.confirmed_at|dt }}</td>
+      <td class="actions">{% if h.status == 'pending' %}<form class="inline" method="post" action="/admin/handovers/{{ h.id }}/cancel"><button class="btn ghost sm" type="submit">Zrušit</button></form>{% endif %}{% if h.protocol_path %}<a class="btn ghost sm" href="/api/v1/handovers/{{ h.id }}/protocol.pdf">PDF</a>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="7">{{ m.empty('Zatím žádné protokoly.', 'handover') }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
 
-<h2>Historie přiřazení</h2>
-<table>
-  <thead><tr><th>Zaměstnanec</th><th>Od</th><th>Do</th></tr></thead>
-  <tbody>
-  {% for a in assignments %}
-    <tr><td>{{ a.employee.display_name if a.employee else a.employee_id }}</td><td>{{ a.started_at|dt }}</td><td>{{ a.ended_at|dt }}</td></tr>
-  {% else %}
-    <tr><td colspan="3" class="muted">Zatím nepřiděleno.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+<div class="tab-panel" id="files">
+  <div class="card">
+    <h2>Soubory</h2>
+    <ul class="files">
+      {% for f in attachments %}<li>{{ m.icon('invoice') }}<div><div class="name"><a href="/admin/attachments/{{ f.id }}">{{ f.filename }}</a></div><div class="meta">{{ {'invoice':'faktura','photo':'fotografie','document':'dokument','other':'jiné'}.get(f.kind, f.kind) }} · {{ (f.size / 1024)|round(0)|int }} kB · {{ f.uploaded_at|dt }} · {{ f.uploaded_by }}</div></div><form class="inline sp" method="post" action="/admin/attachments/{{ f.id }}/delete"><button class="btn ghost sm" type="submit">Smazat</button></form></li>{% else %}<li class="muted">Žádné soubory. Faktura patří k faktuře (viz Pořízení); sem nahrajte fotografie nebo předávací dokumenty.</li>{% endfor %}
+    </ul>
+    <form method="post" action="/admin/assets/{{ asset.id }}/attachments" enctype="multipart/form-data" class="btn-row" style="margin-top:12px">
+      <select name="kind" style="width:auto"><option value="photo">Fotografie</option><option value="document">Dokument</option><option value="other">Jiné</option></select>
+      <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required style="width:auto">
+      <button class="btn secondary sm" type="submit">{{ m.icon('upload') }} Nahrát</button>
+    </form>
+  </div>
+</div>
 {% endblock %}

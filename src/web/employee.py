@@ -50,7 +50,7 @@ def confirm_handover(token):
             
         # Check if the handover is still pending
         if handover['status'] != 'pending':
-            return render_template('my/handover_confirm.html', notice="Převzetí zařízení již není možné"), 200
+            return render_template('my/handover_confirm.html', handover=service.with_details(handover), notice="Požadavek už není otevřený"), 200
             
         # Check that the token email matches the logged-in user
         if user['email'].lower() != token_data['email'].lower():

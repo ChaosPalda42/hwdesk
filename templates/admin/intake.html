@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% import "_macros.html" as m %}
+{% block title %}Příjem zařízení{% endblock %}
+{% block topbar %}<div class="topbar"><div><h1>Příjem zařízení</h1><div class="muted">Nová dodávka: jedna faktura, jeden model, N kusů → inventární čísla, sériová čísla, štítky</div></div></div>{% endblock %}
+{% block content %}
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+<div class="grid-2">
+  <form method="post" action="/admin/intake" class="card">
+    <h2>1 · Co přišlo</h2>
+    <div class="grid-2">
+      <div class="field"><label>Typ</label><select name="type">{% for t in types %}<option value="{{ t }}" {{ 'selected' if request.form.get('type', 'notebook') == t }}>{{ m.type_label(t) }} ({{ next_tags.get(t, '') }})</option>{% endfor %}</select><div class="hint">V závorce první volné inventární číslo.</div></div>
+      <div class="field"><label>Počet kusů</label><input type="number" name="quantity" min="1" max="500" value="{{ request.form.get('quantity', 1) }}" required></div>
+      <div class="field"><label>Výrobce</label><input type="text" name="brand" value="{{ request.form.get('brand', '') }}" required></div>
+      <div class="field"><label>Model</label><input type="text" name="model" value="{{ request.form.get('model', '') }}" required></div>
+      <div class="field"><label>Stav kusů</label><select name="condition">{% for c in conditions %}<option value="{{ c }}" {{ 'selected' if c == 'new' }}>{{ m.CONDITION_LABELS.get(c, c) }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Lokalita</label><select name="location_id"><option value="">—</option>{% for l in locations %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}</select></div>
+    </div>
+    <h2 style="margin-top:8px">2 · Faktura a záruka</h2>
+    <div class="grid-2">
+      <div class="field"><label>Číslo faktury</label><input type="text" name="invoice_number" value="{{ request.args.get('invoice_number', request.form.get('invoice_number', '')) }}" placeholder="FV-2026-0117" list="invoices"><datalist id="invoices">{% for i in invoices %}<option value="{{ i.number }}">{{ i.supplier }}</option>{% endfor %}</datalist><div class="hint">Existující se použije, nová se založí.</div></div>
+      <div class="field"><label>Dodavatel</label><input type="text" name="supplier" value="{{ request.form.get('supplier', '') }}"></div>
+      <div class="field"><label>Cena za kus (Kč)</label><input type="number" step="0.01" name="unit_price" value="{{ request.form.get('unit_price', '') }}"></div>
+      <div class="field"><label>Záruka do</label><input type="date" name="warranty_until" value="{{ request.form.get('warranty_until', '') }}"></div>
+    </div>
+    <div class="field"><label>Štítky</label><input type="text" name="tags" value="{{ request.form.get('tags', '') }}" placeholder="Nákup 2026, Obchod"><div class="hint">Oddělené čárkou; např. název projektu nebo dodávky.</div></div>
+    <button class="btn" type="submit">{{ m.icon('inbox') }} Založit zařízení a pokračovat na sériová čísla</button>
+  </form>
+  <div class="card">
+    <h2>Jak příjem probíhá</h2>
+    <ol style="padding-left:18px;margin:0;line-height:1.8">
+      <li>Vyplníte typ, model a počet kusů — systém přidělí inventární čísla v řadě.</li>
+      <li>Doplníte sériová čísla (stačí načíst čtečkou, pole jdou za sebou).</li>
+      <li>Vytisknete štítky s QR — z prohlížeče nebo přímo na štítkovou tiskárnu.</li>
+      <li>Zařízení jsou skladem; předáte je zaměstnancům z detailu.</li>
+    </ol>
+    <h3 style="margin-top:18px">Přidání jednoho kusu</h3>
+    <p class="muted">Pro jednotlivé zařízení použijte <a href="/admin/assets/new">Nové zařízení</a>. Hromadný import z tabulky: <a href="/admin/assets">Zařízení → Export CSV</a> jako vzor, pak <code>POST /api/v1/assets/import.csv</code>.</p>
+  </div>
+</div>
+{% endblock %}

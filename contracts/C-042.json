@@ -1,0 +1,18 @@
+{
+  "id": "C-042",
+  "file": "src/repositories/attachments.py",
+  "role": "coder",
+  "title": "Attachment repository",
+  "interface": "class AttachmentRepository(conn). create(owner_type, owner_id, kind, filename, stored_name, mime_type, size, uploaded_by) -> dict. get(id) -> dict | None. list_for(owner_type, owner_id) -> list[dict] ordered by id. delete(id) -> bool. count_for(owner_type, owner_id) -> int. Dict keys: id, owner_type, owner_id, kind, filename, stored_name, mime_type, size, uploaded_by, uploaded_at. the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+  "uses": {
+    "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_attachments.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

@@ -51,10 +51,20 @@ def load_config(overrides: dict | None = None) -> dict:
         "PROTOCOL_DIR": env.get("HWDESK_PROTOCOL_DIR", "protocols"),
         # Every confirmed protocol is also mailed here (default: the first admin).
         "PROTOCOL_COPY_TO": env.get("HWDESK_PROTOCOL_COPY_TO", ""),
+        # Uploaded invoices, photos and other files attached to assets.
+        "ATTACHMENTS_DIR": env.get("HWDESK_ATTACHMENTS_DIR", "attachments"),
+        # Inventory numbers: prefix per type + zero-padded sequence (NB-0042).
+        "TAG_PREFIXES": env.get("HWDESK_TAG_PREFIXES", '{"notebook":"NB","desktop":"PC","monitor":"MO","phone":"PH","tablet":"TB","keyboard":"KB","mouse":"MS","headset":"HS","dock":"DK","other":"OT"}'),
+        "TAG_PAD": int(env.get("HWDESK_TAG_PAD", "4")),
+        # Network label printer (Zebra/ZPL over TCP 9100); empty = browser printing only.
+        "LABEL_PRINTER_HOST": env.get("HWDESK_LABEL_PRINTER_HOST", ""),
+        "LABEL_PRINTER_PORT": int(env.get("HWDESK_LABEL_PRINTER_PORT", "9100")),
+        "LABEL_ZPL_TEMPLATE": env.get("HWDESK_LABEL_ZPL_TEMPLATE", ""),
+        "ATTACHMENT_MAX_MB": int(env.get("HWDESK_ATTACHMENT_MAX_MB", "20")),
     }
     if overrides:
         config.update(overrides)
-    for key in ("OUTBOX_DIR", "PROTOCOL_DIR"):
+    for key in ("OUTBOX_DIR", "PROTOCOL_DIR", "ATTACHMENTS_DIR"):
         Path(config[key]).mkdir(parents=True, exist_ok=True)
     return config
 
@@ -71,6 +81,13 @@ ASSET_TYPES = (
     "dock",
     "other",
 )
+
+ATTACHMENT_KINDS = ("invoice", "photo", "document", "other")
+ATTACHMENT_OWNERS = ("asset", "invoice")
+ATTACHMENT_ALLOWED_TYPES = ("application/pdf", "image/jpeg", "image/png", "image/webp")
+
+ASSET_CONDITIONS = ("new", "good", "worn", "broken")
+TAG_COLORS = ("gray", "blue", "green", "yellow", "red", "purple")
 
 ASSET_STATUSES = ("in_stock", "pending_handover", "assigned", "pending_return", "retired", "lost")
 
