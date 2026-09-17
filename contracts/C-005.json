@@ -1,0 +1,18 @@
+{
+  "id": "C-005",
+  "file": "src/repositories/audit.py",
+  "role": "coder",
+  "title": "Audit repository",
+  "interface": "class AuditRepository(conn). record(actor, action, entity, entity_id, details: dict) -> dict (details stored as JSON text, returned as dict). list_recent(limit=50) -> list[dict] newest first (id DESC). list_for_entity(entity, entity_id) -> list[dict] newest first. Dict keys: id, at, actor, action, entity, entity_id, details (dict). repositories receive a sqlite3.Connection in the constructor (no default) and call conn.commit() after every write; rows are returned as plain dicts with `is_...`/`active` booleans converted from 0/1",
+  "uses": {
+    "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_audit.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

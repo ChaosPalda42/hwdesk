@@ -1,0 +1,20 @@
+{
+  "id": "C-025",
+  "file": "templates/admin/handovers.html",
+  "role": "coder",
+  "title": "Admin: handover list",
+  "interface": "Extends base.html. Filter form GET status select (pending, confirmed, declined, expired, cancelled, all). Table: protocol_number, kind, asset.asset_tag (link to /admin/assets/<asset_id>), employee.display_name + email, status, created_at, confirmed_at, actions (cancel form POST /admin/handovers/<id>/cancel when pending; PDF link when protocol_path). Variables: handovers, status. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

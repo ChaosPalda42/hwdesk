@@ -1,0 +1,20 @@
+{
+  "id": "C-026",
+  "file": "templates/admin/employees.html",
+  "role": "coder",
+  "title": "Admin: employee list",
+  "interface": "Extends base.html. Search form GET q. Table: display_name (link to /admin/employees/<email>), email, department, manager_email, active ('ano'/'ne'). Variables: employees, q. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

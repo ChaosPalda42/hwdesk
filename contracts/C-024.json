@@ -1,0 +1,20 @@
+{
+  "id": "C-024",
+  "file": "templates/admin/asset_detail.html",
+  "role": "coder",
+  "title": "Admin: asset detail with handover actions",
+  "interface": "Extends base.html. Shows all asset fields and the status span; the current holder (variable holder: employee dict or None); a section 'Předat zaměstnanci' with form POST /admin/assets/<id>/handover (select employee_email from `employees` — show display_name and e-mail as the option text, value=email — and input note) shown only when asset.status == 'in_stock'; a form POST /admin/assets/<id>/return shown when status == 'assigned'; forms POST .../retire and .../lost shown when status in ('in_stock','retired','lost'); a link to /admin/assets/<id>/edit; a table of handovers (variable handovers with keys protocol_number, kind, status, created_at, confirmed_at, employee.display_name, and a cancel form POST /admin/handovers/<id>/cancel when status == 'pending'; a link to /api/v1/handovers/<id>/protocol.pdf when protocol_path); a table of the assignment history (variable history with employee names). Variables: asset, holder, employees, handovers, history. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

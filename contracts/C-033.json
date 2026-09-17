@@ -1,0 +1,20 @@
+{
+  "id": "C-033",
+  "file": "tests/test_smoke_pages.py",
+  "role": "tester",
+  "title": "Tester: every page renders for admin and employee",
+  "interface": "A pytest module using the fixtures app, client and helper login from tests/conftest.py and helper api. Seed one employee and one asset through the API (Authorization: Bearer test-api-key). Assert: as admin (admin@firma.cz) GET /admin/assets, /admin/assets/new, /admin/assets/<id>, /admin/assets/<id>/edit, /admin/handovers, /admin/employees, /admin/employees/jan@firma.cz, /admin/audit all return 200 and contain the tag NB-0001 where the asset is listed; as employee (jan@firma.cz) GET / returns 200 and /admin/assets returns 403; GET /auth/login while anonymous returns 200 and contains 'Přihlásit'; unknown token GET /handovers/confirm/12345 as jan returns 410. At least 6 assertions across 3 test functions; no mocks; do not modify any other file.",
+  "uses": {
+    "fixtures": "tests/conftest.py: app, client, login(client, email), api(client, method, path, key=..., **kwargs), outbox(app)"
+  },
+  "database": "",
+  "acceptance": "tests/test_smoke_pages.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-032"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

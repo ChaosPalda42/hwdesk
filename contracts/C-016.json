@@ -1,0 +1,25 @@
+{
+  "id": "C-016",
+  "file": "src/api/handovers.py",
+  "role": "coder",
+  "title": "JSON API: handovers and returns",
+  "interface": "Blueprint `bp` (name 'api_handovers'; mounted at /api/v1). All routes require api_auth_required. GET /handovers?status=&kind= -> 200 list of handovers with 'asset' and 'employee' details (service.with_details). POST /handovers JSON {asset_id, employee_email, note?} -> 201 handover dict; unknown employee -> 404 {'error'}; HandoverError -> 409 {'error'}; missing fields -> 400. GET /handovers/<int:id> -> 200 with details | 404. POST /handovers/<int:id>/cancel -> 200 | 409 (HandoverError) | 404. GET /handovers/<int:id>/protocol.pdf -> the stored PDF (send_file, mimetype application/pdf) | 404 when none. POST /returns JSON {asset_id, note?} -> 201 handover dict | 409 | 400. Use src/services/factory.py build_handover_service(db) to construct the service.",
+  "uses": {
+    "build_handover_service": "src/services/factory.py: build_handover_service(db) -> HandoverService",
+    "HandoverService": "src/services/handover_service.py: start_handover/start_return/cancel/with_details/handovers (repo)/HandoverError",
+    "EmployeeRepository": "src/repositories/employees.py: get_by_email",
+    "get_db": "src/db.py",
+    "guards": "src/auth/guards.py: api_auth_required, actor()"
+  },
+  "database": "build_handover_service(get_db()) per request",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-017",
+    "C-012"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

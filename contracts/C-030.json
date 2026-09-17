@@ -1,0 +1,20 @@
+{
+  "id": "C-030",
+  "file": "templates/my/handover_confirm.html",
+  "role": "coder",
+  "title": "Confirmation page for a handover link",
+  "interface": "Extends base.html. When `error` is set show it in div.flash.error and nothing else. Otherwise show the handover: heading 'Převzetí zařízení' for kind handover or 'Vrácení zařízení' for return, protocol_number, asset (asset_tag, type, brand, model, serial_number), note, created_by. When handover.status == 'pending': form POST to request.path with hidden action=confirm and button 'Potvrzuji', and a second form with action=decline, textarea reason and button 'Odmítnout' (class secondary). Otherwise a notice with the current status. Variables: handover (with asset/employee), error, user. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

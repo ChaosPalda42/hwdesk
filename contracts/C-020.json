@@ -1,0 +1,16 @@
+{
+  "id": "C-020",
+  "file": "templates/base.html",
+  "role": "coder",
+  "title": "Layout template",
+  "interface": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css. Variables available in every template: user (dict email/is_admin or None). Czech UI text.",
+  "uses": {},
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": "HTML only."
+}

@@ -1,0 +1,39 @@
+{
+  "id": "C-032",
+  "file": "src/app.py",
+  "role": "integrator",
+  "title": "Application factory",
+  "interface": "create_app(overrides: dict | None = None) -> Flask. app = Flask(__name__, template_folder=<absolute path to the repository's templates/ directory, i.e. Path(__file__).resolve().parent.parent / 'templates'>, static_folder=<repository static/>). app.config.update(load_config(overrides)). Register blueprints: auth bp (src/auth/oidc.py), admin bp (src/web/admin.py), employee bp (src/web/employee.py, no prefix), and the three API blueprints at url_prefix '/api/v1'. app.teardown_appcontext(close_db). GET /health -> {'status': 'ok'}. Context processor injecting `user` = current_user() and `config` = app.config into templates. Do NOT create a module-level app; provide `if __name__ == '__main__': create_app().run()`.",
+  "uses": {
+    "load_config": "src/config.py",
+    "close_db": "src/db.py",
+    "blueprints": "src/auth/oidc.py bp; src/web/admin.py bp; src/web/employee.py bp; src/api/assets.py bp; src/api/employees.py bp; src/api/handovers.py bp",
+    "current_user": "src/auth/guards.py"
+  },
+  "database": "app.config['DATABASE'] is the single source of truth",
+  "acceptance": "tests",
+  "forbidden": [],
+  "depends_on": [
+    "C-013",
+    "C-014",
+    "C-015",
+    "C-016",
+    "C-018",
+    "C-019",
+    "C-021",
+    "C-022",
+    "C-023",
+    "C-024",
+    "C-025",
+    "C-026",
+    "C-027",
+    "C-028",
+    "C-029",
+    "C-030",
+    "C-031"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

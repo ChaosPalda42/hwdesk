@@ -1,0 +1,20 @@
+{
+  "id": "C-029",
+  "file": "templates/my/home.html",
+  "role": "coder",
+  "title": "Employee home: my devices",
+  "interface": "Extends base.html. Greeting with employee.display_name. Section 'Čeká na vaše potvrzení' listing overview.pending (asset_tag, brand, model, kind text 'převzetí'/'vrácení', and a link 'Potvrdit' to the confirmation page: the view passes `confirm_links` dict handover_id -> url; render `confirm_links[h.id]`). Section 'Moje zařízení' table from overview.assigned: asset_tag, <span class='status status-{{asset.status}}'>{{asset.status}}</span>, type, brand, model, serial_number, since started_at, protocol number with link /my/protocols/<protocol_number>.pdf, and a form POST /my/assets/<asset_id>/return with input note and button 'Vrátit'. Section 'Historie' from overview.history (protocol_number, kind, status, confirmed_at). Empty-state texts. Variables: employee, overview, confirm_links, user. Czech; the word 'potvr' must appear when something is pending.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

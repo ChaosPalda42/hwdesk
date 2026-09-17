@@ -1,0 +1,21 @@
+{
+  "id": "C-013",
+  "file": "src/auth/oidc.py",
+  "role": "coder",
+  "title": "Login routes: Microsoft 365 (MSAL) and dev login",
+  "interface": "Blueprint `bp` (name 'auth', url_prefix '/auth'). GET /auth/login: in AUTH_MODE 'dev' render 'login.html' (form POST to /auth/dev-login with field email); in mode 'oidc' build msal.ConfidentialClientApplication(client_id, authority='https://login.microsoftonline.com/<tenant>', client_credential=secret), store a generated state in the session, and redirect 302 to app.get_authorization_request_url(['User.Read'], state=..., redirect_uri=<BASE_URL>+OIDC_REDIRECT_PATH). GET /auth/callback: oidc only; verify state; app.acquire_token_by_authorization_code(code, scopes, redirect_uri); on success set session['email'] = (id_token_claims['preferred_username'] or ['email']).lower() and session['name'], redirect to '/'; on failure 400 with the error description. POST /auth/dev-login: 404 unless AUTH_MODE == 'dev'; sets session['email']=email.lower(), session['name']=email; redirect 302 to request.form.get('next') or '/'. POST /auth/logout (and GET /auth/logout): clear the session; redirect 302 to '/auth/login'. GET /auth/me: 401 JSON {'error': 'unauthorized'} when anonymous, else 200 JSON {'email', 'is_admin'} from guards.current_user(). Read config via flask.current_app.config.",
+  "uses": {
+    "current_user": "src/auth/guards.py: current_user() -> {'email','is_admin'} | None",
+    "msal": "pip package msal: ConfidentialClientApplication(client_id, authority=..., client_credential=...); .get_authorization_request_url(scopes, state=..., redirect_uri=...); .acquire_token_by_authorization_code(code, scopes=..., redirect_uri=...) -> dict with 'id_token_claims' or 'error_description'"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-012"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": "Exercised by tests/test_auth.py once the app exists."
+}

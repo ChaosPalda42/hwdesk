@@ -1,0 +1,20 @@
+{
+  "id": "C-004",
+  "file": "src/repositories/assignments.py",
+  "role": "coder",
+  "title": "Assignment repository",
+  "interface": "class AssignmentRepository(conn). open(asset_id, employee_id, handover_id) -> dict (started_at=now UTC ISO, ended_at None, return_id None). get(id) -> dict | None. get_open_for_asset(asset_id) -> dict | None (ended_at IS NULL). list_open_for_employee(employee_id) -> list[dict]. close(id, return_id) -> bool (sets ended_at=now and return_id; False when unknown or already closed). history_for_asset(asset_id) -> list[dict] newest first. Dict keys: id, asset_id, employee_id, handover_id, return_id, started_at, ended_at. repositories receive a sqlite3.Connection in the constructor (no default) and call conn.commit() after every write; rows are returned as plain dicts with `is_...`/`active` booleans converted from 0/1",
+  "uses": {
+    "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_handovers_assignments.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-003"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

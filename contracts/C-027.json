@@ -1,0 +1,20 @@
+{
+  "id": "C-027",
+  "file": "templates/admin/employee_detail.html",
+  "role": "coder",
+  "title": "Admin: employee detail",
+  "interface": "Extends base.html. Employee fields; 'Přidělená zařízení' table from overview.assigned (asset_tag link to /admin/assets/<id>, type, brand, model, since assignment.started_at, protocol number); 'Čeká na potvrzení' from overview.pending; 'Historie' from overview.history. Variables: employee, overview. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

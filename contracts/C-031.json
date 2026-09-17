@@ -1,0 +1,20 @@
+{
+  "id": "C-031",
+  "file": "templates/my/not_registered.html",
+  "role": "coder",
+  "title": "Page for a login without an employee record",
+  "interface": "Extends base.html. Text: 'Váš účet <email> není v evidenci zaměstnanců. Kontaktujte správce.' Variable: user. Must contain the word 'evidenci'.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

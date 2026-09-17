@@ -1,0 +1,11 @@
+:root { --ink:#1b2430; --ink2:#5b6675; --rule:#d8dee6; --accent:#2455c7; --bg:#f6f8fa; --ok:#2e7d5b; --warn:#b7791f; --bad:#b23a3a; }
+* { box-sizing:border-box; } body { margin:0; font:15px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+header.top { background:#fff; border-bottom:1px solid var(--rule); padding:12px 24px; display:flex; gap:24px; align-items:center; }
+header.top a { color:var(--ink2); text-decoration:none; } header.top a.brand { font-weight:700; color:var(--ink); } header.top .me { margin-left:auto; color:var(--ink2); font-size:13px; }
+main { max-width:1080px; margin:24px auto; padding:0 24px; } h1 { font-size:24px; margin:0 0 16px; } h2 { font-size:18px; margin:24px 0 8px; }
+table { width:100%; border-collapse:collapse; background:#fff; } th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--rule); vertical-align:top; } th { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink2); }
+.status { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--rule); } .status-assigned{color:var(--ok);border-color:var(--ok)} .status-in_stock{color:var(--ink2)} .status-pending_handover,.status-pending_return{color:var(--warn);border-color:var(--warn)} .status-retired,.status-lost{color:var(--bad);border-color:var(--bad)}
+form.card, .card { background:#fff; border:1px solid var(--rule); padding:16px; margin:12px 0; } label { display:block; font-size:13px; color:var(--ink2); margin:8px 0 2px; } input,select,textarea { width:100%; padding:7px 9px; border:1px solid var(--rule); border-radius:4px; font:inherit; }
+button, .btn { display:inline-block; margin-top:12px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; font:inherit; cursor:pointer; text-decoration:none; } button.secondary { background:#fff; color:var(--ink); border:1px solid var(--rule); } button.danger { background:var(--bad); }
+.flash { padding:10px 14px; margin:12px 0; border-left:3px solid var(--accent); background:#e8eefb; } .flash.error { border-color:var(--bad); background:#fbe9e9; }
+.muted { color:var(--ink2); font-size:13px; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:720px){ .grid{grid-template-columns:1fr} }

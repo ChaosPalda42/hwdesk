@@ -1,0 +1,22 @@
+{
+  "id": "C-003",
+  "file": "src/repositories/handovers.py",
+  "role": "coder",
+  "title": "Handover repository",
+  "interface": "class HandoverRepository(conn). create(kind, asset_id, employee_id, created_by, protocol_number, note) -> dict (status 'pending'). get(id) -> dict | None. mark_sent(id) -> bool (sets sent_at=now UTC ISO). set_status(id, status, confirmed_at=None, protocol_path=None, decline_reason=None) -> bool (updates only the given optional columns; raises ValueError for a status not in config.HANDOVER_STATUSES; False when unknown id). next_protocol_number(year: int) -> str: 'HP-<year>-<6-digit sequence>' = 1 + count of protocol_numbers starting with 'HP-<year>-'. list_all(status=None, kind=None) -> list[dict] newest first (id DESC). list_for_employee(employee_id) -> list[dict] newest first. list_pending_for_employee(employee_id) -> list[dict] (status 'pending', newest first). list_for_asset(asset_id) -> list[dict] newest first. Dict keys: id, kind, asset_id, employee_id, created_by, status, protocol_number, note, decline_reason, created_at, sent_at, confirmed_at, protocol_path. repositories receive a sqlite3.Connection in the constructor (no default) and call conn.commit() after every write; rows are returned as plain dicts with `is_...`/`active` booleans converted from 0/1",
+  "uses": {
+    "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES, load_config(overrides) -> dict"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_handovers_assignments.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-001",
+    "C-002"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

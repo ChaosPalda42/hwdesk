@@ -1,0 +1,28 @@
+{
+  "id": "C-015",
+  "file": "src/api/employees.py",
+  "role": "coder",
+  "title": "JSON API: employees, HR sync, audit",
+  "interface": "Blueprint `bp` (name 'api_employees'; mounted at /api/v1). All routes require api_auth_required. GET /employees?q=&active= -> 200 list (search when q). GET /employees/<path:email> -> 200 | 404 {'error': 'not found'}. POST /hr/employees JSON {'employees': [...]} -> 200 sync result dict; ValueError (e.g. missing email) -> 400 {'error'}; a body without an 'employees' list -> 400. POST /hr/employees/csv with the CSV as the raw request body (request.get_data(as_text=True)) -> 200 sync result. GET /audit?limit=50 -> 200 list of audit entries. Services built per request from get_db(): HrSyncService(EmployeeRepository(db), AssetRepository(db), AuditRepository(db), assignments=AssignmentRepository(db)).",
+  "uses": {
+    "HrSyncService": "src/services/hr_sync.py: sync(actor, records), parse_csv(text)",
+    "EmployeeRepository": "src/repositories/employees.py",
+    "AssetRepository": "src/repositories/assets.py",
+    "AssignmentRepository": "src/repositories/assignments.py",
+    "AuditRepository": "src/repositories/audit.py",
+    "get_db": "src/db.py",
+    "guards": "src/auth/guards.py: api_auth_required, actor()"
+  },
+  "database": "repositories on get_db() per request",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-011",
+    "C-004",
+    "C-012"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

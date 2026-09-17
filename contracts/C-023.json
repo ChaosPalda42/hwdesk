@@ -1,0 +1,20 @@
+{
+  "id": "C-023",
+  "file": "templates/admin/asset_form.html",
+  "role": "coder",
+  "title": "Admin: asset create/edit form",
+  "interface": "Extends base.html. Form POST to request.path with fields asset_tag, type (select from types, selected asset.type when editing), brand, model, serial_number, purchase_date (type=date), price (number step 0.01), notes (textarea); prefilled from `asset` when given; shows `error` in a div.flash.error when set. Variables: asset (dict or None), types, error. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

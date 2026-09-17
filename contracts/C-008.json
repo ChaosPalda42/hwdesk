@@ -1,0 +1,16 @@
+{
+  "id": "C-008",
+  "file": "src/services/protocol_pdf.py",
+  "role": "coder",
+  "title": "Handover protocol PDF",
+  "interface": "render_protocol_pdf(path, protocol_number, kind, company, employee: dict, asset: dict, created_by, confirmed_at, note) -> str (returns path). One-page A4 PDF built with reportlab.platypus (SimpleDocTemplate, Paragraph, Table, Spacer): title 'Předávací protokol' for kind 'handover' or 'Protokol o vrácení' for 'return'; the protocol number and company; a table of the asset (asset_tag, type, brand, model, serial_number); a table of the employee (display_name, email, department); created_by; confirmed_at; note; and the sentence 'Zaměstnanec potvrdil elektronicky dne <confirmed_at>.'. Fonts: try pdfmetrics.registerFont(TTFont('Unicode', path)) for the first existing path among '/System/Library/Fonts/Supplemental/Arial Unicode.ttf', '/Library/Fonts/Arial Unicode.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' and use it; if none exists use the built-in 'Helvetica'. Create parent directories with os.makedirs(exist_ok=True). Never swallow exceptions.",
+  "uses": {},
+  "database": "",
+  "acceptance": "tests/test_services_infra.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

@@ -1,0 +1,20 @@
+{
+  "id": "C-028",
+  "file": "templates/admin/audit.html",
+  "role": "coder",
+  "title": "Admin: audit log",
+  "interface": "Extends base.html. Table: at, actor, action, entity + entity_id, details (JSON as text via tojson filter). Variable: entries. Czech.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

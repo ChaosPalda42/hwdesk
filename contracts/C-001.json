@@ -1,0 +1,18 @@
+{
+  "id": "C-001",
+  "file": "src/repositories/employees.py",
+  "role": "coder",
+  "title": "Employee repository",
+  "interface": "class EmployeeRepository(conn). upsert(email, display_name, department, manager_email, hr_id) -> dict: keyed by lower-cased email; creates or updates (never changes `active`; sets synced_at=now UTC ISO). get(id) -> dict | None. get_by_email(email) -> dict | None (case-insensitive). list_all(active_only: bool = False) -> list[dict] ordered by email. search(q) -> list[dict] matching display_name or email case-insensitively (LIKE %q%). set_active(id, active: bool) -> bool (False when unknown). Dict keys: id, email, display_name, department, manager_email, hr_id, active (bool), created_at, synced_at. repositories receive a sqlite3.Connection in the constructor (no default) and call conn.commit() after every write; rows are returned as plain dicts with `is_...`/`active` booleans converted from 0/1",
+  "uses": {
+    "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_employees.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

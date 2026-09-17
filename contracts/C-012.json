@@ -1,0 +1,16 @@
+{
+  "id": "C-012",
+  "file": "src/auth/guards.py",
+  "role": "coder",
+  "title": "Identity and access guards",
+  "interface": "current_user() -> dict | None from flask.session: {'email': lower-case str, 'is_admin': bool (email in current_app.config['ADMIN_EMAILS'])}. Decorators for view functions: login_required (anonymous -> redirect 302 to '/auth/login?next=<path>'), admin_required (anonymous -> 302 to login; logged in non-admin -> 403 JSON {'error': 'admin required'} when the request path starts with '/api/' else a 403 HTML/plain response), api_auth_required (accepts either Authorization: Bearer <key> with key in config['API_KEYS'] — sets flask.g.api_actor='api:<first 4 chars of key>' — or an admin session; missing/invalid key and no session -> 401 JSON {'error': 'unauthorized'}; a non-admin session -> 403 JSON {'error': 'admin required'}). actor() -> str: g.api_actor if set, else the session email, else 'anonymous'. All decorators use functools.wraps.",
+  "uses": {},
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": "No acceptance test of its own; exercised through tests/test_auth.py after the app exists."
+}

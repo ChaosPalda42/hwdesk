@@ -1,0 +1,26 @@
+{
+  "id": "C-019",
+  "file": "src/web/employee.py",
+  "role": "coder",
+  "title": "Employee pages: my devices, confirmation links, protocols",
+  "interface": "Blueprint `bp` (name 'my', no url_prefix). GET / (login_required): employee = EmployeeRepository(get_db()).get_by_email(user email); when None render 'my/not_registered.html' (text contains 'evidenci') with status 200; else render 'my/home.html' with overview_for_employee(employee id) and the user. GET /handovers/confirm/<token> (login_required): tokens.verify; unknown/expired -> 'my/handover_confirm.html' with an error and status 410; handover not pending -> same template with a notice (200); the token email must equal the logged-in email else 403; otherwise render the template with the handover (with details) and two buttons (action confirm / decline + reason). POST /handovers/confirm/<token> (login_required) form {action: 'confirm'|'decline', reason?}: call service.confirm or service.decline with actor_email = logged-in email; HandoverError with a mismatched addressee -> 403; other HandoverError -> flash error and redirect to '/'; success -> flash 'Potvrzeno' / 'Odmítnuto' and redirect to '/'. POST /my/assets/<int:id>/return (login_required) form {note} -> service.request_return(employee_email=logged-in, ...), flash, redirect to '/'; HandoverError -> flash error, redirect '/'. GET /my/protocols/<filename> (login_required): serve '<PROTOCOL_DIR>/<filename>' with send_from_directory only when the logged-in employee has a handover with that protocol_path (or the user is admin); else 404. Services via src/services/factory.py; tokens via HandoverTokens(secret=config['SECRET_KEY'], max_age_hours=config['HANDOVER_TOKEN_HOURS']).",
+  "uses": {
+    "build_handover_service": "src/services/factory.py",
+    "HandoverService": "src/services/handover_service.py (confirm, decline, request_return, overview_for_employee, with_details, tokens attribute, handovers/employees repositories, HandoverError)",
+    "EmployeeRepository": "src/repositories/employees.py",
+    "get_db": "src/db.py",
+    "guards": "src/auth/guards.py: login_required, current_user()",
+    "HandoverTokens": "src/services/tokens.py"
+  },
+  "database": "services from src/services/factory.py on get_db() per request",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-017",
+    "C-012"
+  ],
+  "budget": {
+    "iterations": 16
+  },
+  "notes": ""
+}

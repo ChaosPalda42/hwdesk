@@ -1,0 +1,23 @@
+{
+  "id": "C-009",
+  "file": "src/services/asset_service.py",
+  "role": "coder",
+  "title": "Asset service",
+  "interface": "Exceptions AssetValidationError(ValueError), DuplicateAssetTag(ValueError). class AssetService(assets: AssetRepository, audit: AuditRepository). create(actor, asset_tag, type, brand, model, serial_number, purchase_date, price, notes) -> dict: strips and upper-cases asset_tag (empty -> AssetValidationError), type must be in config.ASSET_TYPES, purchase_date '' or ISO date YYYY-MM-DD (else AssetValidationError), price coerced to float (invalid -> AssetValidationError); sqlite3.IntegrityError from the repository -> DuplicateAssetTag; records audit 'asset.created'. get(id) -> dict | None. update(actor, asset_id, **fields) -> dict (same validation for the fields given; unknown id -> AssetValidationError; audit 'asset.updated'). retire(actor, asset_id) -> dict and mark_lost(actor, asset_id) -> dict: refuse (AssetValidationError) when the asset status is 'assigned', 'pending_handover' or 'pending_return'; set status 'retired'/'lost'; audit 'asset.retired'/'asset.lost'. list(status=None, type=None, q='') -> list[dict] (search when q given, then filter by status/type). Never catch generic Exception.",
+  "uses": {
+    "AssetRepository": "src/repositories/assets.py: create/get/get_by_tag/update/set_status/list_all/search",
+    "AuditRepository": "src/repositories/audit.py: record(actor, action, entity, entity_id, details)",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES, load_config(overrides) -> dict"
+  },
+  "database": "through injected repositories only",
+  "acceptance": "tests/test_service_assets.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-002",
+    "C-005"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

@@ -1,0 +1,20 @@
+{
+  "id": "C-022",
+  "file": "templates/admin/assets.html",
+  "role": "coder",
+  "title": "Admin: asset list",
+  "interface": "Extends base.html. Search form GET (q, status select from statuses, type select from types) and a link to /admin/assets/new. Table of assets: asset_tag (link to /admin/assets/<id>), type, brand, model, serial_number, status as <span class='status status-<status>'>status</span>. Variables: assets, types, statuses, q, status, type. Czech labels.",
+  "uses": {
+    "base": "templates/base.html: Jinja layout with blocks title and content; header nav (Moje zařízení '/', for admins: /admin/assets, /admin/handovers, /admin/employees, /admin/audit), current user e-mail and a logout form POST /auth/logout; flashed messages via get_flashed_messages(with_categories=true); links /static/style.css"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-020"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

@@ -1,0 +1,19 @@
+{
+  "id": "C-002",
+  "file": "src/repositories/assets.py",
+  "role": "coder",
+  "title": "Asset repository",
+  "interface": "class AssetRepository(conn). create(asset_tag, type, brand, model, serial_number, purchase_date, price, notes) -> dict (asset_tag stored upper-cased and stripped; status 'in_stock'; raises sqlite3.IntegrityError on duplicate tag — do NOT catch it). get(id) -> dict | None. get_by_tag(tag) -> dict | None (case-insensitive). update(id, **fields) -> dict | None (only columns asset_tag, type, brand, model, serial_number, purchase_date, price, notes; ignores unknown keys). set_status(id, status) -> bool (raises ValueError if status not in config.ASSET_STATUSES; False when unknown id). list_all(status=None, type=None) -> list[dict] ordered by asset_tag. search(q) -> list[dict] matching asset_tag, brand, model or serial_number case-insensitively. Dict keys: id, asset_tag, type, brand, model, serial_number, purchase_date, price (float), status, notes, created_at. repositories receive a sqlite3.Connection in the constructor (no default) and call conn.commit() after every write; rows are returned as plain dicts with `is_...`/`active` booleans converted from 0/1",
+  "uses": {
+    "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)",
+    "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES, load_config(overrides) -> dict"
+  },
+  "database": "injected connection only",
+  "acceptance": "tests/test_repo_assets.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}
