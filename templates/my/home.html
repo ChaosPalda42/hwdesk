@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Moje zařízení{% endblock %}
+
+{% block content %}
+<h1>Ahoj, {{ employee.display_name }}!</h1>
+
+<section>
+    <h2>Čeká na vaše potvrzení</h2>
+    {% if overview.pending %}
+        <ul>
+            {% for h in overview.pending %}
+                <li>
+                    {{ h.asset_tag }} - {{ h.brand }} {{ h.model }} 
+                    {% if h.kind == 'handover' %}(převzetí){% else %}(vrácení){% endif %}
+                    <a href="{{ confirm_links[h.id] }}">Potvrdit</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Žádné čekající potvrzení.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h2>Moje zařízení</h2>
+    {% if overview.assigned %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Přihlašovací jméno</th>
+                    <th>Stav</th>
+                    <th>Typ</th>
+                    <th>Marka</th>
+                    <th>Model</th>
+                    <th>Seriové číslo</th>
+                    <th>Od</th>
+                    <th>Protokol</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in overview.assigned %}
+                <tr>
+                    <td>{{ asset.asset_tag }}</td>
+                    <td><span class="status status-{{ asset.status }}">{{ asset.status }}</span></td>
+                    <td>{{ asset.type }}</td>
+                    <td>{{ asset.brand }}</td>
+                    <td>{{ asset.model }}</td>
+                    <td>{{ asset.serial_number }}</td>
+                    <td>{{ asset.started_at }}</td>
+                    <td><a href="/my/protocols/{{ asset.protocol_number }}.pdf">PDF</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Žádné přiřazené zařízení.</p>
+    {% endif %}
+</section>
+
+<section>
+    <h2>Historie</h2>
+    {% if overview.history %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Číslo protokolu</th>
+                    <th>Druh</th>
+                    <th>Stav</th>
+                    <th>Potvrzeno dne</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in overview.history %}
+                <tr>
+                    <td>{{ item.protocol_number }}</td>
+                    <td>{{ item.kind }}</td>
+                    <td>{{ item.status }}</td>
+                    <td>{{ item.confirmed_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Žádná historie.</p>
+    {% endif %}
+</section>
+{% endblock %}
