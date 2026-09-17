@@ -1,0 +1,38 @@
+{
+  "id": "P-016",
+  "contract": "C-047",
+  "title": "Asset labels: QR SVG, ZPL, network printing",
+  "created_at": "2026-09-17T11:35:39+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "blocked: acceptance imports a contract not yet produced (operator fixture)",
+    "retained on factory/failed/C-047-1"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_labels.py: the acceptance run imports src.web.catalog, which C-049 owns and has not produced yet; make that import lazy (inside the fixture) or add C-049 to depends_on"
+  ],
+  "failing": "..E                                                                      [100%]\n==================================== ERRORS ====================================\n______________ ERROR at setup of test_label_pages_and_short_link _______________\n\ntmp_path = PosixPath('/private/var/folders/w2/31c54tyx6rzg7nq29x8fj6_h0000gq/T/pytest-of-AI/pytest-5463/test_label_pages_and_short_lin0')\n\n    @pytest.fixture()\n    def app(tmp_path):\n>       from src.app import create_app  # produced by the last contract\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/conftest.py:18: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    from flask import Flask, jsonify\n    from pathlib import Path\n    \n    # Import collaborators\n    from src.config import load_config\n    from src.db import close_db\n    from src.auth.oidc import bp as auth_bp\n    from src.web.admin import bp as admin_bp\n    from src.web.employee import bp as employee_bp\n    from src.web.settings import bp as settings_bp, apply_settings\n>   from src.web.catalog import bp as catalog_bp\nE   ModuleNotFoundError: No module named 'src.web.catalog'\n\nsrc/app.py:11: ModuleNotFoundError\n=========================== short test summary info ============================\nERROR tests/test_labels.py::test_label_pages_and_short_link - ModuleNotFoundE...\n2 passed, 1 error in 0.17s\n",
+  "diff": "+import socket\n+from typing import Optional, Callable, List, Dict\n+import segno\n+\n+\n+class LabelService:\n+    def __init__(self, base_url: str, company: str, zpl_template: Optional[str] = None, connect: Optional[Callable] = None):\n+        self.base_url = base_url\n+        self.company = company\n+        self.zpl_template = zpl_template or self._default_zpl_template()\n+        self.connect = connect or socket.create_connection\n+\n+    def url_for(self, asset: Dict) -> str:\n+        \"\"\"Generate the URL for an asset.\"\"\"\n+        asset_tag = asset[\"asset_tag\"]\n+        return f\"{self.base_url.rstrip('/')}/a/{asset_tag}\"\n+\n+    def qr_svg(self, asset: Dict) -> str:\n+        \"\"\"Generate QR code SVG for an asset.\"\"\"\n+        url = self.url_for(asset)\n+        qr_code = segno.make(url, error='m')\n+        return qr_code.svg_inline(scale=4)\n+\n+    def zpl(self, asset: Dict) -> str:\n+        \"\"\"Generate ZPL label for an asset.\"\"\"\n+        url = self.url_for(asset)\n+        return self.zpl_template.format(\n+            asset_tag=asset[\"asset_tag\"],\n+            brand=asset[\"brand\"],\n+            model=asset[\"model\"],\n+            serial_number=asset[\"serial_number\"],\n+            url=url,\n+            company=self.company\n+        )\n+\n+    def _default_zpl_template(self) -> str:\n+        \"\"\"Return the default ZPL template.\"\"\"\n+        return ('^XA^CI28^PW400^LL200^FO20,20^BQN,2,4^FDQA,{url}^FS'\n+                '^FO150,25^A0N,36,36^FD{asset_tag}^FS'\n+                '^FO150,70^A0N,24,24^FD{brand} {model}^FS'\n+                '^FO150,100^A0N,22,22^FDSN {serial_number}^FS'\n+                '^FO150,140^A0N,20,20^FD{company}^FS^XZ')\n+\n+    def print_zpl(self, assets: List[Dict], host: str, port: int = 9100) -> int:\n+        \"\"\"Print ZPL labels to a network printer.\"\"\"\n+        count = 0\n+        with self.connect(host, port, timeout=10) as sock:\n+            for asset in assets:\n+                zpl = self.zpl(asset)\n+                sock.sendall(zpl.encode('utf-8'))\n+                count += 1\n+        return count",
+  "tried": [
+    "worker: budget after 12 iterations"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-047",
+    "file": "src/services/label_service.py",
+    "role": "coder",
+    "title": "Asset labels: QR SVG, ZPL, network printing",
+    "interface": "class LabelService(base_url, company, zpl_template=None, connect=None). url_for(asset) -> f'{base_url.rstrip(\"/\")}/a/{asset_tag}'. qr_svg(asset) -> str: an <svg> string of the QR code of url_for(asset) built with the `segno` package (segno.make(url, error='m').svg_inline() or .svg_data_uri — return inline SVG markup starting with '<svg'). zpl(asset) -> str: template.format(asset_tag=, brand=, model=, serial_number=, url=, company=) where the default template is a 50x25 mm label: '^XA^CI28^PW400^LL200^FO20,20^BQN,2,4^FDQA,{url}^FS^FO150,25^A0N,36,36^FD{asset_tag}^FS^FO150,70^A0N,24,24^FD{brand} {model}^FS^FO150,100^A0N,22,22^FDSN {serial_number}^FS^FO150,140^A0N,20,20^FD{company}^FS^XZ' (the test only requires: starts with ^XA, ends with ^XZ, contains asset_tag, 'brand model', the url and the company). print_zpl(assets: list[dict], host, port=9100) -> int: connect(host, port, timeout) — default socket.create_connection((host, port), timeout=10) — used as a context manager; sendall(zpl.encode('utf-8')) per asset; returns the count. Never catch generic Exception.",
+    "uses": {
+      "segno": "pip package segno: segno.make(text, error='m') -> QRCode with .svg_inline(scale=...) returning an <svg …> string"
+    },
+    "database": "",
+    "acceptance": "tests/test_labels.py",
+    "forbidden": [],
+    "depends_on": [],
+    "budget": {
+      "iterations": 14
+    },
+    "notes": ""
+  }
+}

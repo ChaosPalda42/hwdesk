@@ -1,0 +1,38 @@
+{
+  "id": "P-019",
+  "contract": "C-039",
+  "title": "Tag repository",
+  "created_at": "2026-09-17T11:37:49+00:00",
+  "ladder": [
+    "blocked: acceptance imports a contract not yet produced (operator fixture)"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_repo_taxonomy.py: the acceptance run imports src.repositories.locations, which C-040 owns and has not produced yet; make that import lazy (inside the fixture) or add C-040 to depends_on",
+    "[MISSING_FILE] src/repositories/tags.py: the contract's file does not exist"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n_________________ ERROR collecting tests/test_repo_taxonomy.py _________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_repo_taxonomy.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_repo_taxonomy.py:6: in <module>\n    from src.repositories.locations import LocationRepository\nE   ModuleNotFoundError: No module named 'src.repositories.locations'\n=========================== short test summary info ============================\nERROR tests/test_repo_taxonomy.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "",
+  "tried": [],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-039",
+    "file": "src/repositories/tags.py",
+    "role": "coder",
+    "title": "Tag repository",
+    "interface": "class TagRepository(conn). create(name, color='gray') -> dict (raises ValueError if color not in TAG_COLORS; sqlite3.IntegrityError on duplicate name — do not catch). get(id) -> dict | None. get_by_name(name) -> dict | None (case-insensitive, stripped). update(id, name=None, color=None) -> dict | None. delete(id) -> bool (asset_tags rows removed too). list_all() -> list[dict] ordered by name, each with 'asset_count'. assign(asset_id, tag_id) -> bool (False when already assigned: INSERT OR IGNORE and rowcount). unassign(asset_id, tag_id) -> bool. set_for_asset(asset_id, tag_ids: list[int]) -> None (replace). for_asset(asset_id) -> list[dict] ordered by name. for_assets(asset_ids) -> dict[asset_id, list[dict]] (one query; every requested id present, [] when none). asset_ids_with(tag_id) -> list[int]. Dict keys: id, name, color (+ asset_count in list_all). the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+    "uses": {
+      "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings",
+      "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+    },
+    "database": "injected connection only",
+    "acceptance": "tests/test_repo_taxonomy.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-002"
+    ],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

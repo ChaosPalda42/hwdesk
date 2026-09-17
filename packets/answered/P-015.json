@@ -1,0 +1,38 @@
+{
+  "id": "P-015",
+  "contract": "C-042",
+  "title": "Attachment repository",
+  "created_at": "2026-09-17T11:35:38+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "blocked: acceptance imports a contract not yet produced (operator fixture)",
+    "retained on factory/failed/C-042-1"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_attachments.py: the acceptance run imports src.services.attachment_service, which C-043 owns and has not produced yet; make that import lazy (inside the fixture) or add C-043 to depends_on"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n__________________ ERROR collecting tests/test_attachments.py __________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_attachments.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_attachments.py:8: in <module>\n    from src.services.attachment_service import AttachmentError, AttachmentService\nE   ModuleNotFoundError: No module named 'src.services.attachment_service'\n=========================== short test summary info ============================\nERROR tests/test_attachments.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "+from __future__ import annotations\n+\n+import sqlite3\n+from typing import Any\n+\n+\n+class AttachmentRepository:\n+    def __init__(self, conn: sqlite3.Connection):\n+        self.conn = conn\n+\n+    def create(\n+        self,\n+        owner_type: str,\n+        owner_id: int,\n+        kind: str,\n+        filename: str,\n+        stored_name: str,\n+        mime_type: str,\n+        size: int,\n+        uploaded_by: str,\n+    ) -> dict[str, Any]:\n+        cursor = self.conn.execute(\n+            \"\"\"\n+            INSERT INTO attachments (\n+                owner_type,\n+                owner_id,\n+                kind,\n+                filename,\n+                stored_name,\n+                mime_type,\n+                size,\n+                uploaded_by\n+            )\n+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n+            RETURNING *\n+            \"\"\",\n+            (\n+                owner_type,\n+                owner_id,\n+                kind,\n+                filename,\n+                stored_name,\n+                mime_type,\n+                size,\n+                uploaded_by,\n+            ),\n+        )\n+        self.conn.commit()\n+        return dict(cursor.fetchone())\n+\n+    def get(self, id: int) -> dict[str, Any] | None:\n+        cursor = self.conn.execute(\n+            \"SELECT * FROM attachments WHERE id = ?\", (id,)\n+        )\n+        row = cursor.fetchone()\n+        return dict(row) if row is not None else None\n+\n+    def list_for(self, owner_type: str, owner_id: int) -> list[dict[str, Any]]:\n+        cursor = self.conn.execute(\n+            \"SELECT * FROM attachments WHERE owner_type = ? AND owner_id = ? ORDER BY id\",\n… (17 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-042",
+    "file": "src/repositories/attachments.py",
+    "role": "coder",
+    "title": "Attachment repository",
+    "interface": "class AttachmentRepository(conn). create(owner_type, owner_id, kind, filename, stored_name, mime_type, size, uploaded_by) -> dict. get(id) -> dict | None. list_for(owner_type, owner_id) -> list[dict] ordered by id. delete(id) -> bool. count_for(owner_type, owner_id) -> int. Dict keys: id, owner_type, owner_id, kind, filename, stored_name, mime_type, size, uploaded_by, uploaded_at. the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+    "uses": {
+      "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings"
+    },
+    "database": "injected connection only",
+    "acceptance": "tests/test_attachments.py",
+    "forbidden": [],
+    "depends_on": [],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

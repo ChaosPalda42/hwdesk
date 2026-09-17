@@ -1,0 +1,40 @@
+{
+  "id": "P-017",
+  "contract": "C-040",
+  "title": "Location repository",
+  "created_at": "2026-09-17T11:37:46+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "blocked: acceptance imports a contract not yet produced (operator fixture)",
+    "retained on factory/failed/C-040-1"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_repo_taxonomy.py: the acceptance run imports src.repositories.tags, which C-039 owns and has not produced yet; make that import lazy (inside the fixture) or add C-039 to depends_on"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n_________________ ERROR collecting tests/test_repo_taxonomy.py _________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_repo_taxonomy.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_repo_taxonomy.py:7: in <module>\n    from src.repositories.tags import TagRepository\nE   ModuleNotFoundError: No module named 'src.repositories.tags'\n=========================== short test summary info ============================\nERROR tests/test_repo_taxonomy.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "+import sqlite3\n+from typing import Optional, List, Dict, Any\n+\n+\n+class LocationRepository:\n+    def __init__(self, conn: sqlite3.Connection):\n+        self.conn = conn\n+\n+    def create(self, name: str, address: str = '', notes: str = '') -> Dict[str, Any]:\n+        cursor = self.conn.execute(\n+            'INSERT INTO locations (name, address, notes) VALUES (?, ?, ?)',\n+            (name, address, notes)\n+        )\n+        self.conn.commit()\n+        return self.get(cursor.lastrowid)\n+\n+    def get(self, id: int) -> Optional[Dict[str, Any]]:\n+        row = self.conn.execute('SELECT * FROM locations WHERE id = ?', (id,)).fetchone()\n+        return dict(row) if row else None\n+\n+    def get_by_name(self, name: str) -> Optional[Dict[str, Any]]:\n+        row = self.conn.execute('SELECT * FROM locations WHERE LOWER(name) = LOWER(?)', (name,)).fetchone()\n+        return dict(row) if row else None\n+\n+    def update(self, id: int, name: Optional[str] = None, address: Optional[str] = None, notes: Optional[str] = None) -> Optional[Dict[str, Any]]:\n+        # Build dynamic query\n+        set_parts = []\n+        params = []\n+\n+        if name is not None:\n+            set_parts.append('name = ?')\n+            params.append(name)\n+        if address is not None:\n+            set_parts.append('address = ?')\n+            params.append(address)\n+        if notes is not None:\n+            set_parts.append('notes = ?')\n+            params.append(notes)\n+\n+        if not set_parts:\n+            return self.get(id)\n+\n+        # Add ID to params for WHERE clause\n+        params.append(id)\n+        query = f'UPDATE locations SET {\", \".join(set_parts)} WHERE id = ?'\n+        self.conn.execute(query, params)\n+        self.conn.commit()\n+        return self.get(id)\n+\n+    def delete(self, id: int) -> bool:\n+        # Check if any asset references this location\n+        count = self.conn.execute('SELECT COUNT(*) FROM assets WHERE location_id = ?', (id,)).fetchone()[0]\n+        if count > 0:\n+            raise sqlite3.IntegrityError('location is referenced by assets')\n+\n+        cursor = self.conn.execute('DELETE FROM locations WHERE id = ?', (id,))\n+        self.conn.commit()\n+        return cursor.rowcount > 0\n+\n+    def list_all(self) -> List[Dict[str, Any]]:\n… (7 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-040",
+    "file": "src/repositories/locations.py",
+    "role": "coder",
+    "title": "Location repository",
+    "interface": "class LocationRepository(conn). create(name, address='', notes='') -> dict (IntegrityError on duplicate name — do not catch). get(id) -> dict | None. get_by_name(name) -> dict | None (case-insensitive). update(id, name=None, address=None, notes=None) -> dict | None. delete(id) -> bool: raises sqlite3.IntegrityError when any asset references it (check with a SELECT and raise sqlite3.IntegrityError('location is referenced by assets') yourself); False when unknown. list_all() -> list[dict] ordered by name, each with 'asset_count'. Dict keys: id, name, address, notes (+ asset_count). the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+    "uses": {
+      "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings"
+    },
+    "database": "injected connection only",
+    "acceptance": "tests/test_repo_taxonomy.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-002"
+    ],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "P-018",
+  "contract": "C-041",
+  "title": "Invoice repository",
+  "created_at": "2026-09-17T11:37:48+00:00",
+  "ladder": [
+    "worker: stopped after 12 iterations",
+    "blocked: acceptance imports a contract not yet produced (operator fixture)",
+    "retained on factory/failed/C-041-1"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_invoices.py: the acceptance run imports src.repositories.locations, which C-040 owns and has not produced yet; make that import lazy (inside the fixture) or add C-040 to depends_on"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n___________________ ERROR collecting tests/test_invoices.py ____________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_invoices.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_invoices.py:9: in <module>\n    from src.repositories.locations import LocationRepository\nE   ModuleNotFoundError: No module named 'src.repositories.locations'\n=========================== short test summary info ============================\nERROR tests/test_invoices.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "+from __future__ import annotations\n+\n+import sqlite3\n+from typing import Any, Dict, List, Optional, Union\n+\n+\n+class InvoiceRepository:\n+    def __init__(self, conn: sqlite3.Connection):\n+        self.conn = conn\n+\n+    def create(self, number: str, supplier: str, issued_at: str, total: float, currency: str, notes: str, created_by: str) -> Dict:\n+        # Insert the new invoice and get its ID\n+        cursor = self.conn.execute(\n+            \"\"\"\n+            INSERT INTO invoices (number, supplier, issued_at, total, currency, notes, created_by)\n+            VALUES (?, ?, ?, ?, ?, ?, ?)\n+            RETURNING id\n+            \"\"\",\n+            (number, supplier, issued_at, total, currency, notes, created_by)\n+        )\n+        self.conn.commit()\n+        invoice_id = cursor.fetchone()[0]\n+\n+        # Fetch the full record to return\n+        return self.get(invoice_id)\n+\n+    def get(self, id: int) -> Optional[Dict]:\n+        cursor = self.conn.execute(\"SELECT * FROM invoices WHERE id=?\", (id,))\n+        row = cursor.fetchone()\n+        if not row:\n+            return None\n+        return dict(row)\n+\n+    def get_by_number(self, number: str) -> Optional[Dict]:\n+        cursor = self.conn.execute(\"SELECT * FROM invoices WHERE UPPER(number) = UPPER(?)\", (number,))\n+        row = cursor.fetchone()\n+        if not row:\n+            return None\n+        return dict(row)\n+\n+    def update(self, id: int, **fields) -> Optional[Dict]:\n+        if not fields:\n+            return self.get(id)\n+\n+        # Build dynamic update query\n+        set_clause = \", \".join([f\"{key} = ?\" for key in fields])\n+        values = list(fields.values()) + [id]\n+        query = f\"UPDATE invoices SET {set_clause} WHERE id=? RETURNING *\"\n+        cursor = self.conn.execute(query, values)\n+        self.conn.commit()\n+        row = cursor.fetchone()\n+        if not row:\n+            return None\n+        return dict(row)\n+\n+    def delete(self, id: int) -> bool:\n+        # Check if any asset references this invoice\n+        cursor = self.conn.execute(\"SELECT id FROM assets WHERE invoice_id=?\", (id,))\n+        if cursor.fetchone():\n+            raise sqlite3.IntegrityError(\"invoice is referenced by assets\")\n… (27 more lines)",
+  "tried": [
+    "worker: stopped after 12 iterations"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-041",
+    "file": "src/repositories/invoices.py",
+    "role": "coder",
+    "title": "Invoice repository",
+    "interface": "class InvoiceRepository(conn). create(number, supplier, issued_at, total, currency, notes, created_by) -> dict (number stripped; IntegrityError on duplicate — do not catch). get(id) -> dict | None. get_by_number(number) -> dict | None (case-insensitive). update(id, **fields) -> dict | None (number, supplier, issued_at, total, currency, notes). delete(id) -> bool: raise sqlite3.IntegrityError('invoice is referenced by assets') when any asset has invoice_id=id; False when unknown. list_all() -> list[dict] newest first (id DESC) each with 'asset_count' and 'attachment_count' (attachments where owner_type='invoice'). search(q) -> list[dict] matching number or supplier LIKE, same enrichment. Dict keys: id, number, supplier, issued_at, total (float), currency, notes, created_by, created_at. the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+    "uses": {
+      "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings"
+    },
+    "database": "injected connection only",
+    "acceptance": "tests/test_invoices.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-002"
+    ],
+    "budget": {
+      "iterations": 14
+    },
+    "notes": ""
+  }
+}

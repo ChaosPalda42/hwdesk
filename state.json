@@ -11,12 +11,12 @@
     },
     "C-002": {
       "status": "pending",
-      "attempts": 2,
+      "attempts": 3,
       "iterations": 18,
-      "commit": "738cf58",
+      "commit": "714d153",
       "last_finding": "reset by operator",
       "packet": "",
-      "updated_at": "2026-09-17T11:25:35+00:00"
+      "updated_at": "2026-09-17T11:45:37+00:00"
     },
     "C-005": {
       "status": "green",
@@ -325,13 +325,13 @@
       "updated_at": "2026-09-17T10:50:45+00:00"
     },
     "C-035": {
-      "status": "pending",
-      "attempts": 1,
-      "iterations": 2,
-      "commit": "adea3c4",
-      "last_finding": "reset by operator",
+      "status": "green",
+      "attempts": 2,
+      "iterations": 7,
+      "commit": "a998b49",
+      "last_finding": "",
       "packet": "",
-      "updated_at": "2026-09-17T11:25:35+00:00"
+      "updated_at": "2026-09-17T11:40:45+00:00"
     },
     "C-037": {
       "status": "green",
@@ -341,6 +341,105 @@
       "last_finding": "",
       "packet": "",
       "updated_at": "2026-09-17T10:53:47+00:00"
+    },
+    "C-042": {
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 12,
+      "commit": "",
+      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_attachments.py: the acceptance run imports src.services.attachment_service, which C-043 owns and has not produced yet; make that import lazy (inside the fixture) or add C-043 to depends_on",
+      "packet": "P-015",
+      "updated_at": "2026-09-17T11:35:38+00:00"
+    },
+    "C-047": {
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 12,
+      "commit": "",
+      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_labels.py: the acceptance run imports src.web.catalog, which C-049 owns and has not produced yet; make that import lazy (inside the fixture) or add C-049 to depends_on",
+      "packet": "P-016",
+      "updated_at": "2026-09-17T11:35:39+00:00"
+    },
+    "C-039": {
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 0,
+      "commit": "",
+      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_repo_taxonomy.py: the acceptance run imports src.repositories.locations, which C-040 owns and has not produced yet; make that import lazy (inside the fixture) or add C-040 to depends_on; [MISSING_FILE] src/repositories/tags.py: the contr",
+      "packet": "P-019",
+      "updated_at": "2026-09-17T11:37:49+00:00"
+    },
+    "C-040": {
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 12,
+      "commit": "",
+      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_repo_taxonomy.py: the acceptance run imports src.repositories.tags, which C-039 owns and has not produced yet; make that import lazy (inside the fixture) or add C-039 to depends_on",
+      "packet": "P-017",
+      "updated_at": "2026-09-17T11:37:46+00:00"
+    },
+    "C-041": {
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 12,
+      "commit": "",
+      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_invoices.py: the acceptance run imports src.repositories.locations, which C-040 owns and has not produced yet; make that import lazy (inside the fixture) or add C-040 to depends_on",
+      "packet": "P-018",
+      "updated_at": "2026-09-17T11:37:48+00:00"
+    },
+    "C-044": {
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 23,
+      "commit": "",
+      "last_finding": "acceptance failed (1 failed)",
+      "packet": "P-020",
+      "updated_at": "2026-09-17T11:42:54+00:00"
+    },
+    "C-043": {
+      "status": "pending",
+      "attempts": 0,
+      "iterations": 0,
+      "commit": "",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": ""
+    },
+    "C-045": {
+      "status": "pending",
+      "attempts": 0,
+      "iterations": 0,
+      "commit": "",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": ""
+    },
+    "C-046": {
+      "status": "pending",
+      "attempts": 0,
+      "iterations": 0,
+      "commit": "",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": ""
+    },
+    "C-048": {
+      "status": "pending",
+      "attempts": 0,
+      "iterations": 0,
+      "commit": "",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": ""
+    },
+    "C-049": {
+      "status": "pending",
+      "attempts": 0,
+      "iterations": 0,
+      "commit": "",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": ""
     }
   },
   "runs": [
@@ -413,7 +512,24 @@
       "red": 0,
       "escalated": 0,
       "note": "full suite failed (0 failed) after all contracts were green"
+    },
+    {
+      "started_at": "2026-09-17T11:34:20+00:00",
+      "finished_at": "2026-09-17T11:42:54+00:00",
+      "outcome": "needs-operator",
+      "iterations": 76,
+      "green": 34,
+      "red": 0,
+      "escalated": 6,
+      "note": "6 packet(s) waiting"
     }
   ],
-  "open_packets": []
+  "open_packets": [
+    "P-015",
+    "P-016",
+    "P-017",
+    "P-018",
+    "P-019",
+    "P-020"
+  ]
 }

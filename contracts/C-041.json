@@ -8,7 +8,7 @@
     "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings"
   },
   "database": "injected connection only",
-  "acceptance": "tests/test_invoices.py",
+  "acceptance": "tests/test_repo_invoices.py",
   "forbidden": [],
   "depends_on": [
     "C-002"

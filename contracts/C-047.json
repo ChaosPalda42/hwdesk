@@ -8,7 +8,7 @@
     "segno": "pip package segno: segno.make(text, error='m') -> QRCode with .svg_inline(scale=...) returning an <svg …> string"
   },
   "database": "",
-  "acceptance": "tests/test_labels.py",
+  "acceptance": "tests/test_service_labels.py",
   "forbidden": [],
   "depends_on": [],
   "budget": {

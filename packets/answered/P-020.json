@@ -1,0 +1,70 @@
+{
+  "id": "P-020",
+  "contract": "C-044",
+  "title": "Dashboard statistics",
+  "created_at": "2026-09-17T11:42:54+00:00",
+  "ladder": [
+    "worker: stopped after 11 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-044-1"
+  ],
+  "findings": [],
+  "failing": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_____________________________ test_dashboard_stats _____________________________\n\nconn = <sqlite3.Connection object at 0x10b96a2f0>\n\n    def test_dashboard_stats(conn):\n        assets = AssetRepository(conn)\n        emp = EmployeeRepository(conn).upsert(email=\"jan@f.cz\", display_name=\"Jan\", department=\"\", manager_email=\"\", hr_id=\"\")\n>       a = assets.create(asset_tag=\"NB-1\", type=\"notebook\", brand=\"\", model=\"\", serial_number=\"\", purchase_date=\"\", price=30000, notes=\"\", warranty_until=\"2026-10-01\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       TypeError: AssetRepository.create() got an unexpected keyword argument 'warranty_until'\n\ntests/test_service_dashboard.py:11: TypeError\n=========================== short test summary info ============================\nFAILED tests/test_service_dashboard.py::test_dashboard_stats - TypeError: Ass...\n1 failed in 0.02s\n",
+  "diff": "+from datetime import datetime, timedelta\n+from typing import Dict, List\n+\n+\n+class DashboardService:\n+    def __init__(self, assets, handovers, audit, employees):\n+        self.assets = assets\n+        self.handovers = handovers\n+        self.audit = audit\n+        self.employees = employees\n+\n+    def stats(self, today: str, warranty_days: int = 90) -> dict:\n+        # Parse the today string to a date object\n+        today_date = datetime.fromisoformat(today)\n+        \n+        # Calculate warranty expiration date\n+        warranty_expiration_date = today_date + timedelta(days=warranty_days)\n+        \n+        # Get totals\n+        assets_count = self.assets.count_by('status')\n+        assets_value = sum(asset.get('price', 0) for asset in self.assets.list_all())\n+        employees_count = len(self.employees.list_all(active_only=True))\n+        \n+        # Get by status and type\n+        by_status = self.assets.count_by('status')\n+        by_type = self.assets.count_by('type')\n+        \n+        # Get by condition (we'll assume this is based on warranty status)\n+        by_condition = self._get_by_condition()\n+        \n+        # Get pending handovers\n+        pending_handovers_data = []\n+        pending_handovers = self.handovers.list_all(status='pending')\n+        for handover in pending_handovers:\n+            asset = self.assets.get(handover['asset_id'])\n+            employee = self.employees.get(handover['employee_id'])\n+            if asset and employee:\n+                pending_handovers_data.append({\n+                    'handover': handover,\n+                    'asset': asset,\n+                    'employee': employee\n+                })\n+        \n+        # Get warranty expiring assets\n+        warranty_expiring = self.assets.search_assets(warranty_before=warranty_expiration_date.isoformat()[:10])\n+        # Filter out retired/lost assets\n+        warranty_expiring = [asset for asset in warranty_expiring if asset.get('status') not in ['retired', 'lost']]\n+        # Sort by warranty_until\n+        warranty_expiring.sort(key=lambda x: x.get('warranty_until', '9999-12-31'))\n+        \n+        # Get recent activity\n+        recent_activity = self.audit.list_recent(20)\n+        \n+        return {\n+            'totals': {\n+                'assets': assets_count,\n+                'value': assets_value,\n+                'employees': employees_count\n+            },\n+            'by_status': by_status,\n… (11 more lines)",
+  "tried": [
+    "worker: stopped after 11 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: list_files src/repositories ok",
+    "2: read_file src/repositories/assets.py ok",
+    "3: read_file src/repositories/handovers.py ok",
+    "4: read_file src/repositories/audit.py ok",
+    "5: read_file src/repositories/employees.py ok",
+    "6: read_file src/repositories/assets.py FAILED {\"error\": \"Malformed arguments for 'read_file': EngineeringExecutor.read_file() got an unexpected keyword argument 'content'\", \"recoverable\"",
+    "7: run_command python -c import src.repositories.assets; help(src.repositor ok",
+    "8: run_command python3 -c import sys; sys.path.insert(0, '.'); import src.r ok",
+    "9: run_command grep -n def  src/repositories/assets.py FAILED {\"error\": \"executable 'grep' is not in the allowed development tool list (['ffmpeg', 'ffprobe', 'git', 'go', 'node', 'npm', 'pytest', 'pytho",
+    "10: run_command python3 -c with open('src/repositories/assets.py', 'r') as f ok",
+    "11: run_command [ \" p y t h o n 3 \" ,   \" - c \" ,   \" w i t h   o p e n ( '  FAILED {\"error\": \"argv must be a non-empty list of strings\", \"recoverable\": true}",
+    "final: no file change in six turns",
+    "-- retry --",
+    "1: list_files  ok",
+    "2: read_file src/repositories/assets.py ok",
+    "3: read_file src/repositories/handovers.py ok",
+    "4: read_file src/repositories/audit.py ok",
+    "5: read_file src/repositories/employees.py ok",
+    "6: read_file tests/test_service_dashboard.py ok",
+    "7: write_file src/services/dashboard_service.py ok",
+    "8: write_file src/services/dashboard_service.py ok",
+    "9: read_file src/repositories/assets.py FAILED {\"error\": \"Malformed arguments for 'read_file': EngineeringExecutor.read_file() got an unexpected keyword argument 'start_line'\", \"recoverab",
+    "10: read_file src/repositories/assets.py ok",
+    "11: run_command python -c from src.repositories.assets import AssetRepositor ok",
+    "12: run_command uv run python -c from src.repositories.assets import AssetRe FAILED {\"error\": \"UV_RUN_EXECUTABLE_REJECTED: project entry-point symlinks are not executable unless they are the venv's Python interpreter targeti",
+    "final: budget exhausted"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-044",
+    "file": "src/services/dashboard_service.py",
+    "role": "coder",
+    "title": "Dashboard statistics",
+    "interface": "class DashboardService(assets: AssetRepository, handovers: HandoverRepository, audit: AuditRepository, employees: EmployeeRepository). stats(today: str, warranty_days: int = 90) -> dict: 'totals' {'assets': count of all assets, 'value': sum of price as float, 'employees': count of active employees}; 'by_status' (assets.count_by('status')); 'by_type' (count_by('type')); 'by_condition'; 'pending_handovers': handovers.list_all(status='pending') each with 'asset' (assets.get) and 'employee' (employees.get); 'warranty_expiring': assets.search_assets(warranty_before=today + warranty_days (date arithmetic, ISO)) excluding retired/lost, sorted by warranty_until; 'recent_activity': audit.list_recent(20). Never catch generic Exception.",
+    "uses": {
+      "repositories": "src/repositories/{assets,handovers,audit,employees}.py (assets.search_assets(warranty_before=...), assets.count_by(field))"
+    },
+    "database": "",
+    "acceptance": "tests/test_service_dashboard.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-002",
+      "C-003",
+      "C-005",
+      "C-001"
+    ],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

@@ -10,7 +10,7 @@
     "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
   },
   "database": "",
-  "acceptance": "tests/test_attachments.py",
+  "acceptance": "tests/test_service_attachments.py",
   "forbidden": [],
   "depends_on": [
     "C-042",

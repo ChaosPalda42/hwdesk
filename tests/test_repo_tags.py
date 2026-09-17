@@ -3,7 +3,6 @@ import sqlite3
 import pytest
 
 from src.repositories.assets import AssetRepository
-from src.repositories.locations import LocationRepository
 from src.repositories.tags import TagRepository
 
 
@@ -39,21 +38,3 @@ def test_tags_crud_and_assignment(conn):
     assert tags.set_for_asset(b["id"], [vip["id"]]) is None and [t["id"] for t in tags.for_asset(b["id"])] == [vip["id"]]
     assert tags.list_all()[0]["asset_count"] == 1  # VIP klient on b
     assert tags.delete(vip["id"]) is True and tags.for_asset(b["id"]) == [] and tags.delete(999) is False
-
-
-def test_locations_crud(conn):
-    locations = LocationRepository(conn)
-    hq = locations.create("Praha – HQ", "Vodičkova 1", "")
-    assert hq["id"] == 1 and locations.get(1)["name"] == "Praha – HQ"
-    locations.create("Brno", "", "sklad")
-    assert [l["name"] for l in locations.list_all()] == ["Brno", "Praha – HQ"]
-    assert locations.update(1, name="Praha", address="Vodičkova 1", notes="")["name"] == "Praha"
-    assert locations.get_by_name("praha")["id"] == 1
-    with pytest.raises(sqlite3.IntegrityError):
-        locations.create("Praha", "", "")
-    assets = AssetRepository(conn)
-    _asset(assets, "NB-1", location_id=1)
-    assert locations.list_all()[1]["asset_count"] == 1
-    with pytest.raises(sqlite3.IntegrityError):
-        locations.delete(1)  # still referenced
-    assert locations.delete(2) is True and locations.delete(2) is False

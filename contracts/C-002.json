@@ -11,9 +11,12 @@
   "database": "injected connection only",
   "acceptance": "tests/test_repo_assets.py",
   "forbidden": [],
-  "depends_on": [],
+  "depends_on": [
+    "C-039",
+    "C-040"
+  ],
   "budget": {
     "iterations": 12
   },
-  "notes": "Also exercised by tests/test_repo_assets_v2.py via C-039/C-040 dependencies."
+  "notes": ""
 }
