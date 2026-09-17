@@ -76,6 +76,13 @@ CREATE TABLE IF NOT EXISTS audit_log (
     details    TEXT NOT NULL DEFAULT ''          -- JSON
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_by TEXT NOT NULL DEFAULT ''
+);
+
 CREATE INDEX IF NOT EXISTS idx_assignments_open ON assignments(asset_id) WHERE ended_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_handovers_status ON handovers(status);
 """

@@ -1,0 +1,16 @@
+{
+  "id": "C-036",
+  "file": "src/services/drupal_hr.py",
+  "role": "coder",
+  "title": "Drupal JSON:API HR connector",
+  "interface": "Exception DrupalHrError(RuntimeError). class DrupalHrClient(base_url, auth_mode, user, password, token, field_map: dict, filter_query: str, fetch=None). fetch is a callable (url, headers) -> (status_code: int, body_text: str); default implementation uses urllib.request with a 30 s timeout (allow the injected one in tests). DEFAULT_FIELD_MAP = {'email': 'attributes.mail', 'display_name': 'attributes.display_name', 'department': 'attributes.field_department', 'manager_email': 'attributes.field_manager_email', 'hr_id': 'attributes.drupal_internal__uid', 'active': 'attributes.status'}; the given field_map overrides keys of the default. Headers: Accept 'application/vnd.api+json'; auth_mode 'basic' -> 'Authorization: Basic <base64(user:password)>', 'token' -> 'Authorization: Bearer <token>', 'none' -> no auth header. fetch_employees() -> (records: list[dict], skipped: int): start at base_url.rstrip('/') + '/jsonapi/user/user?page[limit]=50' plus '&' + filter_query when given; follow links.next.href until absent; a non-2xx status raises DrupalHrError with the status and the first 200 chars of the body; invalid JSON raises DrupalHrError. Each data item -> record via dotted-path lookup (a path like 'attributes.dept.name' descends dicts; missing -> ''); hr_id falls back to the item's 'id' when the mapped value is missing; email lower-cased and stripped — items without an e-mail are skipped and counted; active coerced to bool (True for True/1/'1'/'true'/'yes'); department/manager_email default ''. Never catch generic Exception.",
+  "uses": {},
+  "database": "",
+  "acceptance": "tests/test_service_drupal_hr.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

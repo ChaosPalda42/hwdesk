@@ -1,0 +1,30 @@
+{
+  "id": "C-037",
+  "file": "src/web/settings.py",
+  "role": "coder",
+  "title": "Admin settings pages: save, test e-mail, HR sync now",
+  "interface": "Blueprint `bp` (name 'settings', url_prefix '/admin/settings'), every route admin_required. Module-level helper apply_settings(app) -> None: reads SettingsService(SettingsRepository(get_db())).effective(load_config()) and updates app.config with the result (keys from SETTINGS_SCHEMA only) and stores the repository version in app.config['SETTINGS_VERSION']. A @bp.before_app_request hook: if the stored version (SettingsRepository(get_db()).version()) differs from app.config.get('SETTINGS_VERSION'), call apply_settings(current_app) — so every worker process picks up changes on its next request. GET /admin/settings -> render 'admin/settings.html' with rows=service.for_form(current_app.config) grouped by group (pass `groups`: ordered list of (group, rows)), redirect_uri=current_app.config['BASE_URL'] + current_app.config['OIDC_REDIRECT_PATH'], and `problems` []. POST /admin/settings: values=request.form (all keys in SETTINGS_SCHEMA; a bool checkbox absent from the form means '0' — read bool keys as '1' if present else '0'); problems=service.validate(values); if problems re-render the page with them (status 200); else service.save(values, updated_by=actor()), apply_settings(current_app), audit 'settings.updated' with the changed keys (never values), flash 'Nastavení uloženo.', redirect to /admin/settings. POST /admin/settings/test-email: build the EmailSender from the current config (via src/services/factory.py build_email_sender(config)) and send to the logged-in admin's e-mail a message with subject 'HW Desk – testovací e-mail'; flash success or the exception text as error; redirect back. POST /admin/settings/hr-sync: if not current_app.config.get('DRUPAL_URL') flash error 'Nejprve nastavte DRUPAL_URL.' and redirect; else build DrupalHrClient from config (field_map = json.loads(DRUPAL_FIELD_MAP) if set else {}, fetch=current_app.config.get('DRUPAL_FETCH') (a test hook; None -> default)), fetch_employees(), run HrSyncService (EmployeeRepository, AssetRepository, AuditRepository, assignments=AssignmentRepository, all on get_db()).sync(actor=actor(), records), flash a Czech summary containing the counts (e.g. 'HR synchronizace: 1 nových, 0 upravených, 0 deaktivovaných, 0 přeskočeno') and redirect back; DrupalHrError -> flash error with its text, redirect back.",
+  "uses": {
+    "SettingsService/SETTINGS_SCHEMA": "src/services/settings_service.py",
+    "SettingsRepository": "src/repositories/settings.py",
+    "load_config": "src/config.py: load_config() -> dict of env defaults",
+    "build_email_sender": "src/services/factory.py: build_email_sender(config: dict) -> EmailSender",
+    "DrupalHrClient/DrupalHrError": "src/services/drupal_hr.py",
+    "HrSyncService": "src/services/hr_sync.py",
+    "repositories": "src/repositories/{employees,assets,assignments,audit}.py",
+    "guards": "src/auth/guards.py: admin_required, actor(), current_user()",
+    "get_db": "src/db.py"
+  },
+  "database": "repositories on get_db() per request",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [
+    "C-035",
+    "C-036",
+    "C-038"
+  ],
+  "budget": {
+    "iterations": 16
+  },
+  "notes": ""
+}

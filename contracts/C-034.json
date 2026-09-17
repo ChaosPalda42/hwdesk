@@ -1,0 +1,18 @@
+{
+  "id": "C-034",
+  "file": "src/repositories/settings.py",
+  "role": "coder",
+  "title": "Settings repository (key/value)",
+  "interface": "class SettingsRepository(conn). get(key) -> str | None. set(key, value: str, updated_by: str) -> None (INSERT OR REPLACE into table settings with updated_at=now UTC ISO). delete(key) -> bool. all() -> dict[str, str]. version() -> int: an integer that changes whenever a setting changes — return the count of rows plus the max(rowid) (or use a dedicated '__version__' counter row incremented on every set/delete, excluded from all()). the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write",
+  "uses": {
+    "schema": "src/db.py: table settings(key TEXT PRIMARY KEY, value TEXT, updated_at TEXT, updated_by TEXT)"
+  },
+  "database": "",
+  "acceptance": "tests/test_repo_settings.py",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

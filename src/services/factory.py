@@ -11,6 +11,16 @@ from src.repositories.assignments import AssignmentRepository
 from src.repositories.audit import AuditRepository
 
 
+def build_email_sender(config) -> EmailSender:
+    """The e-mail transport for a config mapping (app.config or a plain dict)."""
+    return EmailSender(
+        mode=config['EMAIL_MODE'],
+        outbox_dir=config['OUTBOX_DIR'],
+        sender=config['EMAIL_FROM'],
+        smtp={'host': config['SMTP_HOST'], 'port': config['SMTP_PORT'], 'user': config['SMTP_USER'], 'password': config['SMTP_PASSWORD'], 'starttls': config['SMTP_STARTTLS']},
+    )
+
+
 def build_handover_service(db: sqlite3.Connection) -> HandoverService:
     """Build a HandoverService wired from current_app.config."""
     # Get config values from flask app config

@@ -7,6 +7,7 @@ from src.db import close_db
 from src.auth.oidc import bp as auth_bp
 from src.web.admin import bp as admin_bp
 from src.web.employee import bp as employee_bp
+from src.web.settings import bp as settings_bp, apply_settings
 from src.api.assets import bp as assets_api_bp
 from src.api.employees import bp as employees_api_bp
 from src.api.handovers import bp as handovers_api_bp
@@ -44,6 +45,7 @@ def create_app(overrides=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(employee_bp)
+    app.register_blueprint(settings_bp)
     
     # Register API blueprints at url_prefix '/api/v1'
     app.register_blueprint(assets_api_bp, url_prefix='/api/v1')
@@ -66,6 +68,9 @@ def create_app(overrides=None):
             'config': app.config
         }
     
+    # Settings stored in the database override the environment defaults.
+    with app.app_context():
+        apply_settings(app)
     return app
 
 if __name__ == '__main__':

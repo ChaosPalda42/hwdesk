@@ -1,0 +1,18 @@
+{
+  "id": "C-038",
+  "file": "templates/admin/settings.html",
+  "role": "coder",
+  "title": "Admin: settings page",
+  "interface": "Extends base.html. Title 'Nastavení'. Shows `problems` (list of str) in a div.flash.error when non-empty. Info box: 'Redirect URI pro registraci aplikace v Entra ID:' followed by <code>{{ redirect_uri }}</code>. One form POST /admin/settings containing, for each (group, rows) in `groups`, an <h2>{{ group }}</h2> and for each row a label {{ row.label }} with the input: type 'choice' -> <select name=row.key> with options row.choices (selected when == row.value); 'bool' -> <input type=checkbox name=row.key value=1 {% if row.value in ('1','true','True') %}checked{% endif %}>; 'json' or 'text' -> <textarea name=row.key rows=4>{{ row.value }}</textarea>; 'secret' rows -> <input type=password name=row.key value='{{ row.value }}'>; others -> <input name=row.key value='{{ row.value }}'>; a <small class=muted>{{ row.help }}</small> under each. Submit button 'Uložit'. Below the form two separate forms: POST /admin/settings/test-email with button 'Odeslat testovací e-mail' and POST /admin/settings/hr-sync with button 'Synchronizovat zaměstnance z HR teď'. The page text must contain the words 'SMTP' and 'Entra'. Variables: groups, problems, redirect_uri, user. Czech.",
+  "uses": {
+    "base": "templates/base.html: blocks title/content, user, config"
+  },
+  "database": "",
+  "acceptance": "",
+  "forbidden": [],
+  "depends_on": [],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}
