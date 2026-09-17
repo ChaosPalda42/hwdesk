@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Správa zařízení - {{ 'Úprava' if asset else 'Vytvoření' }} zařízení{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>{{ 'Úprava' if asset else 'Vytvoření' }} zařízení</h2>
+    
+    {% if error %}
+        <div class="flash error">{{ error }}</div>
+    {% endif %}
+    
+    <form method="POST" action="{{ request.path }}">
+        <div class="form-group">
+            <label for="asset_tag">ID zařízení:</label>
+            <input type="text" id="asset_tag" name="asset_tag" value="{{ asset.asset_tag if asset else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="type">Typ:</label>
+            <select id="type" name="type" required>
+                <option value="">Vyberte typ</option>
+                {% for t in types %}
+                    <option value="{{ t }}" {{ 'selected' if asset and asset.type == t else '' }}>{{ t }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="brand">Značka:</label>
+            <input type="text" id="brand" name="brand" value="{{ asset.brand if asset else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="model">Model:</label>
+            <input type="text" id="model" name="model" value="{{ asset.model if asset else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="serial_number">Sériové číslo:</label>
+            <input type="text" id="serial_number" name="serial_number" value="{{ asset.serial_number if asset else '' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="purchase_date">Datum nákupu:</label>
+            <input type="date" id="purchase_date" name="purchase_date" value="{{ asset.purchase_date if asset else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="price">Cena (Kč):</label>
+            <input type="number" id="price" name="price" step="0.01" value="{{ asset.price if asset else '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="notes">Poznámky:</label>
+            <textarea id="notes" name="notes">{{ asset.notes if asset else '' }}</textarea>
+        </div>
+        
+        <button type="submit">Uložit</button>
+    </form>
+</div>
+{% endblock %}
