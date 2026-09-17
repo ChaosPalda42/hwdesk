@@ -1,6 +1,6 @@
 # Factory v2 project configuration. Roles map to local LM Studio models.
 [run]
-test_command = ['uv', 'run', 'pytest', '-q']
+test_command = ['env', 'HWDESK_ALLOW_MISSING_BLUEPRINTS=1', 'uv', 'run', 'pytest', '-q']
 iterations_per_contract = 12
 max_run_iterations = 800
 

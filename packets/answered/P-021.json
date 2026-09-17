@@ -1,0 +1,70 @@
+{
+  "id": "P-021",
+  "contract": "C-002",
+  "title": "Asset repository",
+  "created_at": "2026-09-17T11:52:50+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "retry: stopped after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-002-4"
+  ],
+  "findings": [],
+  "failing": "....F                                                                    [100%]\n=================================== FAILURES ===================================\n______________________ test_filtering_sorting_and_holder _______________________\n\nconn = <sqlite3.Connection object at 0x10b6ca980>\n\n    def test_filtering_sorting_and_holder(conn):\n        repo = AssetRepository(conn)\n        tags = TagRepository(conn)\n        loc = LocationRepository(conn).create(\"HQ\", \"\", \"\")\n        emp = EmployeeRepository(conn).upsert(email=\"jan@f.cz\", display_name=\"Jan\", department=\"\", manager_email=\"\", hr_id=\"\")\n        nb = _asset(repo, \"NB-1\", location_id=loc[\"id\"], warranty_until=\"2026-10-01\")\n        mo = _asset(repo, \"MO-1\", type=\"monitor\", brand=\"LG\", model=\"27UK\", warranty_until=\"2028-01-01\")\n        ph = _asset(repo, \"PH-1\", type=\"phone\", brand=\"Apple\", model=\"iPhone\")\n        vip = tags.create(\"VIP\", \"purple\")\n        tags.assign(nb[\"id\"], vip[\"id\"])\n        h = HandoverRepository(conn).create(kind=\"handover\", asset_id=nb[\"id\"], employee_id=emp[\"id\"], created_by=\"x\", protocol_number=\"HP-2026-000001\", note=\"\")\n        AssignmentRepository(conn).open(asset_id=nb[\"id\"], employee_id=emp[\"id\"], handover_id=h[\"id\"])\n        repo.set_status(nb[\"id\"], \"assigned\")\n    \n        assert [a[\"asset_tag\"] for a in repo.search_assets()] == [\"MO-1\", \"NB-1\", \"PH-1\"]\n        assert [a[\"asset_tag\"] for a in repo.search_assets(sort=\"type\")] == [\"MO-1\", \"NB-1\", \"PH-1\"]\n>       assert [a[\"asset_tag\"] for a in repo.search_assets(sort=\"-created_at\")] == [\"PH-1\", \"MO-1\", \"NB-1\"]\nE       AssertionError: assert ['NB-1', 'MO-1', 'PH-1'] == ['PH-1', 'MO-1', 'NB-1']\nE         \nE         At index 0 diff: 'NB-1' != 'PH-1'\nE         Use -v to get more diff\n\ntests/test_repo_assets.py:82: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_repo_assets.py::test_filtering_sorting_and_holder - Asserti...\n1 failed, 4 passed in 0.05s\n",
+  "diff": "diff --git a/src/repositories/assets.py b/src/repositories/assets.py\nindex 65b37be..09a3ce8 100644\n--- a/src/repositories/assets.py\n+++ b/src/repositories/assets.py\n@@ -1,7 +1,6 @@\n-from __future__ import annotations\n-\n import sqlite3\n-from typing import Any, Dict, List, Optional\n+from datetime import datetime\n+from typing import Dict, List, Optional\n \n from src.config import ASSET_STATUSES\n \n@@ -10,91 +9,274 @@ class AssetRepository:\n     def __init__(self, conn: sqlite3.Connection):\n         self.conn = conn\n \n-    def create(self, asset_tag: str, type: str, brand: str, model: str, serial_number: str, purchase_date: str, price: float, notes: str) -> dict:\n+    def create(\n+        self,\n+        asset_tag: str,\n+        type: str,\n+        brand: str,\n+        model: str,\n+        serial_number: str,\n+        purchase_date: str,\n+        price: float,\n+        notes: str,\n+        location_id: Optional[int] = None,\n+        condition: str = \"good\",\n+        supplier: str = \"\",\n+        warranty_until: str = \"\",\n+        cost_center: str = \"\",\n+        invoice_id: Optional[int] = None,\n+    ) -> Dict:\n         asset_tag = asset_tag.strip().upper()\n-        status = \"in_stock\"\n-        self.conn.execute(\n+        \n+        # Check if the asset tag already exists\n+        existing = self.conn.execute(\n+            \"SELECT id FROM assets WHERE asset_tag = ?\", (asset_tag,)\n+        ).fetchone()\n+        if existing:\n+            raise sqlite3.IntegrityError(\"Asset tag already exists\")\n+\n+        now = datetime.now().isoformat()\n+        result = self.conn.execute(\n             \"\"\"\n-            INSERT INTO assets (asset_tag, type, brand, model, serial_number, purchase_date, price, status, notes)\n-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n+            INSERT INTO assets (\n+                asset_tag, type, brand, model, serial_number,\n+                purchase_date, price, notes, location_id, condition,\n+                supplier, warranty_until, cost_center, invoice_id, updated_at\n+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n+            RETURNING id\n             \"\"\",\n-            (asset_tag, type, brand, model, serial_number, purchase_date, price, status, notes)\n… (283 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations",
+    "retry: stopped after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: read_file src/db.py ok",
+    "2: read_file src/config.py ok",
+    "3: list_files tests ok",
+    "4: read_file tests/test_repo_assets.py ok",
+    "5: write_file src/repositories/assets.py ok",
+    "6: apply_patch src/repositories/assets.py ok",
+    "7: read_file src/repositories/assets.py ok",
+    "8: run_command python -m pytest tests/test_repo_assets.py::test_filtering_s ok",
+    "9: run_command uv run pytest tests/test_repo_assets.py::test_filtering_sort ok",
+    "10: apply_patch src/repositories/assets.py ok",
+    "11: write_file src/repositories/assets.py ok",
+    "12: run_command uv run pytest -q tests/test_repo_assets.py ok",
+    "final: budget exhausted",
+    "-- retry --",
+    "1: read_file src/repositories/assets.py ok",
+    "2: apply_patch src/repositories/assets.py ok",
+    "3: read_file src/repositories/assets.py ok",
+    "4: run_command python -m pytest tests/test_repo_assets.py::test_filtering_s ok",
+    "5: run_command uv run pytest tests/test_repo_assets.py::test_filtering_sort ok",
+    "6: read_file tests/test_repo_assets.py ok",
+    "7: apply_patch src/repositories/assets.py ok",
+    "8: write_file debug_test.py FAILED {\"error\": \"PATH_POLICY: this contract may only write src/repositories/assets.py\", \"recoverable\": true}",
+    "9: run_command python -c import sys; sys.path.insert(0, '.'); import tests. ok",
+    "10: apply_patch src/repositories/assets.py ok",
+    "11: write_file src/repositories/assets.py ok",
+    "12: run_command uv run pytest -xvs tests/test_repo_assets.py::test_filtering ok",
+    "final: no file change in six turns"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-002",
+    "file": "src/repositories/assets.py",
+    "role": "coder",
+    "title": "Asset repository",
+    "interface": "class AssetRepository(conn); attribute conn. create(asset_tag, type, brand, model, serial_number, purchase_date, price, notes, location_id=None, condition='good', supplier='', warranty_until='', cost_center='', invoice_id=None) -> dict (asset_tag upper-cased/stripped; status 'in_stock'; updated_at=now; raises sqlite3.IntegrityError on duplicate tag — do NOT catch). get(id) -> dict | None. get_by_tag(tag) -> dict | None (case-insensitive). update(id, **fields) -> dict | None: columns asset_tag, type, brand, model, serial_number, purchase_date, price, notes, location_id, condition, supplier, warranty_until, cost_center, invoice_id (None allowed for location_id/invoice_id); sets updated_at; ignores unknown keys. set_status(id, status) -> bool (ValueError for unknown status). list_all(status=None, type=None) -> list[dict] by asset_tag. search(q) -> list[dict] matching asset_tag/brand/model/serial_number. search_assets(q='', status=None, type=None, location_id=None, tag_id=None, employee_id=None, invoice_id=None, warranty_before=None, sort='asset_tag') -> list[dict]: one SQL query joining locations (location_name), the open assignment + employee (holder_email, holder_name, holder_employee_id — None when unassigned), filtered by every given argument (tag_id via asset_tags; employee_id via the open assignment; warranty_before: warranty_until != '' AND warranty_until <= value; q matches asset_tag/brand/model/serial_number LIKE, case-insensitive); sort is one of asset_tag, type, brand, model, status, created_at, updated_at, warranty_until, purchase_date, optionally prefixed with '-' for DESC; unknown sort -> asset_tag. count_by(field) -> dict[value, count] for field in ('status','type','condition','location_id'). Dict keys: id, asset_tag, type, brand, model, serial_number, purchase_date, price (float), status, notes, created_at, location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at (+ location_name/holder_* from search_assets). the repository receives a sqlite3.Connection in the constructor (no default) and calls conn.commit() after every write; rows are plain dicts",
+    "uses": {
+      "schema": "src/db.py: SCHEMA — tables employees, locations(id,name,address,notes), tags(id,name,color), invoices(id,number,supplier,issued_at,total,currency,notes,created_by,created_at), asset_tags(asset_id,tag_id), assets(+location_id, condition, supplier, warranty_until, cost_center, invoice_id, updated_at), handovers, assignments, audit_log, attachments(id,owner_type,owner_id,kind,filename,stored_name,mime_type,size,uploaded_by,uploaded_at), settings",
+      "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+    },
+    "database": "injected connection only",
+    "acceptance": "tests/test_repo_assets.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-039",
+      "C-040"
+    ],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "P-023",
+  "contract": "C-048",
+  "title": "JSON API: tags, locations, invoices, attachments, dashboard",
+  "created_at": "2026-09-17T12:14:30+00:00",
+  "ladder": [
+    "blocked: acceptance imports a contract not yet produced (operator fixture)"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_api_taxonomy.py: the acceptance run imports src.web.catalog, which C-049 owns and has not produced yet; make that import lazy (inside the fixture) or add C-049 to depends_on",
+    "[MISSING_FILE] src/api/taxonomy.py: the contract's file does not exist"
+  ],
+  "failing": "E                                                                        [100%]\n==================================== ERRORS ====================================\n________________ ERROR at setup of test_tags_and_locations_api _________________\n\ntmp_path = PosixPath('/private/var/folders/w2/31c54tyx6rzg7nq29x8fj6_h0000gq/T/pytest-of-AI/pytest-5502/test_tags_and_locations_api0')\n\n    @pytest.fixture()\n    def app(tmp_path):\n>       from src.app import create_app  # produced by the last contract\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests/conftest.py:18: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\n    from flask import Flask, jsonify\n    from pathlib import Path\n    \n    # Import collaborators\n    from src.config import load_config\n    from src.db import close_db\n    from src.auth.oidc import bp as auth_bp\n    from src.web.admin import bp as admin_bp\n    from src.web.employee import bp as employee_bp\n    from src.web.settings import bp as settings_bp, apply_settings\n>   from src.web.catalog import bp as catalog_bp\nE   ModuleNotFoundError: No module named 'src.web.catalog'\n\nsrc/app.py:11: ModuleNotFoundError\n=========================== short test summary info ============================\nERROR tests/test_api_taxonomy.py::test_tags_and_locations_api - ModuleNotFoun...\n1 error in 0.13s\n",
+  "diff": "",
+  "tried": [],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-048",
+    "file": "src/api/taxonomy.py",
+    "role": "coder",
+    "title": "JSON API: tags, locations, invoices, attachments, dashboard",
+    "interface": "Blueprint `bp` (name 'api_taxonomy', no url_prefix; mounted at /api/v1). All routes api_auth_required. Tags: GET /tags -> list; POST /tags {name, color?} -> 201 | 400 (bad color via ValueError) | 409 (IntegrityError); PATCH /tags/<int:id> -> 200 | 404; DELETE /tags/<int:id> -> 204 | 404. Locations: GET /locations; POST /locations {name, address?, notes?} -> 201 | 409; PATCH /locations/<int:id>; DELETE /locations/<int:id> -> 204 | 404 | 409 (IntegrityError: referenced). Invoices: GET /invoices?q= -> list (search when q else list_all); POST /invoices {number, supplier?, issued_at?, total?, currency?, notes?} -> 201 | 400 (missing number) | 409; GET /invoices/<int:id> -> invoice dict + 'assets' (AssetService.assets.search_assets(invoice_id=id)) + 'attachments' (AttachmentRepository.list_for('invoice', id)) | 404; PATCH /invoices/<int:id>; DELETE /invoices/<int:id> -> 204 | 409; POST /invoices/<int:id>/assets {asset_ids: [...]} -> 200 {'attached': n} via AssetService.attach_invoice. Attachments: GET /assets/<int:id>/attachments -> list; POST /assets/<int:id>/attachments multipart (fields kind, file) -> 201 attachment dict | 400 (AttachmentError) | 404; POST /invoices/<int:id>/attachments likewise (owner_type 'invoice'); GET /attachments/<int:id> -> the file via send_file(path_for(id), as_attachment=True, download_name=filename, mimetype=mime_type) | 404; DELETE /attachments/<int:id> -> 204 | 404. GET /dashboard -> DashboardService stats(today=date.today().isoformat()). Services from src/services/factory.py (build_asset_service, build_attachment_service, build_dashboard_service) and repositories on get_db(). Actor via guards.actor().",
+    "uses": {
+      "factory": "src/services/factory.py",
+      "repositories": "src/repositories/{tags,locations,invoices,attachments}.py",
+      "AssetService": "src/services/asset_service.py: attach_invoice, assets.search_assets",
+      "AttachmentService": "src/services/attachment_service.py: store/path_for/delete, AttachmentError",
+      "guards": "src/auth/guards.py",
+      "get_db": "src/db.py",
+      "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+    },
+    "database": "services from src/services/factory.py on get_db() per request",
+    "acceptance": "tests/test_api_taxonomy.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-017",
+      "C-012",
+      "C-043",
+      "C-044"
+    ],
+    "budget": {
+      "iterations": 20
+    },
+    "notes": ""
+  }
+}

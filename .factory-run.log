@@ -1,19 +1,16 @@
+decision: P-022: patch — patch applied and committed
 model: coder: qwen/qwen3-coder-30b resident at 32768
 model: tester: nousresearch/hermes-4.3-36b resident at 32768
 model: triage: openai/gpt-oss-120b resident at 65536
-C-002: green (0 iterations) — already green
-C-042: escalated -> P-015 — worker: budget after 12 iterations; blocked: acceptance imports a contract not yet produced (operator fixture); retained on factory/failed/C-042-1
-C-047: escalated -> P-016 — worker: budget after 12 iterations; blocked: acceptance imports a contract not yet produced (operator fixture); retained on factory/failed/C-047-1
-C-040: escalated -> P-017 — worker: budget after 12 iterations; blocked: acceptance imports a contract not yet produced (operator fixture); retained on factory/failed/C-040-1
-C-041: escalated -> P-018 — worker: stopped after 12 iterations; blocked: acceptance imports a contract not yet produced (operator fixture); retained on factory/failed/C-041-1
-C-039: escalated -> P-019 — blocked: acceptance imports a contract not yet produced (operator fixture)
-C-044: waited 46s for another client
-C-035: green (5 iterations) — worker: green after 5 iterations
-C-044: worker stopped; acceptance failed (0 failed); [MISSING_FILE] src/services/dashboard_service.py: the contract's file does not exist
-C-044: arbitration STILL_AMBIGUOUS (neither side produced a surviving hypothesis for tests/test_service_dashboard.py::test_dashboard_stats (implementation=PATCH_REJECTED, test=PATCH_REJECTED))
-C-044: escalated -> P-020 — worker: stopped after 11 iterations; retry: budget after 12 iterations; triage: STILL_AMBIGUOUS; retained on factory/failed/C-044-1
+C-009: green (0 iterations) — already green
+C-046: green (4 iterations) — worker: green after 4 iterations
+C-045: worker budget; acceptance failed (1 failed); [SWALLOWED_EXCEPTION] src/services/asset_import_export.py: line 160: a broad `except` swallows the exception without logging or re-raising it, so the real failure can nev
+C-017: green (12 iterations) — worker: green after 12 iterations
+C-048: escalated -> P-023 — blocked: acceptance imports a contract not yet produced (operator fixture)
+C-045: arbitration STILL_AMBIGUOUS (neither side produced a surviving hypothesis for tests/test_service_import_export.py::test_import_updates_existing_creates_locations_and_reports_row_errors (imp)
+C-045: escalated -> P-024 — worker: budget after 12 iterations; retry: budget after 12 iterations; triage: STILL_AMBIGUOUS; retained on factory/failed/C-045-1
 
-needs-operator: 6 packet(s) waiting
-green 34 · escalated 6 · iterations 76
-packets waiting: P-015, P-016, P-017, P-018, P-019, P-020
+needs-operator: 2 packet(s) waiting
+green 44 · escalated 2 · iterations 40
+packets waiting: P-023, P-024
 EXIT=1

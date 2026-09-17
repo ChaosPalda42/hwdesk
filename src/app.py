@@ -4,16 +4,39 @@ from pathlib import Path
 # Import collaborators
 from src.config import load_config
 from src.db import close_db
-from src.auth.oidc import bp as auth_bp
-from src.web.admin import bp as admin_bp
-from src.web.employee import bp as employee_bp
-from src.web.settings import bp as settings_bp, apply_settings
-from src.web.catalog import bp as catalog_bp
-from src.api.taxonomy import bp as taxonomy_api_bp
-from src.api.assets import bp as assets_api_bp
-from src.api.employees import bp as employees_api_bp
-from src.api.handovers import bp as handovers_api_bp
 from src.auth.guards import current_user
+
+# (module path, attribute, url_prefix). Registered in order; see _register_blueprints.
+BLUEPRINTS = (
+    ('src.auth.oidc', 'bp', None),
+    ('src.web.admin', 'bp', None),
+    ('src.web.employee', 'bp', None),
+    ('src.web.settings', 'bp', None),
+    ('src.web.catalog', 'bp', None),
+    ('src.api.assets', 'bp', '/api/v1'),
+    ('src.api.employees', 'bp', '/api/v1'),
+    ('src.api.handovers', 'bp', '/api/v1'),
+    ('src.api.taxonomy', 'bp', '/api/v1'),
+)
+
+
+def _register_blueprints(app) -> None:
+    """Import and register every blueprint. While the Factory builds the
+    project one contract at a time, HWDESK_ALLOW_MISSING_BLUEPRINTS=1 lets a
+    not-yet-produced blueprint be skipped; in production every import is
+    strict."""
+    import importlib
+    import os
+
+    allow_missing = os.environ.get('HWDESK_ALLOW_MISSING_BLUEPRINTS') == '1'
+    for module_name, attribute, prefix in BLUEPRINTS:
+        try:
+            module = importlib.import_module(module_name)
+        except ModuleNotFoundError as exc:
+            if allow_missing and exc.name == module_name:
+                continue
+            raise
+        app.register_blueprint(getattr(module, attribute), url_prefix=prefix)
 
 def _format_dt(value):
     """ISO timestamp -> '17. 9. 2026 12:21' in local time; passes through anything else."""
@@ -44,17 +67,7 @@ def create_app(overrides=None):
     # Register blueprints as specified in the contract:
     # auth bp (src/auth/oidc.py), admin bp (src/web/admin.py), employee bp (src/web/employee.py, no prefix)
     # and the three API blueprints at url_prefix '/api/v1'
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(employee_bp)
-    app.register_blueprint(settings_bp)
-    app.register_blueprint(catalog_bp)
-    
-    # Register API blueprints at url_prefix '/api/v1'
-    app.register_blueprint(assets_api_bp, url_prefix='/api/v1')
-    app.register_blueprint(employees_api_bp, url_prefix='/api/v1')
-    app.register_blueprint(handovers_api_bp, url_prefix='/api/v1')
-    app.register_blueprint(taxonomy_api_bp, url_prefix='/api/v1')
+    _register_blueprints(app)
     
     # Register teardown handler
     app.teardown_appcontext(close_db)
@@ -73,6 +86,8 @@ def create_app(overrides=None):
         }
     
     # Settings stored in the database override the environment defaults.
+    from src.web.settings import apply_settings
+
     with app.app_context():
         apply_settings(app)
     return app

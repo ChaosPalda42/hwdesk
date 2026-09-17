@@ -1,0 +1,73 @@
+{
+  "id": "P-024",
+  "contract": "C-045",
+  "title": "CSV export and import of assets",
+  "created_at": "2026-09-17T12:19:14+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-045-1"
+  ],
+  "findings": [],
+  "failing": ".F                                                                       [100%]\n=================================== FAILURES ===================================\n____ test_import_updates_existing_creates_locations_and_reports_row_errors _____\n\nconn = <sqlite3.Connection object at 0x1075ae7a0>\n\n    def test_import_updates_existing_creates_locations_and_reports_row_errors(conn):\n        service = _service(conn)\n        service.create(actor=\"a\", asset_tag=\"NB-1\", type=\"notebook\", brand=\"Dell\", model=\"L\", serial_number=\"\", purchase_date=\"\", price=0, notes=\"\")\n        text = \"asset_tag;type;brand;model;location;tags;condition\\nNB-1;notebook;Dell;Latitude 7;Brno;Servis;worn\\nMO-1;monitor;LG;27;;;\\nBAD-1;spaceship;;;;;\\n\"\n        result = import_assets_csv(service, LocationRepository(conn), \"a\", text)\n>       assert result[\"created\"] == 1 and result[\"updated\"] == 1 and len(result[\"errors\"]) == 1 and result[\"errors\"][0].startswith(\"řádek 4\")\nE       assert (0 == 1)\n\ntests/test_service_import_export.py:35: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_service_import_export.py::test_import_updates_existing_creates_locations_and_reports_row_errors\n1 failed, 1 passed in 0.03s\n",
+  "diff": "+import csv\n+import io\n+from typing import Dict, List\n+import logging\n+\n+from src.services.asset_service import AssetService, AssetValidationError, DuplicateAssetTag\n+from src.repositories.assets import AssetRepository\n+from src.repositories.tags import TagRepository\n+from src.repositories.locations import LocationRepository\n+\n+logger = logging.getLogger(__name__)\n+\n+\n+def export_assets_csv(assets: AssetRepository, tags: TagRepository) -> str:\n+    \"\"\"Export assets to CSV format with specified header and data.\"\"\"\n+    \n+    # Get all assets with their details\n+    asset_rows = assets.search_assets()\n+    \n+    # Prepare CSV content\n+    output = io.StringIO()\n+    writer = csv.writer(output, delimiter=';')\n+    \n+    # Write header\n+    header = [\n+        'asset_tag', 'type', 'brand', 'model', 'serial_number',\n+        'status', 'condition', 'location', 'tags', 'holder_email',\n+        'warranty_until', 'supplier', 'cost_center', 'invoice', \n+        'purchase_date', 'price', 'notes'\n+    ]\n+    writer.writerow(header)\n+    \n+    # Process each asset row\n+    for asset in asset_rows:\n+        # Get tags for this asset\n+        asset_tags = tags.for_asset(asset['id']) if tags else []\n+        tag_names = [tag['name'] for tag in asset_tags]\n+        \n+        # Get invoice number if available\n+        invoice_number = ''\n+        if asset.get('invoice_id') and assets.conn:\n+            cursor = assets.conn.execute(\n+                \"SELECT number FROM invoices WHERE id=?\", \n+                (asset['invoice_id'],)\n+            )\n+            result = cursor.fetchone()\n+            if result:\n+                invoice_number = result[0]\n+        \n+        # Write the row\n+        writer.writerow([\n+            asset.get('asset_tag', ''),\n+            asset.get('type', ''),\n+            asset.get('brand', ''),\n+            asset.get('model', ''),\n+            asset.get('serial_number', ''),\n+            asset.get('status', ''),\n+            asset.get('condition', ''),\n+            asset.get('location_name', '') or '',\n+            '|'.join(tag_names),\n… (112 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: read_file src/repositories/assets.py ok",
+    "2: read_file src/repositories/tags.py ok",
+    "3: read_file src/repositories/locations.py ok",
+    "4: read_file src/repositories/invoices.py ok",
+    "5: write_file src/services/asset_import_export.py ok",
+    "6: apply_patch src/services/asset_import_export.py ok",
+    "7: apply_patch src/services/asset_import_export.py ok",
+    "8: apply_patch src/services/asset_import_export.py ok",
+    "9: run_command python -m pytest tests/test_service_import_export.py::test_i ok",
+    "10: read_file tests/test_service_import_export.py ok",
+    "11: apply_patch src/services/asset_import_export.py ok",
+    "12: write_file src/services/asset_import_export.py ok",
+    "final: budget exhausted",
+    "-- retry --",
+    "1: read_file src/services/asset_import_export.py ok",
+    "2: write_file src/services/asset_import_export.py ok",
+    "3: read_file tests/test_service_import_export.py ok",
+    "4: write_file src/services/asset_import_export.py ok",
+    "5: run_command python -m pytest tests/test_service_import_export.py::test_i ok",
+    "6: write_file src/services/asset_import_export.py ok",
+    "7: write_file src/services/asset_import_export.py ok",
+    "8: run_command uv run pytest -v tests/test_service_import_export.py::test_i ok",
+    "9: write_file src/services/asset_import_export.py ok",
+    "10: write_file src/services/asset_import_export.py ok",
+    "11: write_file src/services/asset_import_export.py ok",
+    "12: write_file src/services/asset_import_export.py ok",
+    "final: budget exhausted"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-045",
+    "file": "src/services/asset_import_export.py",
+    "role": "coder",
+    "title": "CSV export and import of assets",
+    "interface": "export_assets_csv(assets: AssetRepository, tags: TagRepository) -> str: UTF-8 text with header asset_tag;type;brand;model;serial_number;status;condition;location;tags;holder_email;warranty_until;supplier;cost_center;invoice;purchase_date;price;notes (delimiter ';'), rows from assets.search_assets() (location = location_name or '', tags joined with '|', holder_email or '', invoice = the invoice number looked up via assets.conn: SELECT number FROM invoices WHERE id=? or ''). import_assets_csv(service: AssetService, locations: LocationRepository, actor: str, text: str) -> dict {'created', 'updated', 'errors': [str]}: delimiter ';' or ',' (csv.Sniffer, fallback ';'), header required; asset_tag required; existing tag (service.assets.get_by_tag) -> service.update with the given columns, else service.create (type required for create); 'location' name -> locations.get_by_name or locations.create(name); 'tags' split on '|' -> tag_names; 'invoice' -> invoice_number; price float; every row error is collected as 'řádek N: <message>' (N = 1-based line number in the file, header = 1) and processing continues. Never catch generic Exception except to record a row error from AssetValidationError/DuplicateAssetTag/ValueError.",
+    "uses": {
+      "AssetService": "src/services/asset_service.py",
+      "AssetRepository": "src/repositories/assets.py (attribute conn; search_assets rows have location_name, holder_email)",
+      "TagRepository": "src/repositories/tags.py: for_assets",
+      "LocationRepository": "src/repositories/locations.py"
+    },
+    "database": "",
+    "acceptance": "tests/test_service_import_export.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-009",
+      "C-039",
+      "C-040"
+    ],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}
