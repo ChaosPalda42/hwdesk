@@ -72,6 +72,11 @@ vstupy: Entra ID registrace, SMTP účet, Drupal URL/auth, server.
   kontrakty zůstávají pro repozitáře, služby a testy. Každý kontrakt má
   akceptační test (C-017 bez něj „prošel“ beze změny souboru).
 
+- 2026-09-17: veřejný repozitář github.com/ChaosPalda42/hwdesk; klikací
+  statická ukázka na https://chaospalda42.github.io/hwdesk/ (Actions →
+  Pages při každém pushi na main; `tools/snapshot.py` ji staví z aplikace
+  se smyšlenými daty). Stejný postup jako u webu školy.
+
 ## Pravidla projektu
 - Stack: Python 3.11+, Flask 3, sqlite3 (raw SQL, `sqlite3.Row`), Jinja2, reportlab, msal.
 - Testy: `uv run pytest -q`
