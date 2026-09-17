@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="handover-confirm">
+    {% if error %}
+        <div class="flash error">{{ error }}</div>
+    {% else %}
+        <h1>
+            {% if handover.kind == 'handover' %}Převzetí zařízení{% elif handover.kind == 'return' %}Vrácení zařízení{% endif %}
+        </h1>
+        
+        <p><strong>Protokol:</strong> {{ handover.protocol_number }}</p>
+        
+        <h2>Asset</h2>
+        <p><strong>Tag:</strong> {{ handover.asset.asset_tag }}</p>
+        <p><strong>Typ:</strong> {{ handover.asset.type }}</p>
+        <p><strong>Brand:</strong> {{ handover.asset.brand }}</p>
+        <p><strong>Model:</strong> {{ handover.asset.model }}</p>
+        <p><strong>Seriové číslo:</strong> {{ handover.asset.serial_number }}</p>
+        
+        {% if handover.note %}
+            <h2>Poznámka</h2>
+            <p>{{ handover.note }}</p>
+        {% endif %}
+        
+        <h2>Informace o předání</h2>
+        <p><strong>Vytvořil:</strong> {{ handover.created_by }}</p>
+        
+        {% if handover.status == 'pending' %}
+            <form method="POST" action="{{ request.path }}">
+                <input type="hidden" name="action" value="confirm">
+                <button type="submit">Potvrzuji</button>
+            </form>
+            
+            <form method="POST" action="{{ request.path }}" class="decline-form">
+                <input type="hidden" name="action" value="decline">
+                <label for="reason">Důvod odmítnutí:</label>
+                <textarea id="reason" name="reason" required></textarea>
+                <button type="submit" class="secondary">Odmítnout</button>
+            </form>
+        {% else %}
+            <p><strong>Stav:</strong> {{ handover.status }}</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
