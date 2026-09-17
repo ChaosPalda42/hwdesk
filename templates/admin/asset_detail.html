@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Detail majetku - {{ asset.name }}{% endblock %}
+
+{% block content %}
+<div class="asset-detail">
+    <h1>Detail majetku</h1>
+    
+    <div class="asset-info">
+        <h2>{{ asset.name }}</h2>
+        
+        <p><strong>Typ:</strong> {{ asset.type }}</p>
+        <p><strong>SN:</strong> {{ asset.sn }}</p>
+        <p><strong>Model:</strong> {{ asset.model }}</p>
+        <p><strong>Producent:</strong> {{ asset.manufacturer }}</p>
+        <p><strong>Status:</strong> <span class="status-{{ asset.status }}">{{ asset.status }}</span></p>
+        <p><strong>Datum vytvoření:</strong> {{ asset.created_at }}</p>
+        <p><strong>Datum poslední aktualizace:</strong> {{ asset.updated_at }}</p>
+        
+        {% if holder %}
+            <p><strong>Aktuální držitel:</strong> {{ holder.display_name }} ({{ holder.email }})</p>
+        {% else %}
+            <p><strong>Aktuální držitel:</strong> Nepřiřazeno</p>
+        {% endif %}
+    </div>
+
+    <!-- Handover form - shown only when status == 'in_stock' -->
+    {% if asset.status == 'in_stock' %}
+        <div class="handover-section">
+            <h3>Předat zaměstnanci</h3>
+            <form method="POST" action="/admin/assets/{{ asset.id }}/handover">
+                <div class="form-group">
+                    <label for="employee_email">Zaměstnanec:</label>
+                    <select name="employee_email" id="employee_email" required>
+                        <option value="">Vyberte zaměstnance</option>
+                        {% for employee in employees %}
+                            <option value="{{ employee.email }}">{{ employee.display_name }} &lt;{{ employee.email }}&gt;</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="note">Poznámka:</label>
+                    <input type="text" name="note" id="note" placeholder="Poznámka k předání">
+                </div>
+                
+                <button type="submit">Předat</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Return form - shown when status == 'assigned' -->
+    {% if asset.status == 'assigned' %}
+        <div class="return-section">
+            <h3>Návrat do skladu</h3>
+            <form method="POST" action="/admin/assets/{{ asset.id }}/return">
+                <button type="submit">Návrat do skladu</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Retire form - shown when status in ('in_stock','retired','lost') -->
+    {% if asset.status in ['in_stock', 'retired', 'lost'] %}
+        <div class="retire-section">
+            <h3>Výdej</h3>
+            <form method="POST" action="/admin/assets/{{ asset.id }}/retire">
+                <button type="submit">Výdej</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Lost form - shown when status in ('in_stock','retired','lost') -->
+    {% if asset.status in ['in_stock', 'retired', 'lost'] %}
+        <div class="lost-section">
+            <h3>Ztráta</h3>
+            <form method="POST" action="/admin/assets/{{ asset.id }}/lost">
+                <button type="submit">Ztráta</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Edit link -->
+    <div class="edit-section">
+        <a href="/admin/assets/{{ asset.id }}/edit">Upravit majetek</a>
+    </div>
+
+    <!-- Handovers table -->
+    {% if handovers %}
+        <div class="handovers-section">
+            <h3>Historie předání</h3>
+            <table class="handovers-table">
+                <thead>
+                    <tr>
+                        <th>Protokol</th>
+                        <th>Druh</th>
+                        <th>Status</th>
+                        <th>Datum vytvoření</th>
+                        <th>Datum potvrzení</th>
+                        <th>Zaměstnanec</th>
+                        <th>Akce</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for handover in handovers %}
+                        <tr>
+                            <td>
+                                {% if handover.protocol_path %}
+                                    <a href="/api/v1/handovers/{{ handover.protocol_number }}/protocol.pdf" target="_blank">Stáhnout</a>
+                                {% endif %}
+                            </td>
+                            <td>{{ handover.kind }}</td>
+                            <td>{{ handover.status }}</td>
+                            <td>{{ handover.created_at }}</td>
+                            <td>{{ handover.confirmed_at or 'Nepotvrzeno' }}</td>
+                            <td>{{ handover.employee.display_name }}</td>
+                            <td>
+                                {% if handover.status == 'pending' %}
+                                    <form method="POST" action="/admin/handovers/{{ handover.id }}/cancel" style="display: inline;">
+                                        <button type="submit">Zrušit</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <!-- Assignment history table -->
+    {% if history %}
+        <div class="history-section">
+            <h3>Historie přiřazení</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Zaměstnanec</th>
+                        <th>Datum přiřazení</th>
+                        <th>Datum odebrání</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in history %}
+                        <tr>
+                            <td>{{ record.employee.display_name }}</td>
+                            <td>{{ record.assigned_at }}</td>
+                            <td>{{ record.unassigned_at or 'Stále přiřazeno' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
