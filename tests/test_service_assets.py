@@ -16,8 +16,8 @@ def test_create_validates_and_audits(service, conn):
     assert AuditRepository(conn).list_for_entity("asset", a["id"])[0]["action"] == "asset.created"
     with pytest.raises(DuplicateAssetTag):
         service.create(actor="a", asset_tag="NB-0001", type="notebook", brand="", model="", serial_number="", purchase_date="", price=0, notes="")
-    with pytest.raises(AssetValidationError):
-        service.create(actor="a", asset_tag="", type="notebook", brand="", model="", serial_number="", purchase_date="", price=0, notes="")
+    generated = service.create(actor="a", asset_tag="", type="notebook", brand="", model="", serial_number="", purchase_date="", price=0, notes="")
+    assert generated["asset_tag"] == "AS-0001"  # no prefixes configured -> default prefix
     with pytest.raises(AssetValidationError):
         service.create(actor="a", asset_tag="X-1", type="spaceship", brand="", model="", serial_number="", purchase_date="", price=0, notes="")
     with pytest.raises(AssetValidationError):
