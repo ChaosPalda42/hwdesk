@@ -4,14 +4,16 @@ test_command = ['env', 'HWDESK_ALLOW_MISSING_BLUEPRINTS=1', 'uv', 'run', 'pytest
 iterations_per_contract = 12
 max_run_iterations = 800
 
+# 2026-09-18: all roles on gpt-oss-120b (bench: 4/4 green, 50 s/contract; see
+# ~/factory/bench/results). Leave reasoning_effort unset = LM Studio default (medium).
 [roles.coder]
-model = "qwen/qwen3-coder-30b"
-context_length = 32768
+model = "openai/gpt-oss-120b"
+context_length = 65536
 slots = 2
 
 [roles.tester]
-model = "nousresearch/hermes-4.3-36b"
-context_length = 32768
+model = "openai/gpt-oss-120b"
+context_length = 65536
 slots = 1
 
 [roles.triage]
