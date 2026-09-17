@@ -1,12 +1,14 @@
-decision: P-012: patch — patch applied and committed
 model: coder: qwen/qwen3-coder-30b resident at 32768
 model: tester: nousresearch/hermes-4.3-36b resident at 32768
 model: triage: openai/gpt-oss-120b resident at 65536
-C-032: green (0 iterations) — already green
-C-033: worker stopped; acceptance failed (0 failed); [MISSING_FILE] tests/test_smoke_pages.py: the contract's file does not exist
-C-033: escalated -> P-013 — worker: stopped after 7 iterations; retry: stopped after 6 iterations; triage: no parseable failure
+C-034: green (3 iterations) — worker: green after 3 iterations
+C-036: green (7 iterations) — worker: green after 7 iterations
+C-035: green (2 iterations) — worker: green after 2 iterations
+C-038: waited 107s for another client
+C-038: green (2 iterations) — worker: green after 2 iterations
+C-037: worker budget; [SWALLOWED_EXCEPTION] src/web/settings.py: line 142: a broad `except` swallows the exception without logging or re-raising it, so the real failure can never be diagnosed from a test run -- log it with
+C-037: green (18 iterations) — worker: budget after 12 iterations; retry: green after 6 iterations
 
-needs-operator: 1 packet(s) waiting
-green 32 · escalated 1 · iterations 13
-packets waiting: P-013
+failed: full suite failed (0 failed) after all contracts were green
+green 38 · escalated 0 · iterations 32
 EXIT=1

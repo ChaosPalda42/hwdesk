@@ -4,6 +4,7 @@ import logging
 from src.services.settings_service import SettingsService, SETTINGS_SCHEMA
 from src.repositories.settings import SettingsRepository
 from src.config import load_config
+from src.db import get_db
 from src.auth.guards import admin_required, actor, current_user
 from src.services.factory import build_email_sender
 from src.services.drupal_hr import DrupalHrClient, DrupalHrError
@@ -20,7 +21,10 @@ bp = Blueprint('settings', __name__, url_prefix='/admin/settings')
 def apply_settings(app) -> None:
     """Read settings from the repository and update app.config."""
     service = SettingsService(SettingsRepository(get_db()))
-    effective_config = service.effective(load_config())
+    # Base = what the app is running with now (env defaults + explicit
+    # overrides); stored settings win over it, never the other way round.
+    base = {item['key']: app.config.get(item['key']) for item in SETTINGS_SCHEMA if item['key'] in app.config}
+    effective_config = service.effective(base)
     
     # Only update keys that are in SETTINGS_SCHEMA
     for key in SETTINGS_SCHEMA:
@@ -45,7 +49,7 @@ def check_settings_version():
         apply_settings(current_app)
 
 
-@bp.route('/', methods=['GET'])
+@bp.route('', methods=['GET'])
 @admin_required
 def settings_page():
     """Display the admin settings page."""
@@ -74,7 +78,7 @@ def settings_page():
     )
 
 
-@bp.route('/', methods=['POST'])
+@bp.route('', methods=['POST'])
 @admin_required
 def save_settings():
     """Save admin settings."""
@@ -135,7 +139,8 @@ def test_email():
         email_sender.send(
             to=user['email'],
             subject='HW Desk – testovací e-mail',
-            body='Toto je testovací e-mail z HW Desk.'
+            text='Toto je testovací e-mail z HW Desk. Pokud jej čtete, odesílání funguje.',
+            html='<p>Toto je testovací e-mail z HW Desk. Pokud jej čtete, odesílání funguje.</p>',
         )
         
         flash('Testovací e-mail byl odeslán.', 'success')
