@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Správa zařízení{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Moje zařízení</a></li>
+                {% if user and user.is_admin %}
+                    <li><a href="/admin/assets">Správa majetku</a></li>
+                    <li><a href="/admin/handovers">Předání zařízení</a></li>
+                    <li><a href="/admin/employees">Zaměstnanci</a></li>
+                    <li><a href="/admin/audit">Audit</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        {% if user %}
+            <div class="user-info">
+                <span>Přihlášený uživatel: {{ user.email }}</span>
+                <form method="POST" action="/auth/logout">
+                    <button type="submit">Odhlásit se</button>
+                </form>
+            </div>
+        {% endif %}
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
