@@ -2,7 +2,7 @@
 [run]
 test_command = ['uv', 'run', 'pytest', '-q']
 iterations_per_contract = 12
-max_run_iterations = 400
+max_run_iterations = 800
 
 [roles.coder]
 model = "qwen/qwen3-coder-30b"

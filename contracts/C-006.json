@@ -6,7 +6,7 @@
   "interface": "class EmailSender(mode, outbox_dir, sender, smtp: dict, smtp_factory=None). send(to, subject, text, html, attachments=None) -> str (message id). attachments: list of (filename, bytes, mime_type). mode 'outbox': write one JSON file per message into outbox_dir named '<UTC timestamp>-<seq>.json' with keys id, to, from, subject, text, html, attachments=[{filename, mime_type, size}], sent_at. mode 'smtp': build email.message.EmailMessage (plain + html alternative, attachments added), open smtp_factory(host, port) (default smtplib.SMTP), starttls() when smtp['starttls'], login(user, password) when user set, send_message, quit. Any other mode raises ValueError. Never swallow exceptions.",
   "uses": {},
   "database": "",
-  "acceptance": "tests/test_services_infra.py",
+  "acceptance": "tests/test_service_email.py",
   "forbidden": [],
   "depends_on": [],
   "budget": {

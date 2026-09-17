@@ -1,0 +1,39 @@
+{
+  "id": "P-004",
+  "contract": "C-006",
+  "title": "E-mail sender (outbox or SMTP)",
+  "created_at": "2026-09-17T09:00:25+00:00",
+  "ladder": [
+    "worker: stopped after 10 iterations",
+    "retry: stopped after 6 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-006-1"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.protocol_pdf, which C-008 owns and has not produced yet; make that import lazy (inside the fixture) or add C-008 to depends_on"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n________________ ERROR collecting tests/test_services_infra.py _________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_services_infra.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_services_infra.py:7: in <module>\n    from src.services.protocol_pdf import render_protocol_pdf\nE   ModuleNotFoundError: No module named 'src.services.protocol_pdf'\n=========================== short test summary info ============================\nERROR tests/test_services_infra.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "+import json\n+import smtplib\n+import time\n+from email.message import EmailMessage\n+from pathlib import Path\n+from datetime import datetime, timezone\n+\n+\n+class EmailSender:\n+    def __init__(self, mode, outbox_dir, sender, smtp, smtp_factory=None):\n+        self.mode = mode\n+        self.outbox_dir = outbox_dir\n+        self.sender = sender\n+        self.smtp = smtp\n+        self.smtp_factory = smtp_factory or smtplib.SMTP\n+\n+    def send(self, to, subject, text, html, attachments=None):\n+        if self.mode == \"outbox\":\n+            return self._send_outbox(to, subject, text, html, attachments)\n+        elif self.mode == \"smtp\":\n+            return self._send_smtp(to, subject, text, html, attachments)\n+        else:\n+            raise ValueError(f\"Unknown mode: {self.mode}\")\n+\n+    def _send_outbox(self, to, subject, text, html, attachments):\n+        # Create outbox directory if it doesn't exist\n+        Path(self.outbox_dir).mkdir(parents=True, exist_ok=True)\n+        \n+        # Generate message ID and timestamp\n+        timestamp = datetime.now(timezone.utc).isoformat()\n+        seq = int(time.time() * 1000) % 1000\n+        msg_id = f\"{timestamp}-{seq}\"\n+        \n+        # Prepare attachments data\n+        attachments_data = []\n+        if attachments:\n+            for filename, content, mime_type in attachments:\n+                attachments_data.append({\n+                    \"filename\": filename,\n+                    \"mime_type\": mime_type,\n+                    \"size\": len(content)\n+                })\n+        \n+        # Create message data\n+        message_data = {\n+            \"id\": msg_id,\n+            \"to\": to,\n+            \"from\": self.sender,\n+            \"subject\": subject,\n+            \"text\": text,\n+            \"html\": html,\n+            \"attachments\": attachments_data,\n+            \"sent_at\": timestamp\n+        }\n+        \n+        # Write to JSON file\n+        filename = f\"{timestamp}-{seq}.json\"\n+        file_path = Path(self.outbox_dir) / filename\n+        with open(file_path, \"w\", encoding=\"utf-8\") as f:\n+            json.dump(message_data, f, ensure_ascii=False, indent=2)\n… (45 more lines)",
+  "tried": [
+    "worker: stopped after 10 iterations",
+    "retry: stopped after 6 iterations",
+    "triage: STILL_AMBIGUOUS"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-006",
+    "file": "src/services/email_sender.py",
+    "role": "coder",
+    "title": "E-mail sender (outbox or SMTP)",
+    "interface": "class EmailSender(mode, outbox_dir, sender, smtp: dict, smtp_factory=None). send(to, subject, text, html, attachments=None) -> str (message id). attachments: list of (filename, bytes, mime_type). mode 'outbox': write one JSON file per message into outbox_dir named '<UTC timestamp>-<seq>.json' with keys id, to, from, subject, text, html, attachments=[{filename, mime_type, size}], sent_at. mode 'smtp': build email.message.EmailMessage (plain + html alternative, attachments added), open smtp_factory(host, port) (default smtplib.SMTP), starttls() when smtp['starttls'], login(user, password) when user set, send_message, quit. Any other mode raises ValueError. Never swallow exceptions.",
+    "uses": {},
+    "database": "",
+    "acceptance": "tests/test_services_infra.py",
+    "forbidden": [],
+    "depends_on": [],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

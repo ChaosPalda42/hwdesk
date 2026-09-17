@@ -1,0 +1,40 @@
+{
+  "id": "P-003",
+  "contract": "C-002",
+  "title": "Asset repository",
+  "created_at": "2026-09-17T08:55:52+00:00",
+  "ladder": [
+    "worker: stopped after 9 iterations",
+    "retry: stopped after 6 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-002-1"
+  ],
+  "findings": [],
+  "failing": "..F                                                                      [100%]\n=================================== FAILURES ===================================\n___________________________ test_status_and_filters ____________________________\n\nconn = <sqlite3.Connection object at 0x106d55f30>\n\n    def test_status_and_filters(conn):\n        repo = AssetRepository(conn)\n        a = _asset(repo, \"NB-0001\")\n        b = _asset(repo, \"MO-0001\", type=\"monitor\")\n        assert repo.set_status(a[\"id\"], \"assigned\") is True\n        assert repo.get(a[\"id\"])[\"status\"] == \"assigned\"\n        assert [x[\"asset_tag\"] for x in repo.list_all(status=\"in_stock\")] == [\"MO-0001\"]\n        assert [x[\"asset_tag\"] for x in repo.list_all(type=\"notebook\")] == [\"NB-0001\"]\n>       assert [x[\"asset_tag\"] for x in repo.search(\"lati\")] == [\"NB-0001\"]\nE       AssertionError: assert ['MO-0001', 'NB-0001'] == ['NB-0001']\nE         \nE         At index 0 diff: 'MO-0001' != 'NB-0001'\nE         Left contains one more item: 'NB-0001'\nE         Use -v to get more diff\n\ntests/test_repo_assets.py:40: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_repo_assets.py::test_status_and_filters - AssertionError: a...\n1 failed, 2 passed in 0.76s\n",
+  "diff": "+from __future__ import annotations\n+\n+import sqlite3\n+from typing import Any, Dict, List, Optional\n+\n+from src.config import ASSET_STATUSES\n+\n+\n+class AssetRepository:\n+    def __init__(self, conn: sqlite3.Connection):\n+        self.conn = conn\n+\n+    def create(self, asset_tag: str, type: str, brand: str, model: str, serial_number: str,\n+               purchase_date: str, price: float, notes: str) -> Dict[str, Any]:\n+        asset_tag = asset_tag.strip().upper()\n+        status = \"in_stock\"\n+        # We let sqlite3.IntegrityError on duplicate tag bubble up\n+        cursor = self.conn.execute(\n+            \"INSERT INTO assets (asset_tag, type, brand, model, serial_number, purchase_date, price, status, notes)\"\n+            \" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\",\n+            (asset_tag, type, brand, model, serial_number, purchase_date, price, status, notes)\n+        )\n+        self.conn.commit()\n+        return self.get(cursor.lastrowid)\n+\n+    def get(self, id: int) -> Optional[Dict[str, Any]]:\n+        row = self.conn.execute(\"SELECT * FROM assets WHERE id = ?\", (id,)).fetchone()\n+        if row is None:\n+            return None\n+        return self._row_to_dict(row)\n+\n+    def get_by_tag(self, tag: str) -> Optional[Dict[str, Any]]:\n+        row = self.conn.execute(\"SELECT * FROM assets WHERE UPPER(asset_tag) = ?\", (tag.strip().upper(),)).fetchone()\n+        if row is None:\n+            return None\n+        return self._row_to_dict(row)\n+\n+    def update(self, id: int, **fields) -> Optional[Dict[str, Any]]:\n+        allowed_fields = {\n+            \"asset_tag\", \"type\", \"brand\", \"model\", \"serial_number\",\n+            \"purchase_date\", \"price\", \"notes\"\n+        }\n+        updates = {k: v for k, v in fields.items() if k in allowed_fields}\n+        if not updates:\n+            return None\n+\n+        set_clause = \", \".join([f\"{k} = ?\" for k in updates])\n+        values = list(updates.values()) + [id]\n+        self.conn.execute(f\"UPDATE assets SET {set_clause} WHERE id = ?\", values)\n+        self.conn.commit()\n+        return self.get(id)\n+\n+    def set_status(self, id: int, status: str) -> bool:\n+        if status not in ASSET_STATUSES:\n+            raise ValueError(f\"Invalid status: {status}\")\n+        cursor = self.conn.execute(\"UPDATE assets SET status = ? WHERE id = ?\", (status, id))\n+        self.conn.commit()\n+        return cursor.rowcount > 0\n+\n+    def list_all(self, status: Optional[str] = None, type: Optional[str] = None) -> List[Dict[str, Any]]:\n… (30 more lines)",
+  "tried": [
+    "worker: stopped after 9 iterations",
+    "retry: stopped after 6 iterations",
+    "triage: STILL_AMBIGUOUS"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-002",
+    "file": "src/repositories/assets.py",
+    "role": "coder",
+    "title": "Asset repository",
+    "interface": "class AssetRepository(conn). create(asset_tag, type, brand, model, serial_number, purchase_date, price, notes) -> dict (asset_tag stored upper-cased and stripped; status 'in_stock'; raises sqlite3.IntegrityError on duplicate tag — do NOT catch it). get(id) -> dict | None. get_by_tag(tag) -> dict | None (case-insensitive). update(id, **fields) -> dict | None (only columns asset_tag, type, brand, model, serial_number, purchase_date, price, notes; ignores unknown keys). set_status(id, status) -> bool (raises ValueError if status not in config.ASSET_STATUSES; False when unknown id). list_all(status=None, type=None) -> list[dict] ordered by asset_tag. search(q) -> list[dict] matching asset_tag, brand, model or serial_number case-insensitively. Dict keys: id, asset_tag, type, brand, model, serial_number, purchase_date, price (float), status, notes, created_at. repositories receive a sqlite3.Connection in the constructor (no default) and call conn.commit() after every write; rows are returned as plain dicts with `is_...`/`active` booleans converted from 0/1",
+    "uses": {
+      "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)",
+      "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES, load_config(overrides) -> dict"
+    },
+    "database": "injected connection only",
+    "acceptance": "tests/test_repo_assets.py",
+    "forbidden": [],
+    "depends_on": [],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

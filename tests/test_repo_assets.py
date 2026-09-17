@@ -32,7 +32,7 @@ def test_duplicate_tag_raises(conn):
 def test_status_and_filters(conn):
     repo = AssetRepository(conn)
     a = _asset(repo, "NB-0001")
-    b = _asset(repo, "MO-0001", type="monitor")
+    b = _asset(repo, "MO-0001", type="monitor", model="27UK850")
     assert repo.set_status(a["id"], "assigned") is True
     assert repo.get(a["id"])["status"] == "assigned"
     assert [x["asset_tag"] for x in repo.list_all(status="in_stock")] == ["MO-0001"]

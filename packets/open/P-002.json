@@ -1,0 +1,33 @@
+{
+  "id": "P-002",
+  "contract": "C-008",
+  "title": "Handover protocol PDF",
+  "created_at": "2026-09-17T08:54:12+00:00",
+  "ladder": [
+    "blocked: acceptance imports a contract not yet produced (operator fixture)"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.email_sender, which C-006 owns and has not produced yet; make that import lazy (inside the fixture) or add C-006 to depends_on",
+    "[MISSING_FILE] src/services/protocol_pdf.py: the contract's file does not exist"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n________________ ERROR collecting tests/test_services_infra.py _________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_services_infra.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_services_infra.py:6: in <module>\n    from src.services.email_sender import EmailSender\nE   ModuleNotFoundError: No module named 'src.services.email_sender'\n=========================== short test summary info ============================\nERROR tests/test_services_infra.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "",
+  "tried": [],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-008",
+    "file": "src/services/protocol_pdf.py",
+    "role": "coder",
+    "title": "Handover protocol PDF",
+    "interface": "render_protocol_pdf(path, protocol_number, kind, company, employee: dict, asset: dict, created_by, confirmed_at, note) -> str (returns path). One-page A4 PDF built with reportlab.platypus (SimpleDocTemplate, Paragraph, Table, Spacer): title 'Předávací protokol' for kind 'handover' or 'Protokol o vrácení' for 'return'; the protocol number and company; a table of the asset (asset_tag, type, brand, model, serial_number); a table of the employee (display_name, email, department); created_by; confirmed_at; note; and the sentence 'Zaměstnanec potvrdil elektronicky dne <confirmed_at>.'. Fonts: try pdfmetrics.registerFont(TTFont('Unicode', path)) for the first existing path among '/System/Library/Fonts/Supplemental/Arial Unicode.ttf', '/Library/Fonts/Arial Unicode.ttf', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf' and use it; if none exists use the built-in 'Helvetica'. Create parent directories with os.makedirs(exist_ok=True). Never swallow exceptions.",
+    "uses": {},
+    "database": "",
+    "acceptance": "tests/test_services_infra.py",
+    "forbidden": [],
+    "depends_on": [],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "P-001",
+  "contract": "C-007",
+  "title": "Signed handover tokens",
+  "created_at": "2026-09-17T08:54:11+00:00",
+  "ladder": [
+    "blocked: acceptance imports a contract not yet produced (operator fixture)"
+  ],
+  "findings": [
+    "[BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.email_sender, which C-006 owns and has not produced yet; make that import lazy (inside the fixture) or add C-006 to depends_on",
+    "[MISSING_FILE] src/services/tokens.py: the contract's file does not exist"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n________________ ERROR collecting tests/test_services_infra.py _________________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_services_infra.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_services_infra.py:6: in <module>\n    from src.services.email_sender import EmailSender\nE   ModuleNotFoundError: No module named 'src.services.email_sender'\n=========================== short test summary info ============================\nERROR tests/test_services_infra.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "",
+  "tried": [],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-007",
+    "file": "src/services/tokens.py",
+    "role": "coder",
+    "title": "Signed handover tokens",
+    "interface": "class HandoverTokens(secret, max_age_hours). issue(handover_id: int, email: str) -> str (URL-safe, itsdangerous.URLSafeTimedSerializer with salt 'handover'). verify(token, now_offset_seconds: int = 0) -> dict | None: returns {'handover_id': int, 'email': str} or None for a bad signature or when the token is older than max_age_hours (now_offset_seconds is added to the current time when checking age; use serializer.loads(token, max_age=...) and, for the offset, compare the timestamp from loads(..., return_timestamp=True) yourself). Lower-case the email.",
+    "uses": {},
+    "database": "",
+    "acceptance": "tests/test_services_infra.py",
+    "forbidden": [],
+    "depends_on": [],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

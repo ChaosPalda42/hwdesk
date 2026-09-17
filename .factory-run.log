@@ -1,0 +1,33 @@
+model: coder: qwen/qwen3-coder-30b resident at 32768
+model: tester: nousresearch/hermes-4.3-36b resident at 32768
+model: triage: openai/gpt-oss-120b resident at 65536
+C-001: green (5 iterations) — worker: green after 5 iterations
+C-007: escalated -> P-001 — blocked: acceptance imports a contract not yet produced (operator fixture)
+C-008: escalated -> P-002 — blocked: acceptance imports a contract not yet produced (operator fixture)
+C-002: worker stopped; acceptance failed (1 failed)
+C-012: green (6 iterations) — worker: green after 6 iterations
+C-020: green (4 iterations) — worker: green after 4 iterations
+C-002: arbitration STILL_AMBIGUOUS (neither side produced a surviving hypothesis for tests/test_repo_assets.py::test_status_and_filters (implementation=NOT_PROPOSED, test=PATCH_REJECTED))
+C-002: escalated -> P-003 — worker: stopped after 9 iterations; retry: stopped after 6 iterations; triage: STILL_AMBIGUOUS; retained on factory/failed/C-002-1
+C-013: green (5 iterations) — worker: green after 5 iterations
+C-021: green (2 iterations) — worker: green after 2 iterations
+C-022: green (2 iterations) — worker: green after 2 iterations
+C-023: green (2 iterations) — worker: green after 2 iterations
+C-024: green (2 iterations) — worker: green after 2 iterations
+C-025: green (2 iterations) — worker: green after 2 iterations
+C-026: green (2 iterations) — worker: green after 2 iterations
+C-027: green (2 iterations) — worker: green after 2 iterations
+C-028: green (2 iterations) — worker: green after 2 iterations
+C-029: green (2 iterations) — worker: green after 2 iterations
+C-031: green (2 iterations) — worker: green after 2 iterations
+C-005: green (5 iterations) — worker: green after 5 iterations
+C-030: waited 107s for another client
+C-030: green (2 iterations) — worker: green after 2 iterations
+C-006: worker stopped; acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.protocol_pdf, which C-008 owns and has not produced yet; make that import lazy
+C-006: arbitration STILL_AMBIGUOUS (neither side produced a surviving hypothesis for tests/test_services_infra.py (implementation=NODE_STILL_FAILS, test=OUT_OF_SCOPE))
+C-006: escalated -> P-004 — worker: stopped after 10 iterations; retry: stopped after 6 iterations; triage: STILL_AMBIGUOUS; retained on factory/failed/C-006-1
+
+needs-operator: 4 packet(s) waiting
+green 16 · escalated 4 · iterations 78
+packets waiting: P-001, P-002, P-003, P-004
+EXIT=1
