@@ -80,9 +80,6 @@ class HandoverRepository:
             updates.append("decline_reason = ?")
             params.append(decline_reason)
 
-        if not updates:
-            return False
-
         updates.append("status = ?")
         params.append(status)
         params.append(id)

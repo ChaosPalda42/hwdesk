@@ -42,3 +42,11 @@ def test_list_filters_and_pending_for_employee(conn):
     assert [h["id"] for h in repo.list_for_employee(e["id"])] == [h2["id"], h1["id"]]  # newest first
     assert [h["id"] for h in repo.list_pending_for_employee(e["id"])] == [h2["id"]]
     assert [h["id"] for h in repo.list_for_asset(a["id"])] == [h2["id"], h1["id"]]
+
+
+def test_set_status_alone_persists(conn):
+    e, a = _seed(conn)
+    repo = HandoverRepository(conn)
+    h = repo.create(kind="handover", asset_id=a["id"], employee_id=e["id"], created_by="x", protocol_number="HP-2026-000001", note="")
+    assert repo.set_status(h["id"], "cancelled") is True
+    assert repo.get(h["id"])["status"] == "cancelled"
