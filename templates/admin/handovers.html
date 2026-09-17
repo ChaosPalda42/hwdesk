@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Předání zařízení{% endblock %}
+
+{% block content %}
+<h1>Předání zařízení</h1>
+
+<form method="GET" class="filter-form">
+    <label for="status">Stav:</label>
+    <select name="status" id="status">
+        <option value="all" {% if status == 'all' %}selected{% endif %}>Vše</option>
+        <option value="pending" {% if status == 'pending' %}selected{% endif %}>Čekající</option>
+        <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>Potvrzeno</option>
+        <option value="declined" {% if status == 'declined' %}selected{% endif %}>Zamítnuto</option>
+        <option value="expired" {% if status == 'expired' %}selected{% endif %}>Vypršelo</option>
+        <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Zrušeno</option>
+    </select>
+    <button type="submit">Filtrovat</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Číslo protokolu</th>
+            <th>Druh</th>
+            <th>Majetek</th>
+            <th>Zaměstnanec</th>
+            <th>Stav</th>
+            <th>Vytvořeno</th>
+            <th>Potvrzeno</th>
+            <th>Akce</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for handover in handovers %}
+        <tr>
+            <td>{{ handover.protocol_number }}</td>
+            <td>{{ handover.kind }}</td>
+            <td><a href="/admin/assets/{{ handover.asset.id }}">{{ handover.asset.asset_tag }}</a></td>
+            <td>{{ handover.employee.display_name }} &lt;{{ handover.employee.email }}&gt;</td>
+            <td>{{ handover.status }}</td>
+            <td>{{ handover.created_at }}</td>
+            <td>{{ handover.confirmed_at }}</td>
+            <td>
+                {% if handover.status == 'pending' %}
+                    <form method="POST" action="/admin/handovers/{{ handover.id }}/cancel" style="display: inline;">
+                        <button type="submit" onclick="return confirm('Opravdu chcete zrušit tento předání?')">Zrušit</button>
+                    </form>
+                {% elif handover.protocol_path %}
+                    <a href="{{ handover.protocol_path }}" target="_blank">PDF</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
