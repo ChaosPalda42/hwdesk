@@ -10,10 +10,14 @@ potvrdit. Integrace přes JSON API (klíče) — zejména synchronizace
 zaměstnanců z HR (aktivní/neaktivní → offboarding = výzva k vrácení).
 
 ## Kde jsme
-Viz STATE.md. Poslední shrnutí operátora (2026-09-17): 38/38 kontraktů zelených,
-64 testů, druhá dávka (nastavení v DB, Drupal HR konektor) hotová; tok předání ověřen ručně v prohlížeči; připraveno k nasazení
-(Dockerfile, .env.example). Čeká na externí vstupy: Entra ID registrace,
-SMTP účet, který HR systém.
+Viz STATE.md. Poslední shrnutí operátora (2026-09-17): 49/49 kontraktů zelených,
+87 testů. Třetí dávka (plnohodnotný asset management: štítky, lokality,
+faktury 1:N, přílohy, dashboard, filtry + hromadné akce, příjem zboží →
+sériová čísla → štítky s QR (tisk z prohlížeče / ZPL na Zebru), CSV
+import/export, nový design) hotová a ověřená v prohlížeči (dashboard, seznam
+s filtry a bulk, detail, předání → potvrzení zaměstnancem, příjem, štítky,
+faktury, štítky/lokality, nastavení). Demo: port 5077. Čeká na externí
+vstupy: Entra ID registrace, SMTP účet, Drupal URL/auth, server.
 
 ## Rozhodnutí
 - 2026-09-17: stack Flask + sqlite3 (raw SQL) + Jinja; žádný ORM, žádný JS
@@ -50,6 +54,23 @@ SMTP účet, který HR systém.
 - 2026-09-17: poučení pro kontrakty: jeden testovací soubor = jeden kontrakt;
   testy importují cizí moduly jen líně; kontrakt šablony musí vyjmenovat
   proměnné a klíče; blueprint bez vlastního url_prefix, když ho připojuje app.
+
+- 2026-09-17: katalog: štítky (volné, barevné, N:N), lokality, faktury jako
+  sdílená entita (jedna faktura ↔ mnoho zařízení), přílohy k zařízení i
+  faktuře (PDF/obrázky v ATTACHMENTS_DIR, DB drží jen metadata), stav kusu
+  (new/good/worn/broken), záruka, nákladové středisko.
+- 2026-09-17: inventární čísla generuje aplikace: prefix podle typu
+  (TAG_PREFIXES, konfigurovatelné) + pořadí (TAG_PAD); ruční číslo je možné.
+  Štítek 50×25 mm s QR na `/a/<tag>` (přihlášený admin → detail, držitel →
+  moje zařízení); tisk z prohlížeče, nebo ZPL přímo na síťovou tiskárnu
+  (LABEL_PRINTER_HOST:9100).
+- 2026-09-17: příjem zboží = jeden formulář (typ, model, počet, faktura,
+  lokalita, štítky) → N zařízení → obrazovka pro načtení sériových čísel
+  čtečkou → štítky k tisku.
+- 2026-09-17: gluecode (admin/catalog/taxonomy blueprinty, services/factory)
+  píše operátor ručně — modely ho vyrábějí hůř, než ho jde specifikovat;
+  kontrakty zůstávají pro repozitáře, služby a testy. Každý kontrakt má
+  akceptační test (C-017 bez něj „prošel“ beze změny souboru).
 
 ## Pravidla projektu
 - Stack: Python 3.11+, Flask 3, sqlite3 (raw SQL, `sqlite3.Row`), Jinja2, reportlab, msal.

@@ -1,9 +1,11 @@
 # HW Desk
 
-Interní správa firemního hardwaru: evidence zařízení, přidělování zaměstnancům,
-předávací a vratné protokoly potvrzované e-mailem (PDF s číslem), přehled pro
-každého zaměstnance po přihlášení účtem Microsoft 365, JSON API pro integrace,
-synchronizace zaměstnanců z HR, audit log.
+Interní správa firemního hardwaru: evidence zařízení (štítky, lokality, stav
+kusu, záruka, faktury, přílohy), přidělování zaměstnancům, předávací a vratné
+protokoly potvrzované e-mailem (PDF s číslem), příjem zboží s generováním
+inventárních čísel a tiskem štítků s QR, přehled pro každého zaměstnance po
+přihlášení účtem Microsoft 365, JSON API pro integrace, synchronizace
+zaměstnanců z HR, audit log.
 
 ## Spuštění pro vývoj
 
@@ -28,6 +30,22 @@ synchronizace zaměstnanců z HR, audit log.
 - **Vrácení:** správce (nebo sám zaměstnanec v „Moje zařízení") → stejný postup.
 - **Offboarding:** HR sync označí zaměstnance neaktivním → odpověď API vypíše, co má u sebe.
 
+## Evidence
+
+- **Inventární čísla:** prefix podle typu (`HWDESK_TAG_PREFIXES`, JSON, výchozí NB/PC/MO/PH/TB/KB/MS/HS/DK/OT)
+  + pořadí doplněné nulami (`HWDESK_TAG_PAD`); pole lze i vyplnit ručně.
+- **Příjem zboží (Příjem zařízení):** typ, model, počet, faktura, lokalita, štítky →
+  založí N zařízení → načtení sériových čísel čtečkou → štítky k tisku.
+- **Štítky 50×25 mm** s QR na `/a/<inventární číslo>`: tisk z prohlížeče
+  (`/admin/labels?ids=…`), nebo ZPL přímo na síťovou tiskárnu Zebra
+  (`HWDESK_LABEL_PRINTER_HOST`, port 9100, šablonu lze přepsat v `HWDESK_LABEL_ZPL_TEMPLATE`).
+- **Faktury:** jedna faktura pro libovolný počet zařízení; přílohy (PDF/obrázky)
+  k faktuře i k zařízení se ukládají do `HWDESK_ATTACHMENTS_DIR`.
+- **Seznam zařízení:** filtry (hledání, typ, stav, štítek, lokalita, držitel, stav kusu),
+  řazení, hromadné akce nad výběrem (štítek, lokalita, faktura, štítky k tisku, CSV).
+- **CSV:** export `GET /api/v1/assets/export.csv`, import `POST /api/v1/assets/import.csv`
+  (tělo = CSV se stejnou hlavičkou; existující inventární čísla se aktualizují).
+
 ## HR synchronizace z Drupalu
 
 Konektor čte `GET <DRUPAL_URL>/jsonapi/user/user` (JSON:API, stránkování `links.next`),
@@ -42,6 +60,12 @@ změny sám na `POST /api/v1/hr/employees`.
 ## API (`Authorization: Bearer <klíč>`)
 
     GET/POST   /api/v1/assets            GET/PATCH /api/v1/assets/<id>   POST /api/v1/assets/<id>/retire|lost
+               ?q=&status=&type=&location_id=&tag=&employee_email=&invoice_id=&warranty_before=&sort=
+    GET/POST   /api/v1/assets/export.csv | /api/v1/assets/import.csv
+    GET/POST   /api/v1/tags | /locations | /invoices    PATCH/DELETE …/<id>   GET /api/v1/invoices/<id> (+assets, attachments)
+    POST       /api/v1/invoices/<id>/assets {"asset_ids":[…]}
+    GET/POST   /api/v1/assets/<id>/attachments (multipart kind, file)   POST /api/v1/invoices/<id>/attachments
+    GET/DELETE /api/v1/attachments/<id>    GET /api/v1/dashboard
     GET        /api/v1/employees         GET /api/v1/employees/<email>
     POST       /api/v1/hr/employees      {"employees":[{email, display_name, department, manager_email, hr_id, active}]}
     POST       /api/v1/hr/employees/csv  (tělo = CSV; oddělovač ; nebo ,)
