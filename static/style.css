@@ -9,3 +9,4 @@ form.card, .card { background:#fff; border:1px solid var(--rule); padding:16px; 
 button, .btn { display:inline-block; margin-top:12px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; font:inherit; cursor:pointer; text-decoration:none; } button.secondary { background:#fff; color:var(--ink); border:1px solid var(--rule); } button.danger { background:var(--bad); }
 .flash { padding:10px 14px; margin:12px 0; border-left:3px solid var(--accent); background:#e8eefb; } .flash.error { border-color:var(--bad); background:#fbe9e9; }
 .muted { color:var(--ink2); font-size:13px; } .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+header.top form.inline { display:inline; margin:0; } header.top button.link { background:none; border:0; color:var(--ink2); font:inherit; cursor:pointer; padding:0; margin:0 0 0 12px; text-decoration:underline; }

@@ -27,6 +27,7 @@ class HandoverService:
         base_url: str,
         company: str,
         protocol_dir: str,
+        copy_to: str = "",
     ):
         self.handovers = handovers
         self.assignments = assignments
@@ -38,6 +39,7 @@ class HandoverService:
         self.base_url = base_url
         self.company = company
         self.protocol_dir = protocol_dir
+        self.copy_to = copy_to.lower()
 
     def start_handover(
         self, actor: str, asset_id: int, employee_id: int, note: str = ""
@@ -89,7 +91,7 @@ class HandoverService:
 Potvrzení převzetí zařízení
 
 Zařízení:
-- Značka: {asset_tag}
+- Inventární číslo: {asset_tag}
 - Značka: {brand}
 - Model: {model}
 - Sériové číslo: {serial_number}
@@ -109,7 +111,7 @@ Děkujeme.
 
 <p>Zařízení:</p>
 <ul>
-<li>Značka: {asset_tag}</li>
+<li>Inventární číslo: {asset_tag}</li>
 <li>Značka: {brand}</li>
 <li>Model: {model}</li>
 <li>Sériové číslo: {serial_number}</li>
@@ -188,7 +190,7 @@ Děkujeme.
 Potvrzení vrácení zařízení
 
 Zařízení:
-- Značka: {asset_tag}
+- Inventární číslo: {asset_tag}
 
 Poznámka: {note}
 
@@ -205,7 +207,7 @@ Děkujeme.
 
 <p>Zařízení:</p>
 <ul>
-<li>Značka: {asset_tag}</li>
+<li>Inventární číslo: {asset_tag}</li>
 </ul>
 
 <p>Poznámka: {note}</p>
@@ -283,7 +285,7 @@ Děkujeme.
 Potvrzení vrácení zařízení
 
 Zařízení:
-- Značka: {asset_tag}
+- Inventární číslo: {asset_tag}
 
 Poznámka: {note}
 
@@ -300,7 +302,7 @@ Děkujeme.
 
 <p>Zařízení:</p>
 <ul>
-<li>Značka: {asset_tag}</li>
+<li>Inventární číslo: {asset_tag}</li>
 </ul>
 
 <p>Poznámka: {note}</p>
@@ -414,23 +416,25 @@ Děkujeme.
         with open(protocol_path, "rb") as pdf_file:
             pdf_content = pdf_file.read()
         
-        # Send to employee
-        self.email.send(
-            to=employee["email"],
-            subject=f"Potvrzení převzetí zařízení {asset['asset_tag']}",
-            text="Potvrzení převzetí zařízení bylo úspěšně dokončeno.",
-            html=f"<p>Potvrzení převzetí zařízení bylo úspěšně dokončeno.</p>",
-            attachments=[(f"{handover['protocol_number']}.pdf", pdf_content, "application/pdf")]
+        kind_word = 'převzetí' if handover['kind'] == 'handover' else 'vrácení'
+        subject = f"Protokol {handover['protocol_number']} — {kind_word} zařízení {asset['asset_tag']}"
+        text = (
+            f"{kind_word.capitalize()} zařízení {asset['asset_tag']} ({asset['brand']} {asset['model']}) "
+            f"bylo potvrzeno. Protokol {handover['protocol_number']} je v příloze."
         )
-
-        # Send to created_by (if different from employee)
-        if employee["email"].lower() != handover["created_by"].lower():
+        # The employee always; the person who started it when that is an
+        # e-mail (an API key is not); and the configured copy address.
+        recipients = [employee["email"].lower()]
+        for candidate in (handover["created_by"].lower(), self.copy_to):
+            if candidate and "@" in candidate and candidate not in recipients:
+                recipients.append(candidate)
+        for recipient in recipients:
             self.email.send(
-                to=handover["created_by"],
-                subject=f"Potvrzení převzetí zařízení {asset['asset_tag']}",
-                text="Potvrzení převzetí zařízení bylo úspěšně dokončeno.",
-                html=f"<p>Potvrzení převzetí zařízení bylo úspěšně dokončeno.</p>",
-                attachments=[(f"{handover['protocol_number']}.pdf", pdf_content, "application/pdf")]
+                to=recipient,
+                subject=subject,
+                text=text,
+                html=f"<p>{text}</p>",
+                attachments=[(f"{handover['protocol_number']}.pdf", pdf_content, "application/pdf")],
             )
 
         # Audit the action

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hwdesk",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "flask", "--app", "src.app:create_app", "run", "--port", "5077"],
+      "port": 5077,
+      "env": {"HWDESK_ADMIN_EMAILS": "admin@firma.cz", "HWDESK_API_KEYS": "demo-key", "HWDESK_DATABASE": "/tmp/hwdesk-demo.db", "HWDESK_OUTBOX_DIR": "/tmp/hwdesk-outbox", "HWDESK_PROTOCOL_DIR": "/tmp/hwdesk-protocols", "HWDESK_BASE_URL": "http://localhost:5077", "HWDESK_COMPANY_NAME": "Demo s.r.o."}
+    }
+  ]
+}

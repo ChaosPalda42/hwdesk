@@ -49,6 +49,8 @@ def load_config(overrides: dict | None = None) -> dict:
         "HANDOVER_TOKEN_HOURS": int(env.get("HWDESK_HANDOVER_TOKEN_HOURS", "168")),
         # Where confirmed protocols (PDF) are stored.
         "PROTOCOL_DIR": env.get("HWDESK_PROTOCOL_DIR", "protocols"),
+        # Every confirmed protocol is also mailed here (default: the first admin).
+        "PROTOCOL_COPY_TO": env.get("HWDESK_PROTOCOL_COPY_TO", ""),
     }
     if overrides:
         config.update(overrides)

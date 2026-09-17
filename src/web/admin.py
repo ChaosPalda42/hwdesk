@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 import logging
-from src.auth.guards import admin_required
+from src.auth.guards import admin_required, actor
 from src.services.factory import build_handover_service, build_asset_service
 from src.db import get_db
 from src.config import ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES
 from src.services.handover_service import HandoverError
+from src.services.asset_service import AssetValidationError, DuplicateAssetTag
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -32,21 +33,21 @@ def assets_new():
     db = get_db()
     
     if request.method == 'POST':
+        asset_service = build_asset_service(db)
+        current_actor = actor()
+        
+        asset_tag = request.form.get('asset_tag', '').strip().upper()
+        type = request.form.get('type', '')
+        brand = request.form.get('brand', '')
+        model = request.form.get('model', '')
+        serial_number = request.form.get('serial_number', '')
+        purchase_date = request.form.get('purchase_date', '')
+        price = request.form.get('price', '0')
+        notes = request.form.get('notes', '')
+        
         try:
-            asset_service = build_asset_service(db)
-            actor = request.form.get('actor', 'admin')
-            
-            asset_tag = request.form.get('asset_tag', '').strip().upper()
-            type = request.form.get('type', '')
-            brand = request.form.get('brand', '')
-            model = request.form.get('model', '')
-            serial_number = request.form.get('serial_number', '')
-            purchase_date = request.form.get('purchase_date', '')
-            price = request.form.get('price', '0')
-            notes = request.form.get('notes', '')
-            
             asset = asset_service.create(
-                actor=actor,
+                actor=current_actor,
                 asset_tag=asset_tag,
                 type=type,
                 brand=brand,
@@ -56,18 +57,12 @@ def assets_new():
                 price=float(price) if price else 0.0,
                 notes=notes
             )
+        except (AssetValidationError, DuplicateAssetTag) as e:
+            return render_template('admin/asset_form.html', asset=request.form, types=ASSET_TYPES, error=str(e))
+        
+        flash('Zařízení bylo vytvořeno.', 'success')
+        return redirect(url_for('admin.assets_detail', id=asset['id']))
             
-            flash('Asset created successfully', 'success')
-            return redirect(url_for('admin.assets_detail', id=asset['id']))
-            
-        except Exception as e:
-            logger.exception("Error creating asset")
-            flash(f'Error creating asset: {str(e)}', 'error')
-            return render_template('admin/asset_form.html', 
-                                   asset=None, 
-                                   errors=[str(e)],
-                                   asset_types=ASSET_TYPES,
-                                   asset_statuses=ASSET_STATUSES), 400
     
     return render_template('admin/asset_form.html', 
                            asset=None, 
@@ -127,20 +122,20 @@ def assets_edit(id):
         abort(404)
     
     if request.method == 'POST':
+        current_actor = actor()
+        
+        # Get form data
+        type = request.form.get('type', asset['type'])
+        brand = request.form.get('brand', asset['brand'])
+        model = request.form.get('model', asset['model'])
+        serial_number = request.form.get('serial_number', asset['serial_number'])
+        purchase_date = request.form.get('purchase_date', asset['purchase_date'])
+        price = request.form.get('price', asset['price'])
+        notes = request.form.get('notes', asset['notes'])
+        
         try:
-            actor = request.form.get('actor', 'admin')
-            
-            # Get form data
-            type = request.form.get('type', asset['type'])
-            brand = request.form.get('brand', asset['brand'])
-            model = request.form.get('model', asset['model'])
-            serial_number = request.form.get('serial_number', asset['serial_number'])
-            purchase_date = request.form.get('purchase_date', asset['purchase_date'])
-            price = request.form.get('price', asset['price'])
-            notes = request.form.get('notes', asset['notes'])
-            
             updated_asset = asset_service.update(
-                actor=actor,
+                actor=current_actor,
                 asset_id=id,
                 type=type,
                 brand=brand,
@@ -150,18 +145,12 @@ def assets_edit(id):
                 price=float(price) if price else 0.0,
                 notes=notes
             )
+        except (AssetValidationError, DuplicateAssetTag) as e:
+            return render_template('admin/asset_form.html', asset={**asset, **request.form}, types=ASSET_TYPES, error=str(e))
+        
+        flash('Zařízení bylo upraveno.', 'success')
+        return redirect(url_for('admin.assets_detail', id=updated_asset['id']))
             
-            flash('Asset updated successfully', 'success')
-            return redirect(url_for('admin.assets_detail', id=updated_asset['id']))
-            
-        except Exception as e:
-            logger.exception("Error updating asset")
-            flash(f'Error updating asset: {str(e)}', 'error')
-            return render_template('admin/asset_form.html', 
-                                   asset=asset, 
-                                   errors=[str(e)],
-                                   asset_types=ASSET_TYPES,
-                                   asset_statuses=ASSET_STATUSES), 400
     
     return render_template('admin/asset_form.html', 
                            asset=asset, 
@@ -182,26 +171,22 @@ def assets_handover(id):
         # Get employee by email
         employee = handover_service.employees.get_by_email(employee_email)
         if not employee:
-            flash('Employee not found', 'error')
+            flash('Zaměstnanec nenalezen.', 'error')
             return redirect(url_for('admin.assets_detail', id=id))
         
         # Start handover
         handover = handover_service.start_handover(
-            actor=request.form.get('actor', 'admin'),
+            actor=actor(),
             asset_id=id,
             employee_id=employee['id'],
             note=note
         )
         
-        flash('Handover started successfully', 'success')
+        flash('Žádost o potvrzení převzetí byla odeslána.', 'success')
         return redirect(url_for('admin.assets_detail', id=id))
         
     except HandoverError as e:
         flash(f'Handover error: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_detail', id=id))
-    except Exception as e:
-        logger.exception("Unexpected error in assets_handover")
-        flash(f'Unexpected error: {str(e)}', 'error')
         return redirect(url_for('admin.assets_detail', id=id))
 
 @bp.route('/assets/<int:id>/return', methods=['POST'])
@@ -215,20 +200,16 @@ def assets_return(id):
         
         # Start return
         handover = handover_service.start_return(
-            actor=request.form.get('actor', 'admin'),
+            actor=actor(),
             asset_id=id,
             note=note
         )
         
-        flash('Return started successfully', 'success')
+        flash('Žádost o potvrzení vrácení byla odeslána.', 'success')
         return redirect(url_for('admin.assets_detail', id=id))
         
     except HandoverError as e:
         flash(f'Return error: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_detail', id=id))
-    except Exception as e:
-        logger.exception("Unexpected error in assets_return")
-        flash(f'Unexpected error: {str(e)}', 'error')
         return redirect(url_for('admin.assets_detail', id=id))
 
 @bp.route('/assets/<int:id>/retire', methods=['POST'])
@@ -237,19 +218,14 @@ def assets_retire(id):
     db = get_db()
     asset_service = build_asset_service(db)
     
-    try:
-        asset_service.retire(
-            actor=request.form.get('actor', 'admin'),
-            asset_id=id
-        )
+    asset_service.retire(
+        actor=actor(),
+        asset_id=id
+    )
+    
+    flash('Zařízení bylo vyřazeno.', 'success')
+    return redirect(url_for('admin.assets_detail', id=id))
         
-        flash('Asset retired successfully', 'success')
-        return redirect(url_for('admin.assets_detail', id=id))
-        
-    except Exception as e:
-        logger.exception("Error retiring asset")
-        flash(f'Error retiring asset: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_detail', id=id))
 
 @bp.route('/assets/<int:id>/lost', methods=['POST'])
 @admin_required
@@ -257,19 +233,14 @@ def assets_lost(id):
     db = get_db()
     asset_service = build_asset_service(db)
     
-    try:
-        asset_service.mark_lost(
-            actor=request.form.get('actor', 'admin'),
-            asset_id=id
-        )
+    asset_service.mark_lost(
+        actor=actor(),
+        asset_id=id
+    )
+    
+    flash('Zařízení bylo označeno jako ztracené.', 'success')
+    return redirect(url_for('admin.assets_detail', id=id))
         
-        flash('Asset marked as lost successfully', 'success')
-        return redirect(url_for('admin.assets_detail', id=id))
-        
-    except Exception as e:
-        logger.exception("Error marking asset as lost")
-        flash(f'Error marking asset as lost: {str(e)}', 'error')
-        return redirect(url_for('admin.assets_detail', id=id))
 
 @bp.route('/handovers')
 @admin_required
@@ -296,19 +267,15 @@ def handovers_cancel(id):
     
     try:
         handover_service.cancel(
-            actor=request.form.get('actor', 'admin'),
+            actor=actor(),
             handover_id=id
         )
         
-        flash('Handover cancelled successfully', 'success')
+        flash('Předání bylo zrušeno.', 'success')
         return redirect(url_for('admin.handovers_list'))
         
     except HandoverError as e:
         flash(f'Handover cancellation error: {str(e)}', 'error')
-        return redirect(url_for('admin.handovers_list'))
-    except Exception as e:
-        logger.exception("Unexpected error in handovers_cancel")
-        flash(f'Unexpected error: {str(e)}', 'error')
         return redirect(url_for('admin.handovers_list'))
 
 @bp.route('/employees')

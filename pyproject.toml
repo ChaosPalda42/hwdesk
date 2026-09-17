@@ -3,7 +3,13 @@ name = "hwdesk"
 version = "0.1.0"
 description = "HW Desk — správa firemního hardwaru s předávacími protokoly"
 requires-python = ">=3.11"
-dependencies = ["flask>=3.0", "msal>=1.28", "reportlab>=4.0", "pytest"]
+dependencies = [
+    "flask>=3.0",
+    "msal>=1.28",
+    "reportlab>=4.0",
+    "pytest",
+    "gunicorn>=26.2.0",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

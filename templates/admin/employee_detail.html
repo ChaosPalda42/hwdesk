@@ -38,7 +38,7 @@
                     <td>{{ asset.type }}</td>
                     <td>{{ asset.brand }}</td>
                     <td>{{ asset.model }}</td>
-                    <td>{{ asset.started_at }}</td>
+                    <td>{{ asset.started_at|dt }}</td>
                     <td>{{ asset.protocol_number }}</td>
                 </tr>
                 {% endfor %}
@@ -67,7 +67,7 @@
                     <td>{{ asset.type }}</td>
                     <td>{{ asset.brand }}</td>
                     <td>{{ asset.model }}</td>
-                    <td>{{ asset.started_at }}</td>
+                    <td>{{ asset.started_at|dt }}</td>
                     <td>{{ asset.protocol_number }}</td>
                 </tr>
                 {% endfor %}
@@ -96,7 +96,7 @@
                     <td>{{ asset.type }}</td>
                     <td>{{ asset.brand }}</td>
                     <td>{{ asset.model }}</td>
-                    <td>{{ asset.started_at }}</td>
+                    <td>{{ asset.started_at|dt }}</td>
                     <td>{{ asset.protocol_number }}</td>
                 </tr>
                 {% endfor %}

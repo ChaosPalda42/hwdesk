@@ -1,47 +1,35 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Správa zařízení{% endblock %}</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}HW Desk{% endblock %} · {{ config.COMPANY_NAME }}</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="/">Moje zařízení</a></li>
-                {% if user and user.is_admin %}
-                    <li><a href="/admin/assets">Správa majetku</a></li>
-                    <li><a href="/admin/handovers">Předání zařízení</a></li>
-                    <li><a href="/admin/employees">Zaměstnanci</a></li>
-                    <li><a href="/admin/audit">Audit</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-        
-        {% if user %}
-            <div class="user-info">
-                <span>Přihlášený uživatel: {{ user.email }}</span>
-                <form method="POST" action="/auth/logout">
-                    <button type="submit">Odhlásit se</button>
-                </form>
-            </div>
-        {% endif %}
-    </header>
-
-    <main>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flashes">
-                    {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
-    </main>
+<header class="top">
+  <a class="brand" href="/">HW Desk</a>
+  {% if user %}
+    <a href="/">Moje zařízení</a>
+    {% if user.is_admin %}
+      <a href="/admin/assets">Zařízení</a>
+      <a href="/admin/handovers">Předání</a>
+      <a href="/admin/employees">Zaměstnanci</a>
+      <a href="/admin/audit">Audit</a>
+    {% endif %}
+    <span class="me">{{ user.email }}</span>
+    <form method="post" action="/auth/logout" class="inline"><button type="submit" class="link">Odhlásit</button></form>
+  {% else %}
+    <span class="me">{{ config.COMPANY_NAME }}</span>
+  {% endif %}
+</header>
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash {{ 'error' if category == 'error' else '' }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
 </body>
 </html>

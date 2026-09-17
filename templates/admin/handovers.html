@@ -39,8 +39,8 @@
             <td><a href="/admin/assets/{{ handover.asset.id }}">{{ handover.asset.asset_tag }}</a></td>
             <td>{{ handover.employee.display_name }} &lt;{{ handover.employee.email }}&gt;</td>
             <td>{{ handover.status }}</td>
-            <td>{{ handover.created_at }}</td>
-            <td>{{ handover.confirmed_at }}</td>
+            <td>{{ handover.created_at|dt }}</td>
+            <td>{{ handover.confirmed_at|dt }}</td>
             <td>
                 {% if handover.status == 'pending' %}
                     <form method="POST" action="/admin/handovers/{{ handover.id }}/cancel" style="display: inline;">

@@ -10,7 +10,7 @@
     <p><strong>Pořízeno:</strong> {{ asset.purchase_date or "—" }} · <strong>Cena:</strong> {{ asset.price }}</p>
     <p><strong>Poznámka:</strong> {{ asset.notes or "—" }}</p>
     <p><strong>Držitel:</strong>
-      {% if open_assignment and open_assignment.employee %}{{ open_assignment.employee.display_name }} ({{ open_assignment.employee.email }}) od {{ open_assignment.started_at }}{% else %}—{% endif %}
+      {% if open_assignment and open_assignment.employee %}{{ open_assignment.employee.display_name }} ({{ open_assignment.employee.email }}) od {{ open_assignment.started_at|dt }}{% else %}—{% endif %}
     </p>
     <a class="btn" href="/admin/assets/{{ asset.id }}/edit">Upravit</a>
   </div>
@@ -50,8 +50,8 @@
       <td>{{ "převzetí" if h.kind == "handover" else "vrácení" }}</td>
       <td>{{ h.employee.display_name if h.employee else h.employee_id }}</td>
       <td><span class="status">{{ h.status }}</span></td>
-      <td>{{ h.created_at }}</td>
-      <td>{{ h.confirmed_at or "—" }}</td>
+      <td>{{ h.created_at|dt }}</td>
+      <td>{{ h.confirmed_at|dt }}</td>
       <td>
         {% if h.status == "pending" %}<form method="post" action="/admin/handovers/{{ h.id }}/cancel"><button class="secondary" type="submit">Zrušit</button></form>{% endif %}
         {% if h.protocol_path %}<a href="/api/v1/handovers/{{ h.id }}/protocol.pdf">PDF</a>{% endif %}
@@ -68,7 +68,7 @@
   <thead><tr><th>Zaměstnanec</th><th>Od</th><th>Do</th></tr></thead>
   <tbody>
   {% for a in assignments %}
-    <tr><td>{{ a.employee.display_name if a.employee else a.employee_id }}</td><td>{{ a.started_at }}</td><td>{{ a.ended_at or "—" }}</td></tr>
+    <tr><td>{{ a.employee.display_name if a.employee else a.employee_id }}</td><td>{{ a.started_at|dt }}</td><td>{{ a.ended_at|dt }}</td></tr>
   {% else %}
     <tr><td colspan="3" class="muted">Zatím nepřiděleno.</td></tr>
   {% endfor %}

@@ -47,7 +47,7 @@
                     <td>{{ asset.brand }}</td>
                     <td>{{ asset.model }}</td>
                     <td>{{ asset.serial_number }}</td>
-                    <td>{{ item.assignment.started_at }}</td>
+                    <td>{{ item.assignment.started_at|dt }}</td>
                     <td><a href="/my/protocols/{{ item.handover.protocol_number }}.pdf">{{ item.handover.protocol_number }}</a></td>
                 </tr>
                 {% endfor %}
@@ -76,7 +76,7 @@
                     <td>{{ item.protocol_number }}</td>
                     <td>{{ item.kind }}</td>
                     <td>{{ item.status }}</td>
-                    <td>{{ item.confirmed_at }}</td>
+                    <td>{{ item.confirmed_at|dt }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

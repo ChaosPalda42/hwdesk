@@ -54,7 +54,8 @@ def build_handover_service(db: sqlite3.Connection) -> HandoverService:
         tokens=tokens,
         base_url=config['BASE_URL'],
         company=config['COMPANY_NAME'],
-        protocol_dir=config['PROTOCOL_DIR']
+        protocol_dir=config['PROTOCOL_DIR'],
+        copy_to=config.get('PROTOCOL_COPY_TO') or (config['ADMIN_EMAILS'][0] if config.get('ADMIN_EMAILS') else '')
     )
 
 

@@ -30,14 +30,23 @@ def render_protocol_pdf(path, protocol_number, kind, company, employee: dict, as
             font_path = path_candidate
             break
     
+    # Register the Unicode font so Czech diacritics render; Helvetica otherwise.
+    font_name = 'Helvetica'
+    if font_path:
+        pdfmetrics.registerFont(TTFont('Unicode', font_path))
+        font_name = 'Unicode'
+
     # Create document
     doc = SimpleDocTemplate(path, pagesize=A4)
     styles = getSampleStyleSheet()
+    styles['Normal'].fontName = font_name
+    styles['Heading1'].fontName = font_name
     
     # Create custom style for title
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
+        fontName=font_name,
         fontSize=16,
         spaceAfter=12,
         alignment=0  # Left aligned
@@ -60,7 +69,7 @@ def render_protocol_pdf(path, protocol_number, kind, company, employee: dict, as
     # Asset table
     asset_data = [
         ['Položka', 'Hodnota'],
-        ['Značka majetku', asset.get('asset_tag', '')],
+        ['Inventární číslo', asset.get('asset_tag', '')],
         ['Typ', asset.get('type', '')],
         ['Značka', asset.get('brand', '')],
         ['Model', asset.get('model', '')],

@@ -19,7 +19,7 @@
     <tbody>
         {% for entry in entries %}
         <tr>
-            <td>{{ entry.at }}</td>
+            <td>{{ entry.at|dt }}</td>
             <td>{{ entry.actor }}</td>
             <td>{{ entry.action }}</td>
             <td>{{ entry.entity }}</td>

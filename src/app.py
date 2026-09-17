@@ -12,6 +12,21 @@ from src.api.employees import bp as employees_api_bp
 from src.api.handovers import bp as handovers_api_bp
 from src.auth.guards import current_user
 
+def _format_dt(value):
+    """ISO timestamp -> '17. 9. 2026 12:21' in local time; passes through anything else."""
+    if not value:
+        return "—"
+    from datetime import datetime, timezone
+    try:
+        parsed = datetime.fromisoformat(str(value).replace(" ", "T"))
+    except ValueError:
+        return value
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    local = parsed.astimezone()
+    return f"{local.day}. {local.month}. {local.year} {local:%H:%M}"
+
+
 def create_app(overrides=None):
     # Create Flask app with proper template and static folders
     templates_dir = Path(__file__).resolve().parent.parent / 'templates'
@@ -21,6 +36,7 @@ def create_app(overrides=None):
     
     # Load and update configuration
     app.config.update(load_config(overrides))
+    app.jinja_env.filters['dt'] = _format_dt
     
     # Register blueprints as specified in the contract:
     # auth bp (src/auth/oidc.py), admin bp (src/web/admin.py), employee bp (src/web/employee.py, no prefix)
