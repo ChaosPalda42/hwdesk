@@ -10,8 +10,10 @@ potvrdit. Integrace přes JSON API (klíče) — zejména synchronizace
 zaměstnanců z HR (aktivní/neaktivní → offboarding = výzva k vrácení).
 
 ## Kde jsme
-Viz STATE.md. Poslední shrnutí operátora: kontrakty napsány 2026-09-17,
-první běh spuštěn.
+Viz STATE.md. Poslední shrnutí operátora (2026-09-17): 33/33 kontraktů zelených,
+49 testů, tok předání ověřen ručně v prohlížeči; připraveno k nasazení
+(Dockerfile, .env.example). Čeká na externí vstupy: Entra ID registrace,
+SMTP účet, který HR systém.
 
 ## Rozhodnutí
 - 2026-09-17: stack Flask + sqlite3 (raw SQL) + Jinja; žádný ORM, žádný JS
@@ -37,6 +39,12 @@ první běh spuštěn.
   firma používá (otevřená otázka pro Michaela).
 - 2026-09-17: audit log na každou změnu (kdo, co, kdy).
 - 2026-09-17: data zůstávají na Macu; do balíčků smí jít kód, ne obsah DB.
+
+- 2026-09-17: po ověření v prohlížeči doladěno operátorem (actor z guards,
+  bez plošných except, Unicode font v PDF, kopie protokolu na PROTOCOL_COPY_TO).
+- 2026-09-17: poučení pro kontrakty: jeden testovací soubor = jeden kontrakt;
+  testy importují cizí moduly jen líně; kontrakt šablony musí vyjmenovat
+  proměnné a klíče; blueprint bez vlastního url_prefix, když ho připojuje app.
 
 ## Pravidla projektu
 - Stack: Python 3.11+, Flask 3, sqlite3 (raw SQL, `sqlite3.Row`), Jinja2, reportlab, msal.
