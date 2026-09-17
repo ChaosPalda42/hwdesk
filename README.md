@@ -17,7 +17,8 @@ synchronizace zaměstnanců z HR, audit log.
 2. Entra ID: registrovat aplikaci (Web), redirect URI `<BASE_URL>/auth/callback`, povolit ID token; vyplnit tenant/client/secret.
 3. SMTP: účet pro odesílání (M365 SMTP AUTH nebo relay).
 4. `docker build -t hwdesk . && docker run --env-file .env -p 8000:8000 -v hwdesk-data:/data hwdesk`
-5. Cron jednou denně: `docker exec <ctr> uv run python -m src.cli expire` (expirace nepotvrzených žádostí).
+5. Cron: denně `python -m src.cli expire` (expirace nepotvrzených žádostí) a např. každou hodinu `python -m src.cli hr-sync` (Drupal → zaměstnanci).
+6. Entra ID, SMTP a Drupal lze nastavit i v aplikaci (Nastavení, jen správce); hodnoty v DB mají přednost před .env.
 
 ## Toky
 
@@ -26,6 +27,17 @@ synchronizace zaměstnanců z HR, audit log.
   `HP-<rok>-<pořadí>` uložen a odeslán zaměstnanci, zadavateli a na `PROTOCOL_COPY_TO`.
 - **Vrácení:** správce (nebo sám zaměstnanec v „Moje zařízení") → stejný postup.
 - **Offboarding:** HR sync označí zaměstnance neaktivním → odpověď API vypíše, co má u sebe.
+
+## HR synchronizace z Drupalu
+
+Konektor čte `GET <DRUPAL_URL>/jsonapi/user/user` (JSON:API, stránkování `links.next`),
+autentizace none/basic/token, mapování polí v Nastavení (`DRUPAL_FIELD_MAP`, JSON, cesty
+tečkovou notací, výchozí `attributes.mail`, `attributes.display_name`,
+`attributes.field_department`, `attributes.field_manager_email`,
+`attributes.drupal_internal__uid`, `attributes.status`), volitelný filtr
+(`DRUPAL_FILTER`, např. `filter[roles.meta.drupal_internal__target_id]=employee`).
+Spouští se tlačítkem v Nastavení nebo cronem. Alternativně může Drupal tlačit
+změny sám na `POST /api/v1/hr/employees`.
 
 ## API (`Authorization: Bearer <klíč>`)
 
