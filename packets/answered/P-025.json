@@ -1,0 +1,77 @@
+{
+  "id": "P-025",
+  "contract": "C-014",
+  "title": "JSON API: assets",
+  "created_at": "2026-09-17T12:37:02+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-014-2"
+  ],
+  "findings": [],
+  "failing": "F....                                                                    [100%]\n=================================== FAILURES ===================================\n_______________________________ test_assets_crud _______________________________\n\nclient = <FlaskClient <Flask 'src.app'>>\n\n    def test_assets_crud(client):\n        created = _asset(client)\n        assert created.status_code == 201 and created.get_json()[\"asset_tag\"] == \"NB-0001\"\n        aid = created.get_json()[\"id\"]\n        assert _asset(client).status_code == 409\n        bad = api(client, \"POST\", \"/api/v1/assets\", json={\"asset_tag\": \"X\", \"type\": \"spaceship\"})\n        assert bad.status_code == 400 and \"type\" in bad.get_json()[\"error\"]\n        assert api(client, \"GET\", f\"/api/v1/assets/{aid}\").get_json()[\"brand\"] == \"Dell\"\n        assert api(client, \"GET\", \"/api/v1/assets/999\").status_code == 404\n>       assert api(client, \"PATCH\", f\"/api/v1/assets/{aid}\", json={\"brand\": \"DELL\"}).get_json()[\"brand\"] == \"DELL\"\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nE       KeyError: 'brand'\n\ntests/test_api.py:21: KeyError\n=========================== short test summary info ============================\nFAILED tests/test_api.py::test_assets_crud - KeyError: 'brand'\n1 failed, 4 passed in 0.37s\n",
+  "diff": "diff --git a/src/api/assets.py b/src/api/assets.py\nindex 08c4700..479915f 100644\n--- a/src/api/assets.py\n+++ b/src/api/assets.py\n@@ -1,24 +1,31 @@\n from __future__ import annotations\n \n-from flask import Blueprint, request, jsonify\n+from flask import Blueprint, request, jsonify, send_file\n from typing import Dict, Any\n import logging\n+import io\n \n from src.auth.guards import api_auth_required, actor\n from src.db import get_db\n from src.services.asset_service import AssetService, AssetValidationError, DuplicateAssetTag\n from src.repositories.assets import AssetRepository\n from src.repositories.audit import AuditRepository\n+from src.repositories.tags import TagRepository\n+from src.repositories.employees import EmployeeRepository\n+from src.repositories.locations import LocationRepository\n+from src.repositories.invoices import InvoiceRepository\n+from src.services.asset_import_export import export_assets_csv, import_assets_csv\n+from src.services.factory import build_asset_service\n \n bp = Blueprint('api_assets', __name__)\n logger = logging.getLogger(__name__)\n \n-def build_asset_service():\n+\n+def build_asset_service_with_repos():\n     \"\"\"Build an AssetService instance with proper repositories.\"\"\"\n-    return AssetService(\n-        AssetRepository(get_db()),\n-        AuditRepository(get_db())\n-    )\n+    db = get_db()\n+    return build_asset_service(db)\n+\n \n @bp.route('/assets', methods=['GET'])\n @api_auth_required\n@@ -29,13 +36,14 @@ def list_assets():\n     q = request.args.get('q', '')\n     \n     try:\n-        service = build_asset_service()\n+        service = build_asset_service_with_repos()\n         assets = service.list(status, type_filter, q)\n         return jsonify(assets)\n     except Exception as e:\n         logger.exception(\"Error listing assets\")\n         return jsonify({'error': 'Internal server error'}), 500\n \n+\n @bp.route('/assets', methods=['POST'])\n @api_auth_required\n def create_asset():\n@@ -44,23 +52,77 @@ def create_asset():\n         data = request.get_json()\n… (260 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: read_file src/api/assets.py ok",
+    "2: read_file src/services/factory.py ok",
+    "3: read_file src/repositories/tags.py ok",
+    "4: read_file src/repositories/employees.py ok",
+    "5: read_file src/repositories/locations.py ok",
+    "6: read_file src/services/asset_import_export.py ok",
+    "7: read_file src/services/asset_service.py ok",
+    "8: write_file src/api/assets.py FAILED {\"error\": \"SYNTAX_REGRESSION: rejected a Python file mutation that would leave 'assets.py' unparsable (expected an indented block after 'if'",
+    "9: write_file src/api/assets.py FAILED {\"error\": \"SYNTAX_REGRESSION: rejected a Python file mutation that would leave 'assets.py' unparsable (expected an indented block after 'if'",
+    "10: run_command python -m py_compile src/api/assets.py ok",
+    "11: write_file src/api/assets.py FAILED {\"error\": \"SYNTAX_REGRESSION: rejected a Python file mutation that would leave 'assets.py' unparsable (expected an indented block after 'if'",
+    "12: run_command cat src/api/assets.py FAILED {\"error\": \"executable 'cat' is not in the allowed development tool list (['ffmpeg', 'ffprobe', 'git', 'go', 'node', 'npm', 'pytest', 'python",
+    "final: budget exhausted",
+    "-- retry --",
+    "1: read_file src/services/factory.py ok",
+    "2: read_file src/api/assets.py ok",
+    "3: run_command python -c import sys; print(sys.path) ok",
+    "4: list_files . ok",
+    "5: read_file contracts/C-014.json ok",
+    "6: write_file src/api/assets.py ok",
+    "7: read_file tests/test_api.py ok",
+    "8: apply_patch src/api/assets.py ok",
+    "9: run_command python -c import sys; sys.path.insert(0, '.'); from src.serv ok",
+    "10: write_file src/api/assets.py ok",
+    "11: run_command uv run pytest tests/test_api.py::test_assets_crud -v ok",
+    "12: apply_patch src/api/assets.py ok",
+    "final: budget exhausted"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-014",
+    "file": "src/api/assets.py",
+    "role": "coder",
+    "title": "JSON API: assets",
+    "interface": "Blueprint `bp` (name 'api_assets', constructed WITHOUT url_prefix; mounted at /api/v1, so every path below starts with /assets). All routes api_auth_required. GET /assets?q=&status=&type=&location_id=&tag=&tag_id=&employee_email=&invoice_id=&warranty_before=&sort= -> 200 list from AssetService.assets.search_assets (tag name resolved via tags.get_by_name -> tag_id; employee_email via EmployeeRepository.get_by_email -> employee_id), each row enriched with 'tags' (TagRepository.for_assets in one query). POST /assets JSON -> 201 service.create(**fields) where JSON keys map 1:1 (asset_tag optional -> generated; 'tags' list of names -> tag_names; invoice_id/invoice_number/location_id/condition/supplier/warranty_until/cost_center accepted); AssetValidationError -> 400 {'error'}; DuplicateAssetTag -> 409; missing type -> 400. GET /assets/<int:id> -> 200 service.get | 404. PATCH /assets/<int:id> -> 200 | 400 | 404 (JSON 'tags' -> tag_names). POST /assets/<int:id>/retire, /assets/<int:id>/lost -> 200 | 400 | 404. GET /assets/export.csv -> text/csv from export_assets_csv (Content-Disposition attachment; filename assets.csv). POST /assets/import.csv (raw CSV body) -> 200 import_assets_csv result dict. Service built with build_asset_service(get_db()).",
+    "uses": {
+      "build_asset_service": "src/services/factory.py: build_asset_service(db) -> AssetService (with tags/locations/invoices and tag prefixes from config)",
+      "AssetService": "src/services/asset_service.py",
+      "TagRepository": "src/repositories/tags.py: get_by_name, for_assets(ids) -> {asset_id: [tags]}",
+      "EmployeeRepository": "src/repositories/employees.py",
+      "export_assets_csv/import_assets_csv": "src/services/asset_import_export.py",
+      "LocationRepository": "src/repositories/locations.py",
+      "get_db": "src/db.py",
+      "guards": "src/auth/guards.py: api_auth_required, actor()"
+    },
+    "database": "AssetService(AssetRepository(get_db()), AuditRepository(get_db())) per request",
+    "acceptance": "tests/test_api.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-017",
+      "C-045",
+      "C-012"
+    ],
+    "budget": {
+      "iterations": 16
+    },
+    "notes": ""
+  }
+}

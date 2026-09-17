@@ -1,0 +1,8 @@
+{
+  "packet": "P-023",
+  "kind": "retry",
+  "diff": "",
+  "contract": {},
+  "note": "app registers blueprints tolerantly during runs",
+  "created_at": "2026-09-17T12:22:03+00:00"
+}

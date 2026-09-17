@@ -226,13 +226,13 @@
       "updated_at": "2026-09-17T09:10:46+00:00"
     },
     "C-014": {
-      "status": "pending",
-      "attempts": 1,
-      "iterations": 14,
-      "commit": "90c84c0",
-      "last_finding": "reset by operator",
+      "status": "green",
+      "attempts": 3,
+      "iterations": 43,
+      "commit": "ce56767",
+      "last_finding": "",
       "packet": "",
-      "updated_at": "2026-09-17T11:25:35+00:00"
+      "updated_at": "2026-09-17T12:52:31+00:00"
     },
     "C-015": {
       "status": "green",
@@ -262,13 +262,13 @@
       "updated_at": "2026-09-17T12:14:30+00:00"
     },
     "C-018": {
-      "status": "pending",
-      "attempts": 0,
-      "iterations": 0,
-      "commit": "928b594",
-      "last_finding": "reset by operator",
+      "status": "green",
+      "attempts": 2,
+      "iterations": 24,
+      "commit": "e3b3ae6",
+      "last_finding": "",
       "packet": "",
-      "updated_at": "2026-09-17T11:25:35+00:00"
+      "updated_at": "2026-09-17T12:51:20+00:00"
     },
     "C-019": {
       "status": "green",
@@ -406,13 +406,13 @@
       "updated_at": "2026-09-17T11:49:11+00:00"
     },
     "C-045": {
-      "status": "escalated",
-      "attempts": 1,
+      "status": "green",
+      "attempts": 2,
       "iterations": 24,
-      "commit": "",
-      "last_finding": "acceptance failed (1 failed)",
-      "packet": "P-024",
-      "updated_at": "2026-09-17T12:19:14+00:00"
+      "commit": "961eea7",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": "2026-09-17T12:22:06+00:00"
     },
     "C-046": {
       "status": "green",
@@ -424,22 +424,22 @@
       "updated_at": "2026-09-17T12:07:18+00:00"
     },
     "C-048": {
-      "status": "escalated",
-      "attempts": 1,
-      "iterations": 0,
-      "commit": "",
-      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_api_taxonomy.py: the acceptance run imports src.web.catalog, which C-049 owns and has not produced yet; make that import lazy (inside the fixture) or add C-049 to depends_on; [MISSING_FILE] src/api/taxonomy.py: the contract's file does n",
-      "packet": "P-023",
-      "updated_at": "2026-09-17T12:14:30+00:00"
-    },
-    "C-049": {
-      "status": "pending",
-      "attempts": 0,
-      "iterations": 0,
-      "commit": "",
+      "status": "green",
+      "attempts": 3,
+      "iterations": 23,
+      "commit": "e3b3ae6",
       "last_finding": "",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T12:51:20+00:00"
+    },
+    "C-049": {
+      "status": "green",
+      "attempts": 1,
+      "iterations": 24,
+      "commit": "20c2eb0",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": "2026-09-17T13:07:23+00:00"
     }
   },
   "runs": [
@@ -552,10 +552,27 @@
       "red": 0,
       "escalated": 2,
       "note": "2 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T12:22:05+00:00",
+      "finished_at": "2026-09-17T12:44:05+00:00",
+      "outcome": "needs-operator",
+      "iterations": 71,
+      "green": 45,
+      "red": 0,
+      "escalated": 3,
+      "note": "3 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T12:51:18+00:00",
+      "finished_at": "2026-09-17T13:07:26+00:00",
+      "outcome": "failed",
+      "iterations": 29,
+      "green": 49,
+      "red": 0,
+      "escalated": 0,
+      "note": "full suite failed (1 failed) after all contracts were green"
     }
   ],
-  "open_packets": [
-    "P-023",
-    "P-024"
-  ]
+  "open_packets": []
 }

@@ -1,16 +1,15 @@
-decision: P-022: patch — patch applied and committed
+decision: P-025: patch — patch applied and committed
+decision: P-026: patch — patch applied and committed
+decision: P-027: patch — patch applied and committed
 model: coder: qwen/qwen3-coder-30b resident at 32768
 model: tester: nousresearch/hermes-4.3-36b resident at 32768
 model: triage: openai/gpt-oss-120b resident at 65536
-C-009: green (0 iterations) — already green
-C-046: green (4 iterations) — worker: green after 4 iterations
-C-045: worker budget; acceptance failed (1 failed); [SWALLOWED_EXCEPTION] src/services/asset_import_export.py: line 160: a broad `except` swallows the exception without logging or re-raising it, so the real failure can nev
-C-017: green (12 iterations) — worker: green after 12 iterations
-C-048: escalated -> P-023 — blocked: acceptance imports a contract not yet produced (operator fixture)
-C-045: arbitration STILL_AMBIGUOUS (neither side produced a surviving hypothesis for tests/test_service_import_export.py::test_import_updates_existing_creates_locations_and_reports_row_errors (imp)
-C-045: escalated -> P-024 — worker: budget after 12 iterations; retry: budget after 12 iterations; triage: STILL_AMBIGUOUS; retained on factory/failed/C-045-1
+C-018: green (0 iterations) — already green
+C-048: green (0 iterations) — already green
+C-014: green (5 iterations) — worker: green after 5 iterations
+C-049: waited 77s for another client
+C-049: worker budget; acceptance failed (1 failed); [MISSING_FILE] src/web/catalog.py: the contract's file does not exist
+C-049: green (24 iterations) — worker: budget after 12 iterations; retry: green after 12 iterations
 
-needs-operator: 2 packet(s) waiting
-green 44 · escalated 2 · iterations 40
-packets waiting: P-023, P-024
-EXIT=1
+failed: full suite failed (1 failed) after all contracts were green
+green 49 · escalated 0 · iterations 29

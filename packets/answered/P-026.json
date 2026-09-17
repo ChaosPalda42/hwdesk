@@ -1,0 +1,76 @@
+{
+  "id": "P-026",
+  "contract": "C-048",
+  "title": "JSON API: tags, locations, invoices, attachments, dashboard",
+  "created_at": "2026-09-17T12:37:51+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "retry: stopped after 11 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-048-2"
+  ],
+  "findings": [],
+  "failing": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_________________________ test_tags_and_locations_api __________________________\n\nclient = <FlaskClient <Flask 'src.app'>>\n\n    def test_tags_and_locations_api(client):\n        t = api(client, \"POST\", \"/api/v1/tags\", json={\"name\": \"VIP\", \"color\": \"purple\"})\n        assert t.status_code == 201 and t.get_json()[\"color\"] == \"purple\"\n        assert api(client, \"POST\", \"/api/v1/tags\", json={\"name\": \"VIP\"}).status_code == 409\n        assert api(client, \"POST\", \"/api/v1/tags\", json={\"name\": \"X\", \"color\": \"pink\"}).status_code == 400\n        assert [x[\"name\"] for x in api(client, \"GET\", \"/api/v1/tags\").get_json()] == [\"VIP\"]\n        tid = t.get_json()[\"id\"]\n        assert api(client, \"PATCH\", f\"/api/v1/tags/{tid}\", json={\"color\": \"red\"}).get_json()[\"color\"] == \"red\"\n        l = api(client, \"POST\", \"/api/v1/locations\", json={\"name\": \"HQ\", \"address\": \"Praha\"})\n        assert l.status_code == 201 and api(client, \"GET\", \"/api/v1/locations\").get_json()[0][\"name\"] == \"HQ\"\n        a = api(client, \"POST\", \"/api/v1/assets\", json={\"asset_tag\": \"NB-1\", \"type\": \"notebook\", \"location_id\": l.get_json()[\"id\"], \"tags\": [\"VIP\", \"Nový\"], \"condition\": \"new\"})\n        assert a.status_code == 201, a.get_data(as_text=True)\n>       assert [x[\"name\"] for x in a.get_json()[\"tags\"]] == [\"Nový\", \"VIP\"] or [x[\"name\"] for x in a.get_json()[\"tags\"]] == [\"VIP\", \"Nový\"]\nE       AssertionError: assert ([] == ['Nový', 'VIP']\nE         \nE         Right contains 2 more items, first extra item: 'Nový'\nE         Use -v to get more diff or [] == ['VIP', 'Nový']\nE         \nE         Right contains 2 more items, first extra item: 'VIP'\nE         Use -v to get more diff)\n\ntests/test_api_taxonomy.py:16: AssertionError\n------------------------------ Captured log call -------------------------------\nERROR    src.api.taxonomy:taxonomy.py:108 IntegrityError in create_tag\nTraceback (most recent call last):\n  File \"/Users/AI/projects/hwdesk/src/api/taxonomy.py\", line 99, in create_tag\n    tag = repo.create(\n        name=data['name'],\n        color=color\n    )\n  File \"/Users/AI/projects/hwdesk/src/repositories/tags.py\", line 16, in create\n    cursor = self.conn.execute(\n        \"INSERT INTO tags (name, color) VALUES (?, ?)\",\n        (name, color)\n    )\nsqlite3.IntegrityError: UNIQUE constraint failed: tags.name\nERROR    src.api.taxonomy:taxonomy.py:67 API Error 409: Tag name already exists\nERROR    src.api.taxonomy:taxonomy.py:67 API Error 400: Invalid color 'pink'. Must be one of: ('gray', 'blue', 'green', 'yellow', 'red', 'purple')\n=========================== short test summary info ============================\nFAILED tests/test_api_taxonomy.py::test_tags_and_locations_api - AssertionErr...\n1 failed in 0.15s\n",
+  "diff": "+from flask import Blueprint, request, jsonify, send_file\n+import sqlite3\n+from typing import Dict, Any\n+from io import BytesIO\n+import logging\n+\n+from src.auth.guards import api_auth_required, actor\n+from src.db import get_db\n+from src.services.factory import build_asset_service, build_handover_service\n+from src.repositories.tags import TagRepository\n+from src.repositories.locations import LocationRepository\n+from src.repositories.invoices import InvoiceRepository\n+from src.repositories.attachments import AttachmentRepository\n+from src.services.attachment_service import AttachmentError\n+from src.config import TAG_COLORS\n+\n+# Set up logging\n+logger = logging.getLogger(__name__)\n+\n+bp = Blueprint('api_taxonomy', __name__)\n+\n+def _build_asset_service():\n+    \"\"\"Build an AssetService instance.\"\"\"\n+    db = get_db()\n+    return build_asset_service(db)\n+\n+def _build_handover_service():\n+    \"\"\"Build a HandoverService instance.\"\"\"\n+    db = get_db()\n+    return build_handover_service(db)\n+\n+def _build_tag_repository():\n+    \"\"\"Build a TagRepository instance.\"\"\"\n+    db = get_db()\n+    return TagRepository(db)\n+\n+def _build_location_repository():\n+    \"\"\"Build a LocationRepository instance.\"\"\"\n+    db = get_db()\n+    return LocationRepository(db)\n+\n+def _build_invoice_repository():\n+    \"\"\"Build an InvoiceRepository instance.\"\"\"\n+    db = get_db()\n+    return InvoiceRepository(db)\n+\n+def _build_attachment_repository():\n+    \"\"\"Build an AttachmentRepository instance.\"\"\"\n+    db = get_db()\n+    return AttachmentRepository(db)\n+\n+def _owner_exists(owner_type: str, owner_id: int) -> bool:\n+    \"\"\"Check if an owner (invoice or asset) exists.\"\"\"\n+    db = get_db()\n+    \n+    if owner_type == 'invoice':\n+        cursor = db.execute(\"SELECT 1 FROM invoices WHERE id = ?\", (owner_id,))\n+        return cursor.fetchone() is not None\n+    elif owner_type == 'asset':\n+        cursor = db.execute(\"SELECT 1 FROM assets WHERE id = ?\", (owner_id,))\n… (507 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations",
+    "retry: stopped after 11 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: read_file src/repositories/tags.py ok",
+    "2: read_file src/repositories/locations.py ok",
+    "3: read_file src/repositories/invoices.py ok",
+    "4: read_file src/repositories/attachments.py ok",
+    "5: read_file src/services/factory.py ok",
+    "6: read_file src/services/asset_service.py ok",
+    "7: read_file src/services/attachment_service.py ok",
+    "8: read_file src/auth/guards.py ok",
+    "9: read_file src/config.py ok",
+    "10: read_file tests/test_api_taxonomy.py ok",
+    "11: write_file src/api/taxonomy.py ok",
+    "12: read_file src/services/factory.py ok",
+    "final: budget exhausted",
+    "-- retry --",
+    "1: read_file src/api/taxonomy.py ok",
+    "2: read_file src/services/factory.py ok",
+    "3: write_file src/api/taxonomy.py ok",
+    "4: write_file src/api/taxonomy.py ok",
+    "5: read_file tests/test_api_taxonomy.py ok",
+    "6: run_command python -m pytest tests/test_api_taxonomy.py::test_tags_and_l ok",
+    "7: run_command ls -la FAILED {\"error\": \"executable 'ls' is not in the allowed development tool list (['ffmpeg', 'ffprobe', 'git', 'go', 'node', 'npm', 'pytest', 'python'",
+    "8: read_file src/api/taxonomy.py ok",
+    "9: read_file src/api/taxonomy.py ok",
+    "10: read_file src/api/taxonomy.py ok",
+    "11: read_file src/api/taxonomy.py ok",
+    "final: no file change in six turns"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-048",
+    "file": "src/api/taxonomy.py",
+    "role": "coder",
+    "title": "JSON API: tags, locations, invoices, attachments, dashboard",
+    "interface": "Blueprint `bp` (name 'api_taxonomy', no url_prefix; mounted at /api/v1). All routes api_auth_required. Tags: GET /tags -> list; POST /tags {name, color?} -> 201 | 400 (bad color via ValueError) | 409 (IntegrityError); PATCH /tags/<int:id> -> 200 | 404; DELETE /tags/<int:id> -> 204 | 404. Locations: GET /locations; POST /locations {name, address?, notes?} -> 201 | 409; PATCH /locations/<int:id>; DELETE /locations/<int:id> -> 204 | 404 | 409 (IntegrityError: referenced). Invoices: GET /invoices?q= -> list (search when q else list_all); POST /invoices {number, supplier?, issued_at?, total?, currency?, notes?} -> 201 | 400 (missing number) | 409; GET /invoices/<int:id> -> invoice dict + 'assets' (AssetService.assets.search_assets(invoice_id=id)) + 'attachments' (AttachmentRepository.list_for('invoice', id)) | 404; PATCH /invoices/<int:id>; DELETE /invoices/<int:id> -> 204 | 409; POST /invoices/<int:id>/assets {asset_ids: [...]} -> 200 {'attached': n} via AssetService.attach_invoice. Attachments: GET /assets/<int:id>/attachments -> list; POST /assets/<int:id>/attachments multipart (fields kind, file) -> 201 attachment dict | 400 (AttachmentError) | 404; POST /invoices/<int:id>/attachments likewise (owner_type 'invoice'); GET /attachments/<int:id> -> the file via send_file(path_for(id), as_attachment=True, download_name=filename, mimetype=mime_type) | 404; DELETE /attachments/<int:id> -> 204 | 404. GET /dashboard -> DashboardService stats(today=date.today().isoformat()). Services from src/services/factory.py (build_asset_service, build_attachment_service, build_dashboard_service) and repositories on get_db(). Actor via guards.actor().",
+    "uses": {
+      "factory": "src/services/factory.py",
+      "repositories": "src/repositories/{tags,locations,invoices,attachments}.py",
+      "AssetService": "src/services/asset_service.py: attach_invoice, assets.search_assets",
+      "AttachmentService": "src/services/attachment_service.py: store/path_for/delete, AttachmentError",
+      "guards": "src/auth/guards.py",
+      "get_db": "src/db.py",
+      "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, ASSET_CONDITIONS, TAG_COLORS, ATTACHMENT_KINDS, ATTACHMENT_OWNERS, ATTACHMENT_ALLOWED_TYPES, HANDOVER_KINDS, HANDOVER_STATUSES"
+    },
+    "database": "services from src/services/factory.py on get_db() per request",
+    "acceptance": "tests/test_api_taxonomy.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-017",
+      "C-012",
+      "C-043",
+      "C-044"
+    ],
+    "budget": {
+      "iterations": 20
+    },
+    "notes": ""
+  }
+}
