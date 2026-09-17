@@ -14,7 +14,7 @@
     "new repositories": "src/repositories/{tags,locations,invoices,attachments}.py"
   },
   "database": "the connection is passed in",
-  "acceptance": "",
+  "acceptance": "tests/test_service_factory.py",
   "forbidden": [],
   "depends_on": [
     "C-009",
