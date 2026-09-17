@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Správa majetku{% endblock %}
+
+{% block content %}
+<h1>Správa majetku</h1>
+
+<a href="/admin/assets/new">Přidat nové zařízení</a>
+
+<form method="GET">
+    <div class="search-form">
+        <label for="q">Hledat:</label>
+        <input type="text" id="q" name="q" value="{{ q or '' }}">
+
+        <label for="status">Stav:</label>
+        <select id="status" name="status">
+            <option value="">Vše</option>
+            {% for status in statuses %}
+                <option value="{{ status }}" {% if status == selected_status %}selected{% endif %}>
+                    {{ status }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="type">Typ:</label>
+        <select id="type" name="type">
+            <option value="">Vše</option>
+            {% for asset_type in types %}
+                <option value="{{ asset_type }}" {% if asset_type == selected_type %}selected{% endif %}>
+                    {{ asset_type }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Filtrovat</button>
+    </div>
+</form>
+
+<table class="assets-table">
+    <thead>
+        <tr>
+            <th>Štítek zařízení</th>
+            <th>Typ</th>
+            <th>Marka</th>
+            <th>Model</th>
+            <th>Seriové číslo</th>
+            <th>Stav</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for asset in assets %}
+        <tr>
+            <td><a href="/admin/assets/{{ asset.id }}">{{ asset.asset_tag }}</a></td>
+            <td>{{ asset.type }}</td>
+            <td>{{ asset.brand }}</td>
+            <td>{{ asset.model }}</td>
+            <td>{{ asset.serial_number }}</td>
+            <td><span class="status status-{{ asset.status }}">{{ asset.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
