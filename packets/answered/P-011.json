@@ -1,0 +1,79 @@
+{
+  "id": "P-011",
+  "contract": "C-010",
+  "title": "Handover service (the core flows)",
+  "created_at": "2026-09-17T09:35:33+00:00",
+  "ladder": [
+    "worker: budget after 12 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "retained on factory/failed/C-010-3"
+  ],
+  "findings": [],
+  "failing": "..F....F                                                                 [100%]\n=================================== FAILURES ===================================\n__________________ test_decline_and_cancel_release_the_asset ___________________\n\nctx = (<src.services.handover_service.HandoverService object at 0x109ec5f90>, {'id': 1, 'email': 'jan@f.cz', 'display_name':...h('/private/var/folders/w2/31c54tyx6rzg7nq29x8fj6_h0000gq/T/pytest-of-AI/pytest-5407/test_decline_and_cancel_releas0'))\n\n    def test_decline_and_cancel_release_the_asset(ctx):\n        service, jan, nb, assets, tmp_path = ctx\n        h = service.start_handover(actor=\"admin@f.cz\", asset_id=nb[\"id\"], employee_id=jan[\"id\"], note=\"\")\n        token = _outbox(tmp_path)[0][\"text\"].split(\"/handovers/confirm/\", 1)[1].split()[0]\n        declined = service.decline(token=token, actor_email=\"jan@f.cz\", reason=\"nemám ho\")\n        assert declined[\"status\"] == \"declined\" and declined[\"decline_reason\"] == \"nemám ho\"\n        assert assets.get(nb[\"id\"])[\"status\"] == \"in_stock\"\n        h2 = service.start_handover(actor=\"admin@f.cz\", asset_id=nb[\"id\"], employee_id=jan[\"id\"], note=\"\")\n>       assert service.cancel(actor=\"admin@f.cz\", handover_id=h2[\"id\"])[\"status\"] == \"cancelled\"\nE       AssertionError: assert 'pending' == 'cancelled'\nE         \nE         - cancelled\nE         + pending\n\ntests/test_service_handovers.py:82: AssertionError\n_________________________ test_expire_stale_handovers __________________________\n\nctx = (<src.services.handover_service.HandoverService object at 0x109f70050>, {'id': 1, 'email': 'jan@f.cz', 'display_name':...Path('/private/var/folders/w2/31c54tyx6rzg7nq29x8fj6_h0000gq/T/pytest-of-AI/pytest-5407/test_expire_stale_handovers0'))\n\n    def test_expire_stale_handovers(ctx):\n        service, jan, nb, assets, tmp_path = ctx\n        service.start_handover(actor=\"admin@f.cz\", asset_id=nb[\"id\"], employee_id=jan[\"id\"], note=\"\")\n        assert service.expire_stale(older_than_hours=0) == 1\n        assert assets.get(nb[\"id\"])[\"status\"] == \"in_stock\"\n>       assert service.expire_stale(older_than_hours=0) == 0\nE       assert 1 == 0\nE        +  where 1 = expire_stale(older_than_hours=0)\nE        +    where expire_stale = <src.services.handover_service.HandoverService object at 0x109f70050>.expire_stale\n\ntests/test_service_handovers.py:147: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_service_handovers.py::test_decline_and_cancel_release_the_asset\nFAILED tests/test_service_handovers.py::test_expire_stale_handovers - assert ...\n2 failed, 6 passed in 0.13s\n",
+  "diff": "+from __future__ import annotations\n+\n+import sqlite3\n+from datetime import datetime, timezone\n+from typing import Any\n+\n+from src.config import HANDOVER_STATUSES\n+from src.services.tokens import HandoverTokens\n+from src.services.protocol_pdf import render_protocol_pdf\n+\n+\n+class HandoverError(ValueError):\n+    \"\"\"Custom exception for handover service errors.\"\"\"\n+    pass\n+\n+\n+class HandoverService:\n+    def __init__(\n+        self,\n+        handovers: Any,\n+        assignments: Any,\n+        assets: Any,\n+        employees: Any,\n+        audit: Any,\n+        email: Any,\n+        tokens: HandoverTokens,\n+        base_url: str,\n+        company: str,\n+        protocol_dir: str,\n+    ):\n+        self.handovers = handovers\n+        self.assignments = assignments\n+        self.assets = assets\n+        self.employees = employees\n+        self.audit = audit\n+        self.email = email\n+        self.tokens = tokens\n+        self.base_url = base_url\n+        self.company = company\n+        self.protocol_dir = protocol_dir\n+\n+    def start_handover(\n+        self, actor: str, asset_id: int, employee_id: int, note: str = \"\"\n+    ) -> dict:\n+        # Validate asset exists and is in stock\n+        asset = self.assets.get(asset_id)\n+        if not asset:\n+            raise HandoverError(\"Asset does not exist\")\n+        if asset[\"status\"] != \"in_stock\":\n+            raise HandoverError(\"Asset is not in stock\")\n+\n+        # Validate employee exists and is active\n+        employee = self.employees.get(employee_id)\n+        if not employee:\n+            raise HandoverError(\"Employee does not exist\")\n+        if not employee[\"active\"]:\n+            raise HandoverError(\"Employee is not active\")\n+\n+        # Create handover record\n+        now = datetime.now(timezone.utc)\n… (557 more lines)",
+  "tried": [
+    "worker: budget after 12 iterations",
+    "retry: budget after 12 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: read_file src/repositories/handovers.py ok",
+    "2: read_file src/repositories/assignments.py ok",
+    "3: read_file src/repositories/assets.py ok",
+    "4: read_file src/repositories/employees.py ok",
+    "5: read_file src/repositories/audit.py ok",
+    "6: read_file src/services/email_sender.py ok",
+    "7: read_file src/services/tokens.py ok",
+    "8: read_file src/services/protocol_pdf.py ok",
+    "9: write_file src/services/handover_service.py ok",
+    "10: apply_patch src/services/handover_service.py ok",
+    "11: apply_patch src/services/handover_service.py ok",
+    "12: apply_patch src/services/handover_service.py ok",
+    "final: budget exhausted",
+    "-- retry --",
+    "1: read_file src/services/handover_service.py ok",
+    "2: write_file src/services/handover_service.py ok",
+    "3: apply_patch src/services/handover_service.py ok",
+    "4: apply_patch src/services/handover_service.py ok",
+    "5: run_command python -m pytest tests/test_service_handovers.py::test_decli ok",
+    "6: write_file src/services/handover_service.py ok",
+    "7: run_command uv run pytest tests/test_service_handovers.py::test_expire_s ok",
+    "8: apply_patch src/services/handover_service.py ok",
+    "9: read_file tests/test_service_handovers.py ok",
+    "10: apply_patch src/services/handover_service.py ok",
+    "11: read_file src/services/handover_service.py ok",
+    "12: read_file src/services/handover_service.py ok",
+    "final: budget exhausted"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-010",
+    "file": "src/services/handover_service.py",
+    "role": "coder",
+    "title": "Handover service (the core flows)",
+    "interface": "Exception HandoverError(ValueError). class HandoverService(handovers, assignments, assets, employees, audit, email, tokens, base_url, company, protocol_dir) — all keyword arguments, stored as public attributes of the same names. start_handover(actor, asset_id, employee_id, note='') -> dict: asset must exist with status 'in_stock' and employee must exist and be active, else HandoverError; creates handover kind 'handover' with protocol_number=handovers.next_protocol_number(current UTC year); sets asset status 'pending_handover'; sends e-mail to the employee (subject 'Potvrzení převzetí zařízení <asset_tag>', text and html containing asset_tag, brand, model, serial number, note, and the link '<base_url>/handovers/confirm/<token>' where token=tokens.issue(handover_id, employee email)); marks sent; audit 'handover.started'; returns the handover dict. start_return(actor, asset_id, note='') -> dict: requires an open assignment (assignments.get_open_for_asset) else HandoverError; creates handover kind 'return' for that assignment's employee; asset status 'pending_return'; e-mail (subject 'Potvrzení vrácení zařízení <asset_tag>') with the same kind of link; audit 'return.started'. request_return(employee_email, asset_id, note='') -> dict: like start_return but the actor is the employee, who must be the holder of the open assignment (else HandoverError); created_by=employee_email. confirm(token, actor_email) -> dict: tokens.verify(token) must succeed, the handover must be 'pending', and actor_email.lower() must equal the token email and the handover employee's email, else HandoverError. For kind 'handover': open an assignment, asset status 'assigned'. For kind 'return': close the open assignment with return_id, asset status 'in_stock'. Then render the PDF via render_protocol_pdf to '<protocol_dir>/<protocol_number>.pdf', set_status 'confirmed' with confirmed_at (UTC ISO) and protocol_path, e-mail the PDF (attachment (f'{protocol_number}.pdf', bytes, 'application/pdf')) to both the employee and created_by (two messages), audit 'handover.confirmed'; return the updated handover dict. decline(token, actor_email, reason='') -> dict: same token/actor checks; status 'declined' with decline_reason; asset back to 'in_stock' for kind 'handover' or 'assigned' for kind 'return'; audit 'handover.declined'. cancel(actor, handover_id) -> dict: only a 'pending' handover (else HandoverError); status 'cancelled'; asset back to 'in_stock' / 'assigned' as for decline; audit 'handover.cancelled'. overview_for_employee(employee_id) -> dict {'assigned': [{'assignment': dict, 'asset': dict, 'handover': dict}], 'pending': [{**handover dict, 'asset': asset dict}], 'history': [handover dicts newest first]}. expire_stale(older_than_hours) -> int: every 'pending' handover whose created_at is older than the given hours becomes 'expired' with the asset released as for decline; returns the count. Helper with_details(handover) -> dict adds 'asset' and 'employee' dicts. Never catch generic Exception; never send e-mail before the database write succeeded.",
+    "uses": {
+      "HandoverRepository": "src/repositories/handovers.py",
+      "AssignmentRepository": "src/repositories/assignments.py",
+      "AssetRepository": "src/repositories/assets.py",
+      "EmployeeRepository": "src/repositories/employees.py",
+      "AuditRepository": "src/repositories/audit.py",
+      "EmailSender": "src/services/email_sender.py: send(to, subject, text, html, attachments)",
+      "HandoverTokens": "src/services/tokens.py: issue/verify",
+      "render_protocol_pdf": "src/services/protocol_pdf.py"
+    },
+    "database": "through injected repositories only",
+    "acceptance": "tests/test_service_handovers.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-003",
+      "C-004",
+      "C-006",
+      "C-007",
+      "C-008"
+    ],
+    "budget": {
+      "iterations": 16
+    },
+    "notes": ""
+  }
+}

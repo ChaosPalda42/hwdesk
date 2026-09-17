@@ -1,0 +1,8 @@
+{
+  "packet": "P-010",
+  "kind": "retry",
+  "diff": "",
+  "contract": {},
+  "note": "harness: output limit raised, truncation handled",
+  "created_at": "2026-09-17T09:27:30+00:00"
+}

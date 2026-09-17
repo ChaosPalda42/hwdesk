@@ -1,0 +1,68 @@
+{
+  "id": "P-010",
+  "contract": "C-010",
+  "title": "Handover service (the core flows)",
+  "created_at": "2026-09-17T09:26:38+00:00",
+  "ladder": [
+    "worker: stopped after 11 iterations",
+    "retry: stopped after 7 iterations",
+    "triage: STILL_AMBIGUOUS"
+  ],
+  "findings": [
+    "[MISSING_FILE] src/services/handover_service.py: the contract's file does not exist"
+  ],
+  "failing": "\n==================================== ERRORS ====================================\n_______________ ERROR collecting tests/test_service_handovers.py _______________\nImportError while importing test module '/Users/AI/projects/hwdesk/tests/test_service_handovers.py'.\nHint: make sure your test modules/packages have valid Python names.\nTraceback:\n../../.local/share/uv/python/cpython-3.13.15-macos-aarch64-none/lib/python3.13/importlib/__init__.py:88: in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/test_service_handovers.py:12: in <module>\n    from src.services.handover_service import HandoverError, HandoverService\nE   ModuleNotFoundError: No module named 'src.services.handover_service'\n=========================== short test summary info ============================\nERROR tests/test_service_handovers.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.05s\n",
+  "diff": "",
+  "tried": [
+    "worker: stopped after 11 iterations",
+    "retry: stopped after 7 iterations",
+    "triage: STILL_AMBIGUOUS",
+    "1: read_file src/repositories/handovers.py ok",
+    "2: read_file src/repositories/assignments.py ok",
+    "3: read_file src/repositories/assets.py ok",
+    "4: read_file src/repositories/employees.py ok",
+    "5: read_file src/repositories/audit.py ok",
+    "6: read_file src/services/email_sender.py ok",
+    "7: read_file src/services/tokens.py ok",
+    "8: read_file src/services/protocol_pdf.py ok",
+    "9: read_file src/config.py ok",
+    "-- retry --",
+    "1: list_files . ok",
+    "2: read_file src/services/asset_service.py ok",
+    "3: read_file src/services/tokens.py ok",
+    "4: read_file src/services/protocol_pdf.py ok",
+    "5: read_file tests/test_service_handovers.py ok"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-010",
+    "file": "src/services/handover_service.py",
+    "role": "coder",
+    "title": "Handover service (the core flows)",
+    "interface": "Exception HandoverError(ValueError). class HandoverService(handovers, assignments, assets, employees, audit, email, tokens, base_url, company, protocol_dir) — all keyword arguments, stored as public attributes of the same names. start_handover(actor, asset_id, employee_id, note='') -> dict: asset must exist with status 'in_stock' and employee must exist and be active, else HandoverError; creates handover kind 'handover' with protocol_number=handovers.next_protocol_number(current UTC year); sets asset status 'pending_handover'; sends e-mail to the employee (subject 'Potvrzení převzetí zařízení <asset_tag>', text and html containing asset_tag, brand, model, serial number, note, and the link '<base_url>/handovers/confirm/<token>' where token=tokens.issue(handover_id, employee email)); marks sent; audit 'handover.started'; returns the handover dict. start_return(actor, asset_id, note='') -> dict: requires an open assignment (assignments.get_open_for_asset) else HandoverError; creates handover kind 'return' for that assignment's employee; asset status 'pending_return'; e-mail (subject 'Potvrzení vrácení zařízení <asset_tag>') with the same kind of link; audit 'return.started'. request_return(employee_email, asset_id, note='') -> dict: like start_return but the actor is the employee, who must be the holder of the open assignment (else HandoverError); created_by=employee_email. confirm(token, actor_email) -> dict: tokens.verify(token) must succeed, the handover must be 'pending', and actor_email.lower() must equal the token email and the handover employee's email, else HandoverError. For kind 'handover': open an assignment, asset status 'assigned'. For kind 'return': close the open assignment with return_id, asset status 'in_stock'. Then render the PDF via render_protocol_pdf to '<protocol_dir>/<protocol_number>.pdf', set_status 'confirmed' with confirmed_at (UTC ISO) and protocol_path, e-mail the PDF (attachment (f'{protocol_number}.pdf', bytes, 'application/pdf')) to both the employee and created_by (two messages), audit 'handover.confirmed'; return the updated handover dict. decline(token, actor_email, reason='') -> dict: same token/actor checks; status 'declined' with decline_reason; asset back to 'in_stock' for kind 'handover' or 'assigned' for kind 'return'; audit 'handover.declined'. cancel(actor, handover_id) -> dict: only a 'pending' handover (else HandoverError); status 'cancelled'; asset back to 'in_stock' / 'assigned' as for decline; audit 'handover.cancelled'. overview_for_employee(employee_id) -> dict {'assigned': [{'assignment': dict, 'asset': dict, 'handover': dict}], 'pending': [{**handover dict, 'asset': asset dict}], 'history': [handover dicts newest first]}. expire_stale(older_than_hours) -> int: every 'pending' handover whose created_at is older than the given hours becomes 'expired' with the asset released as for decline; returns the count. Helper with_details(handover) -> dict adds 'asset' and 'employee' dicts. Never catch generic Exception; never send e-mail before the database write succeeded.",
+    "uses": {
+      "HandoverRepository": "src/repositories/handovers.py",
+      "AssignmentRepository": "src/repositories/assignments.py",
+      "AssetRepository": "src/repositories/assets.py",
+      "EmployeeRepository": "src/repositories/employees.py",
+      "AuditRepository": "src/repositories/audit.py",
+      "EmailSender": "src/services/email_sender.py: send(to, subject, text, html, attachments)",
+      "HandoverTokens": "src/services/tokens.py: issue/verify",
+      "render_protocol_pdf": "src/services/protocol_pdf.py"
+    },
+    "database": "through injected repositories only",
+    "acceptance": "tests/test_service_handovers.py",
+    "forbidden": [],
+    "depends_on": [
+      "C-003",
+      "C-004",
+      "C-006",
+      "C-007",
+      "C-008"
+    ],
+    "budget": {
+      "iterations": 16
+    },
+    "notes": ""
+  }
+}

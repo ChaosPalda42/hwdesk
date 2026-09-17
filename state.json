@@ -37,12 +37,12 @@
       "updated_at": "2026-09-17T09:02:30+00:00"
     },
     "C-007": {
-      "status": "escalated",
+      "status": "green",
       "attempts": 2,
       "iterations": 18,
-      "commit": "",
-      "last_finding": "[SWALLOWED_EXCEPTION] src/services/tokens.py: line 54: a broad `except` swallows the exception without logging or re-raising it, so the real failure can never be diagnosed from a test run -- log it with traceback (logger.exception) or re-raise before returning an error response",
-      "packet": "P-005",
+      "commit": "6e7bb4f",
+      "last_finding": "",
+      "packet": "",
       "updated_at": "2026-09-17T09:06:03+00:00"
     },
     "C-008": {
@@ -181,19 +181,19 @@
       "updated_at": "2026-09-17T08:58:07+00:00"
     },
     "C-003": {
-      "status": "escalated",
+      "status": "green",
       "attempts": 1,
       "iterations": 0,
-      "commit": "",
-      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_repo_handovers_assignments.py: the acceptance run imports src.repositories.assignments, which C-004 owns and has not produced yet; make that import lazy (inside the fixture) or add C-004 to depends_on; [MISSING_FILE] src/repositories/han",
-      "packet": "P-007",
+      "commit": "d220de6",
+      "last_finding": "",
+      "packet": "",
       "updated_at": "2026-09-17T09:10:47+00:00"
     },
     "C-004": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "8d950a5",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
@@ -208,21 +208,21 @@
       "updated_at": "2026-09-17T09:03:08+00:00"
     },
     "C-010": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "HEAD",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
     },
     "C-011": {
-      "status": "escalated",
+      "status": "green",
       "attempts": 1,
       "iterations": 18,
-      "commit": "",
-      "last_finding": "acceptance failed (2 failed); [BLOCKED_BY_CONTRACT] tests/test_service_hr_sync.py: the acceptance run imports src.repositories.assignments, which C-004 owns and has not produced yet; make that import lazy (inside the fixture) or add C-004 to depends_on; [SWALLOWED_EXCEPTION] src/services/hr_sync.py:",
-      "packet": "P-006",
+      "commit": "839fe36",
+      "last_finding": "",
+      "packet": "",
       "updated_at": "2026-09-17T09:10:46+00:00"
     },
     "C-014": {
@@ -235,67 +235,67 @@
       "updated_at": "2026-09-17T09:13:32+00:00"
     },
     "C-015": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "HEAD",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
     },
     "C-016": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "a440f02",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
     },
     "C-017": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "0d7a460",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
     },
     "C-018": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "928b594",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
     },
     "C-019": {
-      "status": "pending",
+      "status": "green",
       "attempts": 0,
       "iterations": 0,
-      "commit": "",
+      "commit": "a20abc9",
       "last_finding": "",
       "packet": "",
       "updated_at": ""
     },
     "C-032": {
-      "status": "pending",
-      "attempts": 0,
+      "status": "green",
+      "attempts": 1,
       "iterations": 0,
-      "commit": "",
+      "commit": "00bcba6",
       "last_finding": "",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T09:51:26+00:00"
     },
     "C-033": {
-      "status": "pending",
-      "attempts": 0,
-      "iterations": 0,
-      "commit": "",
+      "status": "green",
+      "attempts": 3,
+      "iterations": 33,
+      "commit": "041388c",
       "last_finding": "",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T10:18:54+00:00"
     }
   },
   "runs": [
@@ -318,11 +318,47 @@
       "red": 0,
       "escalated": 3,
       "note": "3 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T09:50:28+00:00",
+      "finished_at": "2026-09-17T09:50:28+00:00",
+      "outcome": "needs-operator",
+      "iterations": 0,
+      "green": 21,
+      "red": 0,
+      "escalated": 3,
+      "note": "3 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T09:51:25+00:00",
+      "finished_at": "2026-09-17T10:02:26+00:00",
+      "outcome": "needs-operator",
+      "iterations": 13,
+      "green": 32,
+      "red": 0,
+      "escalated": 1,
+      "note": "1 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T10:03:05+00:00",
+      "finished_at": "2026-09-17T10:11:19+00:00",
+      "outcome": "needs-operator",
+      "iterations": 13,
+      "green": 32,
+      "red": 0,
+      "escalated": 1,
+      "note": "1 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T10:11:35+00:00",
+      "finished_at": "2026-09-17T10:18:54+00:00",
+      "outcome": "green",
+      "iterations": 7,
+      "green": 33,
+      "red": 0,
+      "escalated": 0,
+      "note": "full suite passed (49 tests)"
     }
   ],
-  "open_packets": [
-    "P-005",
-    "P-006",
-    "P-007"
-  ]
+  "open_packets": []
 }

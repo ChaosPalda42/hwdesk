@@ -1,0 +1,50 @@
+{
+  "id": "P-009",
+  "contract": "C-015",
+  "title": "JSON API: employees, HR sync, audit",
+  "created_at": "2026-09-17T09:18:45+00:00",
+  "ladder": [
+    "worker: stopped after 6 iterations",
+    "retry: budget after 12 iterations",
+    "retained on factory/failed/C-015-1"
+  ],
+  "findings": [
+    "[SWALLOWED_EXCEPTION] src/api/employees.py: line 72: a broad `except` swallows the exception without logging or re-raising it, so the real failure can never be diagnosed from a test run -- log it with traceback (logger.exception) or re-raise before returning an error response",
+    "[SWALLOWED_EXCEPTION] src/api/employees.py: line 92: a broad `except` swallows the exception without logging or re-raising it, so the real failure can never be diagnosed from a test run -- log it with traceback (logger.exception) or re-raise before returning an error response"
+  ],
+  "failing": "",
+  "diff": "+from flask import Blueprint, request, jsonify\n+from src.auth.guards import api_auth_required, actor\n+from src.db import get_db\n+from src.services.hr_sync import HrSyncService\n+from src.repositories.employees import EmployeeRepository\n+from src.repositories.assets import AssetRepository\n+from src.repositories.assignments import AssignmentRepository\n+from src.repositories.audit import AuditRepository\n+\n+bp = Blueprint('api_employees', __name__)\n+\n+def get_hr_sync_service():\n+    \"\"\"Create an HrSyncService instance with repositories for the current request.\"\"\"\n+    db = get_db()\n+    return HrSyncService(\n+        EmployeeRepository(db),\n+        AssetRepository(db),\n+        AuditRepository(db),\n+        AssignmentRepository(db)\n+    )\n+\n+@bp.route('/employees', methods=['GET'])\n+@api_auth_required\n+def get_employees():\n+    \"\"\"Get list of employees with optional search and active filter.\"\"\"\n+    q = request.args.get('q', '')\n+    active = request.args.get('active', type=str)\n+    \n+    db = get_db()\n+    employee_repo = EmployeeRepository(db)\n+    \n+    if q:\n+        employees = employee_repo.search(q)\n+    else:\n+        active_only = active is not None and active.lower() in ('1', 'true', 'yes')\n+        employees = employee_repo.list_all(active_only)\n+    \n+    return jsonify(employees)\n+\n+@bp.route('/employees/<path:email>', methods=['GET'])\n+@api_auth_required\n+def get_employee(email):\n+    \"\"\"Get a specific employee by email.\"\"\"\n+    db = get_db()\n+    employee_repo = EmployeeRepository(db)\n+    \n+    employee = employee_repo.get_by_email(email)\n+    if not employee:\n+        return jsonify({'error': 'not found'}), 404\n+    \n+    return jsonify(employee)\n+\n+@bp.route('/hr/employees', methods=['POST'])\n+@api_auth_required\n+def hr_sync_employees():\n+    \"\"\"Sync employees from HR system.\"\"\"\n+    data = request.get_json()\n+    if not data or 'employees' not in data:\n+        return jsonify({'error': 'missing employees list'}), 400\n+    \n… (45 more lines)",
+  "tried": [
+    "worker: stopped after 6 iterations",
+    "retry: budget after 12 iterations"
+  ],
+  "ask": "patch | contract | skip | question",
+  "contract_snapshot": {
+    "id": "C-015",
+    "file": "src/api/employees.py",
+    "role": "coder",
+    "title": "JSON API: employees, HR sync, audit",
+    "interface": "Blueprint `bp` (name 'api_employees'; mounted at /api/v1). All routes require api_auth_required. GET /employees?q=&active= -> 200 list (search when q). GET /employees/<path:email> -> 200 | 404 {'error': 'not found'}. POST /hr/employees JSON {'employees': [...]} -> 200 sync result dict; ValueError (e.g. missing email) -> 400 {'error'}; a body without an 'employees' list -> 400. POST /hr/employees/csv with the CSV as the raw request body (request.get_data(as_text=True)) -> 200 sync result. GET /audit?limit=50 -> 200 list of audit entries. Services built per request from get_db(): HrSyncService(EmployeeRepository(db), AssetRepository(db), AuditRepository(db), assignments=AssignmentRepository(db)).",
+    "uses": {
+      "HrSyncService": "src/services/hr_sync.py: sync(actor, records), parse_csv(text)",
+      "EmployeeRepository": "src/repositories/employees.py",
+      "AssetRepository": "src/repositories/assets.py",
+      "AssignmentRepository": "src/repositories/assignments.py",
+      "AuditRepository": "src/repositories/audit.py",
+      "get_db": "src/db.py",
+      "guards": "src/auth/guards.py: api_auth_required, actor()"
+    },
+    "database": "repositories on get_db() per request",
+    "acceptance": "",
+    "forbidden": [],
+    "depends_on": [
+      "C-011",
+      "C-004",
+      "C-012"
+    ],
+    "budget": {
+      "iterations": 12
+    },
+    "notes": ""
+  }
+}

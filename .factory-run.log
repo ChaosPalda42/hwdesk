@@ -1,20 +1,12 @@
+decision: P-012: patch — patch applied and committed
 model: coder: qwen/qwen3-coder-30b resident at 32768
 model: tester: nousresearch/hermes-4.3-36b resident at 32768
 model: triage: openai/gpt-oss-120b resident at 65536
-C-002: green (3 iterations) — worker: green after 3 iterations
-C-006: green (4 iterations) — worker: green after 4 iterations
-C-009: green (4 iterations) — worker: green after 4 iterations
-C-007: worker stopped; acceptance failed (0 failed); [MISSING_FILE] src/services/tokens.py: the contract's file does not exist
-C-011: worker stopped; acceptance failed (0 failed); [MISSING_FILE] src/services/hr_sync.py: the contract's file does not exist
-C-007: escalated -> P-005 — worker: stopped after 6 iterations; retry: budget after 12 iterations; retained on factory/failed/C-007-2
-C-011: arbitration STILL_AMBIGUOUS (neither side produced a surviving hypothesis for tests/test_service_hr_sync.py::test_sync_upserts_and_reports_offboarded (implementation=PATCH_REJECTED, test=OU)
-C-011: escalated -> P-006 — worker: stopped after 6 iterations; retry: budget after 12 iterations; triage: STILL_AMBIGUOUS; retained on factory/failed/C-011-1
-C-003: escalated -> P-007 — blocked: acceptance imports a contract not yet produced (operator fixture)
-C-014: worker budget; [UNDECLARED_ROUTE] src/api/assets.py: src/api/assets.py: line 23 registers GET /api/v1/assets, which the approved architecture does not declare; declared endpoints: GET /assets, GET /assets/{}, PATCH 
-C-008: green (5 iterations) — worker: green after 5 iterations
-C-014: green (14 iterations) — worker: budget after 12 iterations; retry: green after 2 iterations
+C-032: green (0 iterations) — already green
+C-033: worker stopped; acceptance failed (0 failed); [MISSING_FILE] tests/test_smoke_pages.py: the contract's file does not exist
+C-033: escalated -> P-013 — worker: stopped after 7 iterations; retry: stopped after 6 iterations; triage: no parseable failure
 
-needs-operator: 3 packet(s) waiting
-green 21 · escalated 3 · iterations 66
-packets waiting: P-005, P-006, P-007
+needs-operator: 1 packet(s) waiting
+green 32 · escalated 1 · iterations 13
+packets waiting: P-013
 EXIT=1
