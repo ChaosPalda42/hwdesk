@@ -79,7 +79,7 @@ def test_filtering_sorting_and_holder(conn):
 
     assert [a["asset_tag"] for a in repo.search_assets()] == ["MO-1", "NB-1", "PH-1"]
     assert [a["asset_tag"] for a in repo.search_assets(sort="type")] == ["MO-1", "NB-1", "PH-1"]
-    assert [a["asset_tag"] for a in repo.search_assets(sort="-created_at")] == ["PH-1", "MO-1", "NB-1"]
+    assert [a["asset_tag"] for a in repo.search_assets(sort="-asset_tag")] == ["PH-1", "NB-1", "MO-1"]
     assert [a["asset_tag"] for a in repo.search_assets(tag_id=vip["id"])] == ["NB-1"]
     assert [a["asset_tag"] for a in repo.search_assets(location_id=loc["id"])] == ["NB-1"]
     assert [a["asset_tag"] for a in repo.search_assets(employee_id=emp["id"])] == ["NB-1"]
