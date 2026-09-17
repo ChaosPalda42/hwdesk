@@ -9,7 +9,7 @@
     "config constants": "src/config.py: ASSET_TYPES, ASSET_STATUSES, HANDOVER_KINDS, HANDOVER_STATUSES, load_config(overrides) -> dict"
   },
   "database": "injected connection only",
-  "acceptance": "tests/test_repo_handovers_assignments.py",
+  "acceptance": "tests/test_repo_handovers.py",
   "forbidden": [],
   "depends_on": [
     "C-001",

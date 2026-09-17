@@ -3,11 +3,12 @@
   "file": "src/services/hr_sync.py",
   "role": "coder",
   "title": "HR synchronisation",
-  "interface": "class HrSyncService(employees, assets, audit, assignments=None). sync(actor, records: list[dict]) -> dict {'created': n, 'updated': n, 'deactivated': n, 'offboarding': [{'email': str, 'asset_tags': [str, ...]}]}. Each record: email (required — a record without email raises ValueError before any write), display_name, department, manager_email, hr_id, active (default True). Unknown email -> employees.upsert (counts as created); known email -> upsert (updated). active False on an employee who is currently active -> employees.set_active(id, False) (deactivated) and an offboarding entry listing the asset_tags of the assets that employee still holds: assignments.list_open_for_employee(employee_id) when an AssignmentRepository was given, otherwise the query SELECT asset_id FROM assignments WHERE employee_id=? AND ended_at IS NULL on assets.conn; tags via assets.get. Audit 'employee.synced' once per sync with the counts as details. parse_csv(text) -> list[dict]: delimiter ';' or ',' (csv.Sniffer with fallback ';'), header row required, columns email, display_name, department, manager_email, hr_id, active; missing columns -> '' (active -> True); active parsed from 1/0/true/false/yes/no case-insensitively; emails lower-cased.",
+  "interface": "class HrSyncService(employees, assets, audit, assignments=None). sync(actor, records: list[dict]) -> dict {'created': n, 'updated': n, 'deactivated': n, 'offboarding': [{'email': str, 'asset_tags': [str, ...]}]}. Each record: email (required — a record without email raises ValueError before any write), display_name, department, manager_email, hr_id, active (default True). Counting: unknown email -> employees.upsert, counts as created; known email whose record becomes inactive in this sync counts ONLY as deactivated (not updated); any other known email -> upsert, counts as updated. active False on an employee who is currently active -> employees.set_active(id, False) (deactivated) and an offboarding entry listing the asset_tags of the assets that employee still holds: assignments.list_open_for_employee(employee_id) when an AssignmentRepository was given, otherwise the query SELECT asset_id FROM assignments WHERE employee_id=? AND ended_at IS NULL on assets.conn; tags via assets.get. Audit 'employee.synced' once per sync with the counts as details. parse_csv(text) -> list[dict]: delimiter ';' or ',' (csv.Sniffer with fallback ';'), header row required, columns email, display_name, department, manager_email, hr_id, active; missing columns -> '' (active -> True); active parsed from 1/0/true/false/yes/no case-insensitively; emails lower-cased.",
   "uses": {
     "EmployeeRepository": "src/repositories/employees.py",
     "AssetRepository": "src/repositories/assets.py (has attribute conn)",
-    "AuditRepository": "src/repositories/audit.py"
+    "AuditRepository": "src/repositories/audit.py",
+    "AssignmentRepository": "src/repositories/assignments.py: list_open_for_employee(employee_id) -> list of assignment dicts with asset_id"
   },
   "database": "through injected repositories; assets.conn only for the open-assignments query",
   "acceptance": "tests/test_service_hr_sync.py",
@@ -15,6 +16,7 @@
   "depends_on": [
     "C-001",
     "C-002",
+    "C-004",
     "C-005"
   ],
   "budget": {

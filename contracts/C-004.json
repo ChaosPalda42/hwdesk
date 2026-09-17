@@ -8,7 +8,7 @@
     "connect/get_db": "src/db.py: connect(path) -> sqlite3.Connection (row_factory=sqlite3.Row, schema ensured); get_db() -> current app connection; SCHEMA (tables employees, assets, handovers, assignments, audit_log)"
   },
   "database": "injected connection only",
-  "acceptance": "tests/test_repo_handovers_assignments.py",
+  "acceptance": "tests/test_repo_assignments.py",
   "forbidden": [],
   "depends_on": [
     "C-003"

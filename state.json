@@ -10,13 +10,13 @@
       "updated_at": "2026-09-17T08:54:10+00:00"
     },
     "C-002": {
-      "status": "escalated",
-      "attempts": 1,
-      "iterations": 15,
-      "commit": "",
-      "last_finding": "acceptance failed (1 failed)",
-      "packet": "P-003",
-      "updated_at": "2026-09-17T08:55:52+00:00"
+      "status": "green",
+      "attempts": 2,
+      "iterations": 18,
+      "commit": "738cf58",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": "2026-09-17T09:02:19+00:00"
     },
     "C-005": {
       "status": "green",
@@ -28,31 +28,31 @@
       "updated_at": "2026-09-17T08:58:29+00:00"
     },
     "C-006": {
-      "status": "escalated",
-      "attempts": 1,
-      "iterations": 16,
-      "commit": "",
-      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.protocol_pdf, which C-008 owns and has not produced yet; make that import lazy (inside the fixture) or add C-008 to depends_on",
-      "packet": "P-004",
-      "updated_at": "2026-09-17T09:00:25+00:00"
+      "status": "green",
+      "attempts": 2,
+      "iterations": 20,
+      "commit": "4025edc",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": "2026-09-17T09:02:30+00:00"
     },
     "C-007": {
       "status": "escalated",
-      "attempts": 1,
-      "iterations": 0,
+      "attempts": 2,
+      "iterations": 18,
       "commit": "",
-      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.email_sender, which C-006 owns and has not produced yet; make that import lazy (inside the fixture) or add C-006 to depends_on; [MISSING_FILE] src/services/tokens.py: the contrac",
-      "packet": "P-001",
-      "updated_at": "2026-09-17T08:54:11+00:00"
+      "last_finding": "[SWALLOWED_EXCEPTION] src/services/tokens.py: line 54: a broad `except` swallows the exception without logging or re-raising it, so the real failure can never be diagnosed from a test run -- log it with traceback (logger.exception) or re-raise before returning an error response",
+      "packet": "P-005",
+      "updated_at": "2026-09-17T09:06:03+00:00"
     },
     "C-008": {
-      "status": "escalated",
-      "attempts": 1,
-      "iterations": 0,
-      "commit": "",
-      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_services_infra.py: the acceptance run imports src.services.email_sender, which C-006 owns and has not produced yet; make that import lazy (inside the fixture) or add C-006 to depends_on; [MISSING_FILE] src/services/protocol_pdf.py: the c",
-      "packet": "P-002",
-      "updated_at": "2026-09-17T08:54:12+00:00"
+      "status": "green",
+      "attempts": 2,
+      "iterations": 5,
+      "commit": "dd460b2",
+      "last_finding": "",
+      "packet": "",
+      "updated_at": "2026-09-17T09:13:11+00:00"
     },
     "C-012": {
       "status": "green",
@@ -181,13 +181,13 @@
       "updated_at": "2026-09-17T08:58:07+00:00"
     },
     "C-003": {
-      "status": "pending",
-      "attempts": 0,
+      "status": "escalated",
+      "attempts": 1,
       "iterations": 0,
       "commit": "",
-      "last_finding": "",
-      "packet": "",
-      "updated_at": ""
+      "last_finding": "acceptance failed (0 failed); [BLOCKED_BY_CONTRACT] tests/test_repo_handovers_assignments.py: the acceptance run imports src.repositories.assignments, which C-004 owns and has not produced yet; make that import lazy (inside the fixture) or add C-004 to depends_on; [MISSING_FILE] src/repositories/han",
+      "packet": "P-007",
+      "updated_at": "2026-09-17T09:10:47+00:00"
     },
     "C-004": {
       "status": "pending",
@@ -199,13 +199,13 @@
       "updated_at": ""
     },
     "C-009": {
-      "status": "pending",
-      "attempts": 0,
-      "iterations": 0,
-      "commit": "",
+      "status": "green",
+      "attempts": 1,
+      "iterations": 4,
+      "commit": "b6e4512",
       "last_finding": "",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T09:03:08+00:00"
     },
     "C-010": {
       "status": "pending",
@@ -217,22 +217,22 @@
       "updated_at": ""
     },
     "C-011": {
-      "status": "pending",
-      "attempts": 0,
-      "iterations": 0,
+      "status": "escalated",
+      "attempts": 1,
+      "iterations": 18,
       "commit": "",
-      "last_finding": "",
-      "packet": "",
-      "updated_at": ""
+      "last_finding": "acceptance failed (2 failed); [BLOCKED_BY_CONTRACT] tests/test_service_hr_sync.py: the acceptance run imports src.repositories.assignments, which C-004 owns and has not produced yet; make that import lazy (inside the fixture) or add C-004 to depends_on; [SWALLOWED_EXCEPTION] src/services/hr_sync.py:",
+      "packet": "P-006",
+      "updated_at": "2026-09-17T09:10:46+00:00"
     },
     "C-014": {
-      "status": "pending",
-      "attempts": 0,
-      "iterations": 0,
-      "commit": "",
+      "status": "green",
+      "attempts": 1,
+      "iterations": 14,
+      "commit": "90c84c0",
       "last_finding": "",
       "packet": "",
-      "updated_at": ""
+      "updated_at": "2026-09-17T09:13:32+00:00"
     },
     "C-015": {
       "status": "pending",
@@ -308,12 +308,21 @@
       "red": 0,
       "escalated": 4,
       "note": "4 packet(s) waiting"
+    },
+    {
+      "started_at": "2026-09-17T09:01:44+00:00",
+      "finished_at": "2026-09-17T09:13:32+00:00",
+      "outcome": "needs-operator",
+      "iterations": 66,
+      "green": 21,
+      "red": 0,
+      "escalated": 3,
+      "note": "3 packet(s) waiting"
     }
   ],
   "open_packets": [
-    "P-001",
-    "P-002",
-    "P-003",
-    "P-004"
+    "P-005",
+    "P-006",
+    "P-007"
   ]
 }
