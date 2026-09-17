@@ -10,8 +10,8 @@ potvrdit. Integrace přes JSON API (klíče) — zejména synchronizace
 zaměstnanců z HR (aktivní/neaktivní → offboarding = výzva k vrácení).
 
 ## Kde jsme
-Viz STATE.md. Poslední shrnutí operátora (2026-09-17): 33/33 kontraktů zelených,
-49 testů, tok předání ověřen ručně v prohlížeči; připraveno k nasazení
+Viz STATE.md. Poslední shrnutí operátora (2026-09-17): 38/38 kontraktů zelených,
+64 testů, druhá dávka (nastavení v DB, Drupal HR konektor) hotová; tok předání ověřen ručně v prohlížeči; připraveno k nasazení
 (Dockerfile, .env.example). Čeká na externí vstupy: Entra ID registrace,
 SMTP účet, který HR systém.
 
@@ -34,6 +34,11 @@ SMTP účet, který HR systém.
   jedno otevřené přiřazení.
 - 2026-09-17: protokol = PDF (reportlab) generované při potvrzení, uloženo do
   `PROTOCOL_DIR`, číslo `HP-<rok>-<pořadí>`; kopie e-mailem oběma stranám.
+- 2026-09-17: Entra ID, SMTP a Drupal konfigurovatelné v aplikaci (tabulka settings,
+  hodnoty v DB mají přednost před .env; tajemství maskovaná ve formuláři).
+- 2026-09-17: HR = vlastní Drupal (JSON:API, `/jsonapi/user/user`), mapování polí
+  konfigurovatelné; pull tlačítkem/cronem, push přes API zůstává.
+- 2026-09-17: nasazení na server (Docker); přístupy dodá Michael později.
 - 2026-09-17: HR sync = obecné rozhraní: `POST /api/v1/hr/employees` (upsert
   seznamu) + CSV import; konkrétní HR konektor až podle toho, který systém
   firma používá (otevřená otázka pro Michaela).
