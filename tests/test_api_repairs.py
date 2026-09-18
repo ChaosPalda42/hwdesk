@@ -8,11 +8,11 @@ def test_repairs_api_endpoints(client):
         "/api/v1/assets",
         json={
             "asset_tag": "R-003",
-            "type": "printer",
+            "type": "other",
             "brand": "Canon",
             "model": "iPF7500",
             "serial_number": "SN789",
-            "purchase_date": "2023-03-15T00:00:00+00:00",
+            "purchase_date": "2023-03-15",
             "price": 250.0,
         },
     )
