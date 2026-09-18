@@ -1,0 +1,23 @@
+{
+  "id": "C-050",
+  "file": "src/repositories/repairs.py",
+  "role": "coder",
+  "title": "Repair repository – CRUD for device repairs",
+  "interface": "class RepairRepository:\n    def __init__(self, conn: sqlite3.Connection): ...\n    def create(self, asset_id: int, description: str, vendor: str, sent_at: str, cost: float, created_by: str) -> dict:\n        # INSERT INTO repairs (…) VALUES (…, '', '') and return the full row as a dict\n    def get(self, repair_id: int) -> dict | None:\n        # SELECT * FROM repairs WHERE id=?\n    def list_for_asset(self, asset_id: int) -> list[dict]:\n        # SELECT * FROM repairs WHERE asset_id=? ORDER BY created_at DESC\n    def list_open(self) -> list[dict]:\n        # SELECT * FROM repairs WHERE returned_at='' OR returned_at IS NULL\n    def close(self, repair_id: int, returned_at: str, result: str, cost: float) -> dict:\n        # UPDATE repairs SET returned_at=?, result=?, cost=? WHERE id=? and return updated row",
+  "uses": {
+    "sqlite3": "built‑in sqlite3 module",
+    "AssetRepository": "src/repositories/assets.py (used by service, not directly here)",
+    "AuditRepository": "src/repositories/audit.py (used by service, not directly here)"
+  },
+  "database": "writes to the `repairs` table; each mutating method commits after execution",
+  "acceptance": "tests/test_repairs_repository.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-002",
+    "C-005"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

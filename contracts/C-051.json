@@ -1,0 +1,24 @@
+{
+  "id": "C-051",
+  "file": "src/services/repair_service.py",
+  "role": "coder",
+  "title": "Repair service – business logic for opening and closing repairs",
+  "interface": "class RepairError(ValueError): ...\nclass RepairService:\n    def __init__(self, assets: AssetRepository, repairs: RepairRepository, audit: AuditRepository): ...\n    def open_repair(self, actor: str, asset_id: int, description: str, vendor: str, sent_at: str, cost: float) -> dict:\n        # Verify asset exists via AssetRepository.get and that its status is not 'retired' or 'lost'.\n        # Call RepairRepository.create(...), record audit AuditRepository.record(actor, 'repair.opened', entity='repair', entity_id=id, details={...})\n        # Return the created repair dict.\n    def close_repair(self, actor: str, repair_id: int, returned_at: str, result: str, cost: float) -> dict:\n        # Fetch repair via RepairRepository.get; ensure it exists and is still open (returned_at empty).\n        # Call RepairRepository.close(...), record audit AuditRepository.record(actor, 'repair.closed', entity='repair', entity_id=repair_id, details={...})\n        # Return the updated repair dict.",
+  "uses": {
+    "AssetRepository": "src/repositories/assets.py",
+    "RepairRepository": "src/repositories/repairs.py",
+    "AuditRepository": "src/repositories/audit.py"
+  },
+  "database": "relies on repository implementations; no direct SQL here",
+  "acceptance": "tests/test_repair_service.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-002",
+    "C-050",
+    "C-005"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

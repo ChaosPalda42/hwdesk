@@ -1,0 +1,24 @@
+{
+  "id": "C-052",
+  "file": "src/api/repairs.py",
+  "role": "coder",
+  "title": "JSON API: repairs – expose repair data for assets",
+  "interface": "Blueprint `bp` (name 'api_repairs', no url_prefix; mounted at /api/v1). All routes require api_auth_required.\nGET  /assets/<int:asset_id>/repairs -> 200 list of repair dicts (uses RepairRepository.list_for_asset)\nPOST /assets/<int:asset_id>/repairs -> JSON {description, vendor, sent_at, cost}; creates via RepairService.open_repair(actor, asset_id, …) and returns 201 with created dict\nPOST /repairs/<int:repair_id>/close -> JSON {returned_at, result, cost}; closes via RepairService.close_repair(actor, repair_id, …) and returns 200 with updated dict\nError responses are JSON {\"error\": \"…\"} with status 400 (validation) or 404 (not found).",
+  "uses": {
+    "guards": "src/auth/guards: current_user()",
+    "RepairService": "src/services/repair_service.py: RepairService",
+    "get_db": "src/db.py"
+  },
+  "database": "no direct DB access; uses services which use repositories",
+  "acceptance": "tests/test_api_repairs.py",
+  "forbidden": [],
+  "depends_on": [
+    "C-012",
+    "C-051",
+    "C-017"
+  ],
+  "budget": {
+    "iterations": 12
+  },
+  "notes": ""
+}

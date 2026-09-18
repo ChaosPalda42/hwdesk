@@ -127,6 +127,19 @@ CREATE TABLE IF NOT EXISTS attachments (
     uploaded_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS repairs (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id     INTEGER NOT NULL REFERENCES assets(id),
+    description  TEXT NOT NULL,
+    vendor       TEXT NOT NULL DEFAULT '',
+    sent_at      TEXT NOT NULL DEFAULT '',        -- ISO date
+    returned_at  TEXT NOT NULL DEFAULT '',        -- ISO date or '' while open
+    cost         REAL NOT NULL DEFAULT 0,
+    result       TEXT NOT NULL DEFAULT '',        -- '' until closed
+    created_by   TEXT NOT NULL DEFAULT '',
+    created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS settings (
     key        TEXT PRIMARY KEY,
     value      TEXT NOT NULL DEFAULT '',
