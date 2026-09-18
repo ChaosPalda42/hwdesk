@@ -15,10 +15,11 @@
   "depends_on": [
     "C-012",
     "C-051",
-    "C-017"
+    "C-017",
+    "C-032"
   ],
   "budget": {
     "iterations": 12
   },
-  "notes": ""
+  "notes": "The app registers this blueprint (C-032 runs first; src/app.py tolerates a missing module until this file exists)."
 }

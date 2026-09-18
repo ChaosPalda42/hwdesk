@@ -10,9 +10,7 @@
   "database": "",
   "acceptance": "tests",
   "forbidden": [],
-  "depends_on": [
-    "C-052"
-  ],
+  "depends_on": [],
   "budget": {
     "iterations": 12
   },
