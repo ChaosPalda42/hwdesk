@@ -1,15 +1,10 @@
-decision: P-025: patch — patch applied and committed
-decision: P-026: patch — patch applied and committed
-decision: P-027: patch — patch applied and committed
-model: coder: qwen/qwen3-coder-30b resident at 32768
-model: tester: nousresearch/hermes-4.3-36b resident at 32768
+decision: P-029: retry — reset to pending
+model: coder: openai/gpt-oss-120b resident at 65536
+model: tester: openai/gpt-oss-120b resident at 65536
 model: triage: openai/gpt-oss-120b resident at 65536
-C-018: green (0 iterations) — already green
-C-048: green (0 iterations) — already green
-C-014: green (5 iterations) — worker: green after 5 iterations
-C-049: waited 77s for another client
-C-049: worker budget; acceptance failed (1 failed); [MISSING_FILE] src/web/catalog.py: the contract's file does not exist
-C-049: green (24 iterations) — worker: budget after 12 iterations; retry: green after 12 iterations
+C-032: worker stopped; acceptance failed (2 failed)
+C-032: green (19 iterations) — worker: stopped after 9 iterations; retry: green after 10 iterations
+C-052: green (5 iterations) — worker: green after 5 iterations
 
-failed: full suite failed (1 failed) after all contracts were green
-green 49 · escalated 0 · iterations 29
+green: full suite passed (91 tests)
+green 52 · escalated 0 · iterations 24
