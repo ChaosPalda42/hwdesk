@@ -83,6 +83,10 @@ vstupy: Entra ID registrace, SMTP účet, Drupal URL/auth, server.
   čísla a štítky, Lokality, Štítky); číselníky patří pod Nastavení, ne do
   hlavního menu. Každá sekce ukládá jen své klíče.
 
+- 2026-09-21: modely běží na llama-serveru (:8080), LM Studio odstraněno;
+  jediný model `qwen3.8-flash-next` (coder/tester bez thinkingu, 4/4 zelené,
+  140 s/kontrakt). factory.toml bez [roles.*] = výchozí harnessu.
+
 ## Pravidla projektu
 - Stack: Python 3.11+, Flask 3, sqlite3 (raw SQL, `sqlite3.Row`), Jinja2, reportlab, msal.
 - Testy: `uv run pytest -q`
