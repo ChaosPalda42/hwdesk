@@ -1,22 +1,8 @@
-# Factory v2 project configuration. Roles map to local LM Studio models.
+# Factory v2 project configuration. Roles map to models on the local llama-server (:8080).
 [run]
 test_command = ['env', 'HWDESK_ALLOW_MISSING_BLUEPRINTS=1', 'uv', 'run', 'pytest', '-q']
 iterations_per_contract = 12
 max_run_iterations = 800
 
-# 2026-09-18: all roles on gpt-oss-120b (bench: 4/4 green, 50 s/contract; see
-# ~/factory/bench/results). Leave reasoning_effort unset = LM Studio default (medium).
-[roles.coder]
-model = "openai/gpt-oss-120b"
-context_length = 65536
-slots = 2
-
-[roles.tester]
-model = "openai/gpt-oss-120b"
-context_length = 65536
-slots = 1
-
-[roles.triage]
-model = "openai/gpt-oss-120b"
-context_length = 65536
-slots = 1
+# 2026-09-21: harness defaults = qwen3.8-flash-next on llama-server (coder/tester
+# without thinking, triage low); no [roles.*] here means "use the defaults".
